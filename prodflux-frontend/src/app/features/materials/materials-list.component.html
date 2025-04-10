@@ -1,0 +1,14 @@
+<h2>Materialien</h2>
+
+<button routerLink="/materials/new">➕ Neues Material anlegen</button>
+
+<ul>
+  <li *ngFor="let mat of materials$ | async">
+    <strong>{{ mat.bezeichnung }}</strong> –
+    {{ mat.hersteller_bezeichnung }} –
+    {{ mat.preis_brutto }} €
+
+    <button [routerLink]="['/materials', mat.id, 'edit']">✏️ Bearbeiten</button>
+    <button (click)="delete(mat.id)">🗑️ Löschen</button>
+  </li>
+</ul>

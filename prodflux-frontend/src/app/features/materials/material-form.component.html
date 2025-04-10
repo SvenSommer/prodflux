@@ -1,0 +1,10 @@
+<!-- material-form.component.html -->
+<h2>Neues Material anlegen</h2>
+<form (ngSubmit)="onSubmit()">
+  <label>Bezeichnung: <input [(ngModel)]="material.bezeichnung" name="bezeichnung" /></label><br />
+  <label>Hersteller-Bez.: <input [(ngModel)]="material.hersteller_bezeichnung" name="hersteller" /></label><br />
+  <label>Preis (brutto): <input type="number" [(ngModel)]="material.preis_brutto" name="preis" /></label><br />
+  <label>Quelle: <input [(ngModel)]="material.quelle" name="quelle" /></label><br />
+  <label>Bestell-Nr.: <input [(ngModel)]="material.bestell_nr" name="bestellnr" /></label><br />
+  <button type="submit">Speichern</button>
+</form>

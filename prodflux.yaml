@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: Produktionssystem API
+  version: 1.0.1
+  description: REST-API zur Verwaltung von Materialien, Produkten, Fertigung und Lagerbestand pro Werkstatt
+
+servers:
+  - url: http://localhost:8000/api
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Material:
+      type: object
+      properties:
+        id:
+          type: integer
+        bezeichnung:
+          type: string
+        hersteller_bezeichnung:
+          type: string
+        preis_brutto:
+          type: number
+        quelle:
+          type: string
+        bestell_nr:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        bezeichnung:
+          type: string
+        menge:
+          type: number
+        preis:
+          type: number
+        g_preis_brutto:
+          type: number
+        netto:
+          type: number
+
+    ProductMaterial:
+      type: object
+      properties:
+        product:
+          type: integer
+        material:
+          type: integer
+        quantity_per_unit:
+          type: number
+
+    Delivery:
+      type: object
+      properties:
+        workshop:
+          type: integer
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              material:
+                type: integer
+              quantity:
+                type: number
+              note:
+                type: string
+
+paths:
+  /auth/login/:
+    post:
+      summary: Login via Benutzername und Passwort
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Erfolgreiches Login
+        '401':
+          description: Ungültige Zugangsdaten
+
+  /auth/me/:
+    get:
+      summary: Aktuellen Benutzer abrufen
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Benutzerinformationen
+
+  /workshops/:
+    get:
+      summary: Alle Werkstätten abrufen
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste aller Werkstätten
+    post:
+      summary: Neue Werkstatt anlegen
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Werkstatt erfolgreich erstellt
+
+  /materials/:
+    get:
+      summary: Alle Materialien abrufen
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste aller Materialien
+    post:
+      summary: Neues Material anlegen
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Material erfolgreich erstellt
+
+  /materials/{id}/movements:
+    get:
+      summary: Materialbewegungen abrufen
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: workshop_id
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Bewegungsverlauf
+    post:
+      summary: Manuelle Bewegung anlegen (Verlust, Korrektur, etc.)
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Bewegung erfasst
+
+  /materials/{id}/stock:
+    get:
+      summary: Lagerbestand eines Materials ermitteln
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: workshop_id
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Aktueller Lagerbestand
+
+  /deliveries/:
+    post:
+      summary: Lieferung erfassen (mehrere Positionen)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Delivery'
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Lieferung gespeichert
+
+  /products/:
+    get:
+      summary: Alle Produkte abrufen
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste aller Produkte
+    post:
+      summary: Neues Produkt anlegen
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Produkt erstellt
+
+  /product-materials/:
+    post:
+      summary: Materialbedarf pro Produkt definieren
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductMaterial'
+      responses:
+        '201':
+          description: Verknüpfung gespeichert
+
+  /manufacture/:
+    post:
+      summary: Produkt fertigen (Materialverbrauch automatisch)
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                workshop_id:
+                  type: integer
+                quantity:
+                  type: number
+      responses:
+        '200':
+          description: Fertigung durchgeführt
+        '400':
+          description: Ungültige Anfrage oder nicht genug Material
+
+  /products/{id}/stock:
+    get:
+      summary: Lagerbestand eines Produkts ermitteln
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: workshop_id
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Produktbestand zurückgegeben
+
+  /products/{id}/producible:
+    get:
+      summary: Wie viele Einheiten können aktuell gefertigt werden
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: workshop_id
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Fertigbare Menge zurückgegeben
+
+  /products/producible:
+    get:
+      summary: Übersicht aller Produkte mit fertigbaren Mengen
+      parameters:
+        - in: query
+          name: workshop_id
+          required: true
+          schema:
+            type: integer
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Übersicht fertigbarer Produkte

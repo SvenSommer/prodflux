@@ -1,0 +1,124 @@
+### Login
+POST http://localhost:8000/api/auth/login/
+Content-Type: application/json
+
+{
+  "username": "rob.hoffmann@posteo.de",
+  "password": "meqban-seVny5-kofvyq"
+}
+
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0Mjg2NTI4LCJpYXQiOjE3NDQyODYyMjgsImp0aSI6IjcyNzRlNWQ1YThiMTRhN2U5MmFlOTIxOGQ2Yjg4YTkyIiwidXNlcl9pZCI6MX0.SIpXjQBaI0UPvzfwNKwclFMIV6U6PegYiOfbIfdPQ4g
+### Authentifizierter Benutzer
+GET http://localhost:8000/api/auth/me/
+Authorization: Bearer {{access_token}}
+
+
+### Alle Werkstätten anzeigen
+GET http://localhost:8000/api/workshops/
+Authorization: Bearer {{access_token}}
+
+### Alle Materialien anzeigen
+GET http://localhost:8000/api/materials/
+Authorization: Bearer {{access_token}}
+
+### Materialbewegungen für Material 1
+GET http://localhost:8000/api/materials/1/movements?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Alle Produkte anzeigen
+GET http://localhost:8000/api/products/
+Authorization: Bearer {{access_token}}
+
+### Produktbestand in Werkstatt 1
+GET http://localhost:8000/api/products/1/stock?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Materialien, die für Produkt 1 benötigt werden
+GET http://localhost:8000/api/products/1/materials/
+Authorization: Bearer {{access_token}}
+
+### Anzahl fertigbarer Einheiten abfragen
+GET http://localhost:8000/api/products/1/producible?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Übersicht aller Produkte mit fertigbaren Einheiten
+GET http://localhost:8000/api/products/producible?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Workshop anlegen
+POST http://localhost:8000/api/workshops/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "Werkstatt Test"
+}
+
+### Material anlegen
+POST http://localhost:8000/api/materials/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "bezeichnung": "D-Sub Schraubsverriegelungssatz M3",
+  "hersteller_bezeichnung": "BKL 10120291",
+  "preis_brutto": 1.15,
+  "quelle": "reichelt.de",
+  "bestell_nr": "BKL 10120291"
+}
+
+### Lieferung anlegen
+POST http://localhost:8000/api/deliveries/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "workshop": 1,
+  "note": "Erstlieferung",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 100,
+      "note": "Initiale Lagerbestückung"
+    }
+  ]
+}
+
+### Materialbestand abfragen
+GET http://localhost:8000/api/materials/1/stock?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Produkt anlegen
+POST http://localhost:8000/api/products/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "bezeichnung": "SD-ATR833-E",
+  "menge": 1,
+  "preis": 119,
+  "g_preis_brutto": 100,
+  "netto": 119
+}
+
+### Material zu Produkt zuordnen
+POST http://localhost:8000/api/product-materials/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "product": 1,
+  "material": 1,
+  "quantity_per_unit": 2
+}
+
+### Produkt fertigen
+POST http://localhost:8000/api/manufacture/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "product_id": 1,
+  "workshop_id": 1,
+  "quantity": 3
+}

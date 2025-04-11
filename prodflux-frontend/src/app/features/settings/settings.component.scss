@@ -1,0 +1,24 @@
+.settings-card {
+  max-width: 800px;
+  margin: 24px auto;
+  padding: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.grow {
+  flex: 1;
+}
+
+.full-width-table {
+  width: 100%;
+}
+
+.mt-4 {
+  margin-top: 24px;
+}

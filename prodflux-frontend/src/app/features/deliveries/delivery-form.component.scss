@@ -1,0 +1,36 @@
+.form-container {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+.delivery-form-card {
+  padding: 24px;
+  position: relative;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-width-table {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.quantity-field {
+  width: 80px;
+}
+
+.actions {
+  margin-top: 32px;
+  display: flex;
+  justify-content: flex-end;
+}

@@ -1,12 +1,9 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .models import Delivery, Material, MaterialMovement
-from .serializers import DeliverySerializer, MaterialSerializer, MaterialMovementSerializer
+from .models import Delivery, Material, MaterialMovement, Order
+from .serializers import DeliverySerializer, MaterialSerializer, MaterialMovementSerializer, OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Sum
-from .models import MaterialMovement
 
 class MaterialListCreateView(generics.ListCreateAPIView):
     queryset = Material.objects.all()
@@ -40,6 +37,15 @@ class DeliveryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DeliverySerializer
     permission_classes = [IsAuthenticated]
 
+class OrderListCreateView(generics.ListCreateAPIView):
+    queryset = Order.objects.all().order_by('-bestellt_am')
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -65,3 +71,30 @@ def material_stock_view(request, material_id):
         "workshop_id": workshop_id,
         "current_stock": total
     })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def all_materials_stock_by_workshop(request, workshop_id):
+    materials = Material.objects.all()
+    response_data = []
+
+    for material in materials:
+        movements = MaterialMovement.objects.filter(
+            material=material,
+            workshop_id=workshop_id
+        )
+
+        total = 0
+        for m in movements:
+            if m.change_type in ['lieferung', 'korrektur']:
+                total += m.quantity
+            elif m.change_type in ['verbrauch', 'verlust']:
+                total -= m.quantity
+
+        response_data.append({
+            "material_id": material.id,
+            "bezeichnung": material.bezeichnung,
+            "bestand": total
+        })
+
+    return Response(response_data)

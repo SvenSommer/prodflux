@@ -1,0 +1,41 @@
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 24px auto;
+  max-width: 1200px;
+  padding: 0 16px;
+}
+
+.full-width-table {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 32px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.mat-column-note {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mat-column-actions {
+  text-align: right;
+}
+
+button[mat-icon-button] {
+  margin-left: 4px;
+}
+
+.material-list {
+  padding-left: 16px;
+  margin: 0;
+  list-style-type: disc;
+
+  li {
+    margin-bottom: 2px;
+  }
+}

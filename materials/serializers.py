@@ -1,7 +1,7 @@
 # serializers.py (in materials)
 
 from rest_framework import serializers
-from .models import Material, MaterialMovement, Delivery, DeliveryItem
+from .models import Material, MaterialMovement, Delivery, DeliveryItem, Order, OrderItem
 
 class MaterialSerializer(serializers.ModelSerializer):
     bild_url = serializers.SerializerMethodField()
@@ -26,7 +26,7 @@ class MaterialMovementSerializer(serializers.ModelSerializer):
 class DeliveryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeliveryItem
-        fields = ['material', 'quantity', 'note', 'preis_pro_stueck', 'quelle']
+        fields = ['material', 'quantity', 'note']
 
 class DeliverySerializer(serializers.ModelSerializer):
     items = DeliveryItemSerializer(many=True)
@@ -49,11 +49,39 @@ class DeliverySerializer(serializers.ModelSerializer):
         instance.workshop = validated_data.get('workshop', instance.workshop)
         instance.save()
 
-        # Vorherige Items und Bewegungen löschen
         instance.items.all().delete()
-
-        # Neue Items + Bewegungen erzeugen
         for item_data in items_data:
             DeliveryItem.objects.create(delivery=instance, **item_data)
+
+        return instance
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'material', 'quantity', 'preis_pro_stueck', 'preis_pro_stueck_mit_versand', 'quelle']
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'bestellt_am', 'angekommen_am', 'versandkosten', 'notiz', 'items']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        order = Order.objects.create(**validated_data)
+        for item in items_data:
+            OrderItem.objects.create(order=order, **item)
+        return order
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', [])
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        instance.items.all().delete()
+        for item in items_data:
+            OrderItem.objects.create(order=instance, **item)
 
         return instance

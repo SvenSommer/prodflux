@@ -1,0 +1,64 @@
+<div class="form-container">
+  <mat-card class="delivery-form-card">
+    <mat-card-title>{{ deliveryId ? 'Lieferung bearbeiten' : 'Neue Lieferung anlegen' }}</mat-card-title>
+
+    <form (ngSubmit)="save()">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Werkstatt</mat-label>
+        <mat-select [(ngModel)]="workshopId" name="workshopId" required>
+          <mat-option *ngFor="let w of workshops" [value]="w.id">{{ w.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Notiz</mat-label>
+        <textarea matInput [(ngModel)]="note" name="note"></textarea>
+      </mat-form-field>
+
+      <!-- Materialzuordnung -->
+      <div class="mt-4">
+        <div class="header-row">
+          <h3>Material-Zuordnung</h3>
+        </div>
+
+        <table mat-table [dataSource]="materialsList" class="mat-elevation-z1 full-width-table">
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef class="text-center">Menge</th>
+            <td mat-cell *matCellDef="let mat" class="text-center">
+              <mat-form-field appearance="outline" class="quantity-field">
+                <input
+                  matInput
+                  type="number"
+                  step="1"
+                  min="0"
+                  [(ngModel)]="materialAssignments[mat.id]"
+                  [name]="'qty_' + mat.id"
+                />
+              </mat-form-field>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="material">
+            <th mat-header-cell *matHeaderCellDef>Material</th>
+            <td mat-cell *matCellDef="let mat">{{ mat.bezeichnung }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="hersteller">
+            <th mat-header-cell *matHeaderCellDef>Hersteller</th>
+            <td mat-cell *matCellDef="let mat">{{ mat.hersteller_bezeichnung }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['quantity', 'material', 'hersteller']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['quantity', 'material', 'hersteller']"></tr>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button mat-raised-button color="primary" type="submit">
+          <mat-icon>save</mat-icon>
+          Speichern
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</div>

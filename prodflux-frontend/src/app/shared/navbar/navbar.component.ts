@@ -1,7 +1,8 @@
 // src/app/shared/navbar/navbar.component.ts
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { WorkshopsService, Workshop } from '../../features/settings/workshop.services';
 
 @Component({
   selector: 'app-navbar',
@@ -10,4 +11,11 @@ import { CommonModule } from '@angular/common';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent {}
+export class NavbarComponent {
+  workshopsService = inject(WorkshopsService);
+  workshops: Workshop[] = [];
+
+  ngOnInit() {
+    this.workshopsService.getAll().subscribe(ws => this.workshops = ws);
+  }
+}

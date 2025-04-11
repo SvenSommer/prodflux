@@ -143,6 +143,9 @@ Authorization: Bearer {{access_token}}
 GET http://localhost:8000/api/materials/{{material_id}}/movements?workshop_id={{workshop_id}}
 Authorization: Bearer {{access_token}}
 
+### Bestand aller Materialien in Werkstatt anzeigen
+GET http://localhost:8000/api/workshops/2/material-stock/
+Authorization: Bearer {{access_token}}
 
 ### 📇 PRODUKTE
 
@@ -283,11 +286,11 @@ Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "workshop": {{workshop_id}},
+  "workshop": 1,
   "note": "Initiale Lieferung",
   "items": [
     {
-      "material": {{material_id}},
+      "material": 1,
       "quantity": 100,
       "note": "Lagerauffüllung"
     }
@@ -312,4 +315,69 @@ Content-Type: application/json
 }
 ### Lieferung löschen
 DELETE http://localhost:8000/api/deliveries/1/
+Authorization: Bearer {{access_token}}
+
+
+### Bestellung anlegen
+POST http://localhost:8000/api/orders/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "bestellt_am": "2025-04-01",
+  "angekommen_am": "2025-04-09",
+  "versandkosten": 6.00,
+  "notiz": "Reichelt-Sammelbestellung",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 10,
+      "preis_pro_stueck": 0.95,
+      "quelle": "reichelt.de"
+    },
+    {
+      "material": 2,
+      "quantity": 30,
+      "preis_pro_stueck": 1.25,
+      "quelle": "reichelt.de"
+    }
+  ]
+}
+
+### Bestellung aktualisieren
+PUT http://localhost:8000/api/orders/2/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "bestellt_am": "2025-04-10",
+  "angekommen_am": "2025-04-13",
+  "versandkosten": 9.99,
+  "notiz": "Aktualisierte Bestellung mit korrigierten Mengen",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 15,
+      "preis_pro_stueck": 0.95,
+      "quelle": "reichelt.de"
+    },
+    {
+      "material": 2,
+      "quantity": 20,
+      "preis_pro_stueck": 1.19,
+      "quelle": "reichelt.de"
+    }
+  ]
+}
+
+### Alle Bestellungen anzeigen
+GET http://localhost:8000/api/orders/
+Authorization: Bearer {{access_token}}
+
+### Einzelne Bestellung anzeigen
+GET http://localhost:8000/api/orders/2/
+Authorization: Bearer {{access_token}}
+
+### Bestellung löschen
+DELETE http://localhost:8000/api/orders/1/
 Authorization: Bearer {{access_token}}

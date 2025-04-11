@@ -1,9 +1,18 @@
-<!-- src/app/shared/navbar/navbar.component.html -->
 <nav class="navbar">
   <ul>
     <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+    <li *ngFor="let w of workshops">
+      <a [routerLink]="['/workshops', w.id]" routerLinkActive="active">{{ w.name }}</a>
+    </li>
+
     <li><a routerLink="/materials" routerLinkActive="active">Materialien</a></li>
     <li><a routerLink="/products" routerLinkActive="active">Produkte</a></li>
+    <li><a routerLink="/deliveries" routerLinkActive="active">Lieferungen</a></li>
+    <li><a routerLink="/settings" routerLinkActive="active">Einstellungen</a></li>
+
+    <!-- Dynamisch generierte Werkstatt-Links -->
+
+
     <li><a routerLink="/login">Login</a></li>
   </ul>
 </nav>

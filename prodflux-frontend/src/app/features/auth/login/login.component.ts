@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../../enviroments/enviroment';
 
 @Component({
   selector: 'app-login',
@@ -21,21 +21,15 @@ export class LoginComponent {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      username: [''],
-      password: [''],
+      username: [environment.production ? '' : 'rh'],
+      password: [environment.production ? '' : 'meqban-seVny5-kofvyq'],
     });
   }
-/*
-  ngOnInit() {
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
-    }
-  }
- */
+
   submit() {
     const { username, password } = this.loginForm.value;
     this.authService.login(username, password).subscribe({
-      next: () => this.router.navigate(['/dashboard']), // später ersetzen
+      next: () => this.router.navigate(['/dashboard']),
       error: () => this.error = 'Login fehlgeschlagen',
     });
   }

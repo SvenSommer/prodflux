@@ -1,8 +1,7 @@
-// src/app/features/materials/material-form.component.ts
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MaterialsService } from './materials.service';
 
 @Component({
@@ -13,6 +12,9 @@ import { MaterialsService } from './materials.service';
 })
 export class MaterialFormComponent {
   private materialsService = inject(MaterialsService);
+  private router = inject(Router);
+
+  isEdit = false; // 👈 wichtig für die gemeinsame Template-Nutzung
 
   material = {
     bezeichnung: '',
@@ -25,6 +27,7 @@ export class MaterialFormComponent {
   onSubmit() {
     this.materialsService.createMaterial(this.material).subscribe(() => {
       alert('Material erfolgreich erstellt');
+      this.router.navigate(['/materials']);
     });
   }
 }

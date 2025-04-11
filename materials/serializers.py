@@ -30,3 +30,18 @@ class DeliverySerializer(serializers.ModelSerializer):
         for item_data in items_data:
             DeliveryItem.objects.create(delivery=delivery, **item_data)
         return delivery
+
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', [])
+        instance.note = validated_data.get('note', instance.note)
+        instance.workshop = validated_data.get('workshop', instance.workshop)
+        instance.save()
+
+        # Vorherige Items und Bewegungen löschen
+        instance.items.all().delete()
+
+        # Neue Items + Bewegungen erzeugen
+        for item_data in items_data:
+            DeliveryItem.objects.create(delivery=instance, **item_data)
+
+        return instance

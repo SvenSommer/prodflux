@@ -13,6 +13,11 @@ class MaterialListCreateView(generics.ListCreateAPIView):
     serializer_class = MaterialSerializer
     permission_classes = [IsAuthenticated]
 
+class MaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Material.objects.all()
+    serializer_class = MaterialSerializer
+    permission_classes = [IsAuthenticated]
+
 class MaterialMovementListCreateView(generics.ListCreateAPIView):
     serializer_class = MaterialMovementSerializer
     permission_classes = [IsAuthenticated]
@@ -25,7 +30,12 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
         material_id = self.kwargs['pk']
         serializer.save(material_id=material_id)
 
-class DeliveryCreateView(generics.CreateAPIView):
+class DeliveryListCreateView(generics.ListCreateAPIView):
+    queryset = Delivery.objects.all().order_by('-created_at')
+    serializer_class = DeliverySerializer
+    permission_classes = [IsAuthenticated]
+
+class DeliveryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Delivery.objects.all()
     serializer_class = DeliverySerializer
     permission_classes = [IsAuthenticated]

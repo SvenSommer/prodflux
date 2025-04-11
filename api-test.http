@@ -1,91 +1,107 @@
+### 🔐 AUTHENTIFIZIERUNG
+
 ### Login
 POST http://localhost:8000/api/auth/login/
 Content-Type: application/json
 
 {
-  "username": "rob.hoffmann@posteo.de",
+  "username": "rh",
   "password": "meqban-seVny5-kofvyq"
 }
 
-@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0Mjg2NTI4LCJpYXQiOjE3NDQyODYyMjgsImp0aSI6IjcyNzRlNWQ1YThiMTRhN2U5MmFlOTIxOGQ2Yjg4YTkyIiwidXNlcl9pZCI6MX0.SIpXjQBaI0UPvzfwNKwclFMIV6U6PegYiOfbIfdPQ4g
-### Authentifizierter Benutzer
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MzU3ODgwLCJpYXQiOjE3NDQzNTc1ODAsImp0aSI6IjJhYTcxNWVjM2YzMjQ4YTA4NjAwYjQyYmRhNDA1ZWM5IiwidXNlcl9pZCI6MX0.RdLXBoIFmlGToFmHwOqbB5ngmGUjVqImCZ6AskSO6v4
+
+### Token-Info
 GET http://localhost:8000/api/auth/me/
 Authorization: Bearer {{access_token}}
 
+### Logout (optional)
+POST http://localhost:8000/api/auth/logout/
+Authorization: Bearer {{access_token}}
+
+
+### 🏭 WERKSTÄTTEN
 
 ### Alle Werkstätten anzeigen
 GET http://localhost:8000/api/workshops/
 Authorization: Bearer {{access_token}}
 
-### Alle Materialien anzeigen
-GET http://localhost:8000/api/materials/
-Authorization: Bearer {{access_token}}
-
-### Materialbewegungen für Material 1
-GET http://localhost:8000/api/materials/1/movements?workshop_id=1
-Authorization: Bearer {{access_token}}
-
-### Alle Produkte anzeigen
-GET http://localhost:8000/api/products/
-Authorization: Bearer {{access_token}}
-
-### Produktbestand in Werkstatt 1
-GET http://localhost:8000/api/products/1/stock?workshop_id=1
-Authorization: Bearer {{access_token}}
-
-### Materialien, die für Produkt 1 benötigt werden
-GET http://localhost:8000/api/products/1/materials/
-Authorization: Bearer {{access_token}}
-
-### Anzahl fertigbarer Einheiten abfragen
-GET http://localhost:8000/api/products/1/producible?workshop_id=1
-Authorization: Bearer {{access_token}}
-
-### Übersicht aller Produkte mit fertigbaren Einheiten
-GET http://localhost:8000/api/products/producible?workshop_id=1
-Authorization: Bearer {{access_token}}
-
-### Workshop anlegen
+### Werkstatt anlegen
 POST http://localhost:8000/api/workshops/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "name": "Werkstatt Test"
+  "name": "Neue Werkstatt"
 }
+
+@workshop_id = 3
+### Werkstatt aktualisieren
+PUT http://localhost:8000/api/workshops/{{workshop_id}}/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "Werkstatt aktualisiert"
+}
+
+### Werkstatt löschen
+DELETE http://localhost:8000/api/workshops/{{workshop_id}}/
+Authorization: Bearer {{access_token}}
+
+
+### 🧱 MATERIALIEN
+
+### Alle Materialien anzeigen
+GET http://localhost:8000/api/materials/
+Authorization: Bearer {{access_token}}
 
 ### Material anlegen
 POST http://localhost:8000/api/materials/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
-{
-  "bezeichnung": "D-Sub Schraubsverriegelungssatz M3",
-  "hersteller_bezeichnung": "BKL 10120291",
-  "preis_brutto": 1.15,
-  "quelle": "reichelt.de",
-  "bestell_nr": "BKL 10120291"
-}
+{                                  
+    "bezeichnung": "D-Sub Schraubensatz",    
+    "hersteller_bezeichnung": "BKL 10120291",
+    "preis_brutto": 1.15,   
+    "quelle": "reichelt.de",    
+    "bestell_nr": "BKL 10120291"
+  }
 
-### Lieferung anlegen
-POST http://localhost:8000/api/deliveries/
+
+@material_id = 4
+### Material anzeigen
+GET http://localhost:8000/api/materials/{{material_id}}/
+Authorization: Bearer {{access_token}}
+
+### Material aktualisieren
+PUT http://localhost:8000/api/materials/{{material_id}}/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "workshop": 1,
-  "note": "Erstlieferung",
-  "items": [
-    {
-      "material": 1,
-      "quantity": 100,
-      "note": "Initiale Lagerbestückung"
-    }
-  ]
+  "bezeichnung": "D-Sub Schraubensatz (aktualisiert)",
+  "preis_brutto": 5.00
 }
 
-### Materialbestand abfragen
-GET http://localhost:8000/api/materials/1/stock?workshop_id=1
+### Material löschen
+DELETE http://localhost:8000/api/materials/{{material_id}}/
+Authorization: Bearer {{access_token}}
+
+### Materialbestand (in Werkstatt)
+GET http://localhost:8000/api/materials/{{material_id}}/stock?workshop_id={{workshop_id}}
+Authorization: Bearer {{access_token}}
+
+### Materialbewegungen (in Werkstatt)
+GET http://localhost:8000/api/materials/{{material_id}}/movements?workshop_id={{workshop_id}}
+Authorization: Bearer {{access_token}}
+
+
+### 📇 PRODUKTE
+
+### Alle Produkte anzeigen
+GET http://localhost:8000/api/products/
 Authorization: Bearer {{access_token}}
 
 ### Produkt anlegen
@@ -94,23 +110,43 @@ Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "bezeichnung": "SD-ATR833-E",
+  "bezeichnung": "SD-ATR833-E (neu)",
   "menge": 1,
   "preis": 119,
   "g_preis_brutto": 100,
   "netto": 119
 }
 
-### Material zu Produkt zuordnen
-POST http://localhost:8000/api/product-materials/
+@product_id = 1
+
+### Produkt anzeigen
+GET http://localhost:8000/api/products/{{product_id}}/
+Authorization: Bearer {{access_token}}
+
+### Produkt aktualisieren
+PUT http://localhost:8000/api/products/{{product_id}}/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "product": 1,
-  "material": 1,
-  "quantity_per_unit": 2
+  "bezeichnung": "Überarbeitetes Produkt",
+  "menge": 1,
+  "preis": 110,
+  "g_preis_brutto": 100,
+  "netto": 119
 }
+
+### Produkt löschen
+DELETE http://localhost:8000/api/products/{{product_id}}/
+Authorization: Bearer {{access_token}}
+
+### Produktbestand in Werkstatt
+GET http://localhost:8000/api/products/{{product_id}}/stock?workshop_id={{workshop_id}}
+Authorization: Bearer {{access_token}}
+
+### Benötigte Materialien für Produkt
+GET http://localhost:8000/api/products/1/materials/
+Authorization: Bearer {{access_token}}
 
 ### Produkt fertigen
 POST http://localhost:8000/api/manufacture/
@@ -118,7 +154,81 @@ Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "product_id": 1,
-  "workshop_id": 1,
-  "quantity": 3
+  "product_id": {{product_id}},
+  "workshop_id": {{workshop_id}},
+  "quantity": 5
 }
+
+### Fertigbare Stückzahl für Produkt
+GET http://localhost:8000/api/products/{{product_id}}/producible?workshop_id={{workshop_id}}
+Authorization: Bearer {{access_token}}
+
+### Übersicht fertigbarer Produkte
+GET http://localhost:8000/api/products/producible?workshop_id={{workshop_id}}
+Authorization: Bearer {{access_token}}
+
+
+### 🔗 MATERIAL ↔ PRODUKT-ZUORDNUNG
+
+### Material zu Produkt zuordnen
+POST http://localhost:8000/api/product-materials/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "product": {{product_id}},
+  "material": {{material_id}},
+  "quantity_per_unit": 2
+}
+
+### Material-Zuordnung löschen
+DELETE http://localhost:8000/api/product-materials/{{assignment_id}}/
+Authorization: Bearer {{access_token}}
+
+
+### 📦 LIEFERUNGEN
+
+### Alle Lieferungen anzeigen
+GET http://localhost:8000/api/deliveries/
+Authorization: Bearer {{access_token}}
+
+### Lieferung anzeigen
+GET http://localhost:8000/api/deliveries/1/
+Authorization: Bearer {{access_token}}
+
+### Lieferung anlegen
+POST http://localhost:8000/api/deliveries/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "workshop": {{workshop_id}},
+  "note": "Initiale Lieferung",
+  "items": [
+    {
+      "material": {{material_id}},
+      "quantity": 100,
+      "note": "Lagerauffüllung"
+    }
+  ]
+}
+
+### Lieferung vollständig aktualisieren
+PUT http://localhost:8000/api/deliveries/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "workshop": 1,
+  "note": "Geänderte Lieferung",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 80,
+      "note": "Erstlieferung 100 Stück (angepasst)"
+    }
+  ]
+}
+### Lieferung löschen
+DELETE http://localhost:8000/api/deliveries/1/
+Authorization: Bearer {{access_token}}

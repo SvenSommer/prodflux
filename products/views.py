@@ -12,7 +12,17 @@ class ProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
 
+class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated]
+
 class ProductMaterialCreateView(generics.CreateAPIView):
+    queryset = ProductMaterial.objects.all()
+    serializer_class = ProductMaterialSerializer
+    permission_classes = [IsAuthenticated]
+
+class ProductMaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductMaterial.objects.all()
     serializer_class = ProductMaterialSerializer
     permission_classes = [IsAuthenticated]

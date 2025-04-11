@@ -21,6 +21,14 @@ export class MaterialsService {
     return this.http.get<Material[]>(this.baseUrl);
   }
 
+  getMaterial(id: number) {
+    return this.http.get<Material>(`${this.baseUrl}${id}/`);
+  }
+
+  updateMaterial(id: number, data: Partial<Material>) {
+    return this.http.put<Material>(`${this.baseUrl}${id}/`, data);
+  }
+
   createMaterial(data: Omit<Material, 'id'>): Observable<Material> {
     return this.http.post<Material>(this.baseUrl, data);
   }

@@ -20,3 +20,8 @@ class WorkshopListCreateView(generics.ListCreateAPIView):
     queryset = Workshop.objects.all()
     serializer_class = WorkshopSerializer
     permission_classes = [IsAuthenticated]
+
+class WorkshopDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Workshop.objects.all()
+    serializer_class = WorkshopSerializer
+    permission_classes = [IsAuthenticated]

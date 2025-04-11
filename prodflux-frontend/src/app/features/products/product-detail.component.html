@@ -1,0 +1,51 @@
+<h2>Produktdetails</h2>
+<div *ngIf="product">
+  <p><strong>Bezeichnung:</strong> {{ product.bezeichnung }}</p>
+  <p><strong>Preis:</strong> {{ product.preis }} €</p>
+  <p><strong>Menge:</strong> {{ product.menge }}</p>
+
+  <button (click)="deleteProduct()">Produkt löschen</button>
+  <button (click)="toggleEditMode()">
+    {{ editMode ? 'Speichern & schließen' : 'Bearbeiten' }}
+  </button>
+
+  <!-- VIEW MODE -->
+  <div *ngIf="!editMode">
+    <h3>Zugeordnete Materialien</h3>
+    <ul>
+      <li *ngFor="let m of materials">
+        {{ getMaterialBezeichnung(m.material) }} – Menge: {{ m.quantity_per_unit }}
+      </li>
+    </ul>
+  </div>
+
+  <!-- EDIT MODE -->
+  <form *ngIf="editMode" (ngSubmit)="toggleEditMode()">
+    <h3>Material-Zuordnung bearbeiten</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Hersteller</th>
+          <th>Menge pro Einheit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let mat of materialsList">
+          <td>{{ mat.bezeichnung }}</td>
+          <td>{{ mat.hersteller_bezeichnung }}</td>
+          <td>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="materialAssignments[mat.id]"
+              [name]="'qty_' + mat.id"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="submit">Speichern & schließen</button>
+  </form>
+</div>

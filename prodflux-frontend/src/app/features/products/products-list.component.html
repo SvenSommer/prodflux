@@ -1,0 +1,21 @@
+<h2>Produkte</h2>
+
+<!-- Neuer Produkt Button -->
+<p>
+  <a routerLink="/products/new">
+    <button>+ Neues Produkt</button>
+  </a>
+</p>
+
+<!-- Liste aller Produkte -->
+<ul>
+  <li *ngFor="let product of products$ | async">
+    <a [routerLink]="['/products', product.id]">
+      {{ product.bezeichnung }} – {{ product.preis }} €
+    </a>
+    |
+    <a [routerLink]="['/products', product.id, 'edit']">
+      <button>Bearbeiten</button>
+    </a>
+  </li>
+</ul>

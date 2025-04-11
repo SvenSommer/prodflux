@@ -104,18 +104,35 @@ Authorization: Bearer {{access_token}}
 GET http://localhost:8000/api/products/
 Authorization: Bearer {{access_token}}
 
-### Produkt anlegen
+### Produkt anlegen (ohne Bild)
 POST http://localhost:8000/api/products/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
   "bezeichnung": "SD-ATR833-E (neu)",
-  "menge": 1,
-  "preis": 119,
-  "g_preis_brutto": 100,
-  "netto": 119
+  "artikelnummer": "SD-ATR833-E"
 }
+
+### Produkt mit Bild anlegen
+POST http://localhost:8000/api/products/
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="bezeichnung"
+
+SD-ATR833-E (neu)
+--boundary
+Content-Disposition: form-data; name="artikelnummer"
+
+SD-ATR833-E
+--boundary
+Content-Disposition: form-data; name="bild"; filename="bild.jpg"
+Content-Type: image/jpeg
+
+< ./pfad/zum/bild.jpg
+--boundary--
 
 @product_id = 1
 
@@ -130,11 +147,28 @@ Content-Type: application/json
 
 {
   "bezeichnung": "Überarbeitetes Produkt",
-  "menge": 1,
-  "preis": 110,
-  "g_preis_brutto": 100,
-  "netto": 119
+  "artikelnummer": "SD-ATR833-E-REVISED"
 }
+
+### Produkt aktualisieren mit Bild
+PUT http://localhost:8000/api/products/{{product_id}}/
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="bezeichnung"
+
+Überarbeitetes Produkt
+--boundary
+Content-Disposition: form-data; name="artikelnummer"
+
+SD-ATR833-E-REVISED
+--boundary
+Content-Disposition: form-data; name="bild"; filename="neues-bild.jpg"
+Content-Type: image/jpeg
+
+< ./pfad/zum/neuen-bild.jpg
+--boundary--
 
 ### Produkt löschen
 DELETE http://localhost:8000/api/products/{{product_id}}/

@@ -1,21 +1,36 @@
-<h2>Produkte</h2>
-
-<!-- Neuer Produkt Button -->
-<p>
-  <a routerLink="/products/new">
-    <button>+ Neues Produkt</button>
-  </a>
-</p>
-
-<!-- Liste aller Produkte -->
-<ul>
-  <li *ngFor="let product of products$ | async">
-    <a [routerLink]="['/products', product.id]">
-      {{ product.bezeichnung }} – {{ product.preis }} €
+<mat-card class="product-list-card">
+  <div class="header-row">
+    <h2>Produkte</h2>
+    <a routerLink="/products/new">
+      <button mat-raised-button color="primary">
+        <mat-icon>add</mat-icon>
+        Neues Produkt
+      </button>
     </a>
-    |
-    <a [routerLink]="['/products', product.id, 'edit']">
-      <button>Bearbeiten</button>
-    </a>
-  </li>
-</ul>
+  </div>
+
+
+<div class="product-grid" *ngIf="products$ | async as products">
+  <mat-card class="product-card" *ngFor="let product of products">
+    <mat-card-header>
+      <mat-card-title>{{ product.bezeichnung }}</mat-card-title>
+      <mat-card-subtitle>Artikelnummer: {{ product.artikelnummer }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <img mat-card-image *ngIf="product.bild" [src]="product.bild" alt="Produktbild" />
+
+    <mat-card-actions align="end">
+      <a [routerLink]="['/products', product.id]">
+        <button mat-icon-button matTooltip="Details">
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </a>
+      <a [routerLink]="['/products', product.id, 'edit']">
+        <button mat-icon-button matTooltip="Bearbeiten">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </a>
+    </mat-card-actions>
+  </mat-card>
+</div>
+</mat-card>

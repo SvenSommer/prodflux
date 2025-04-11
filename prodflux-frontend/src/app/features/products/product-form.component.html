@@ -1,10 +1,37 @@
-<!-- product-form.component.html -->
-<h2>{{ productId ? 'Produkt bearbeiten' : 'Neues Produkt anlegen' }}</h2>
-<form (ngSubmit)="save()">
-  <label>Bezeichnung: <input [(ngModel)]="product.bezeichnung" name="bezeichnung" /></label><br />
-  <label>Menge: <input type="number" [(ngModel)]="product.menge" name="menge" /></label><br />
-  <label>Preis: <input type="number" [(ngModel)]="product.preis" name="preis" /></label><br />
-  <label>Brutto-Gesamtpreis: <input type="number" [(ngModel)]="product.g_preis_brutto" name="gpreis" /></label><br />
-  <label>Netto: <input type="number" [(ngModel)]="product.netto" name="netto" /></label><br />
-  <button type="submit">Speichern</button>
-</form>
+<mat-card class="product-form-card">
+  <mat-card-title>
+    {{ productId ? 'Produkt bearbeiten' : 'Neues Produkt anlegen' }}
+  </mat-card-title>
+
+  <form (ngSubmit)="save()" enctype="multipart/form-data" class="product-form" #form="ngForm">
+    <mat-form-field appearance="fill">
+      <mat-label>Bezeichnung</mat-label>
+      <input matInput [(ngModel)]="product.bezeichnung" name="bezeichnung" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Artikelnummer</mat-label>
+      <input matInput [(ngModel)]="product.artikelnummer" name="artikelnummer" required />
+    </mat-form-field>
+
+    <div class="image-preview" *ngIf="currentImageUrl || newImagePreview">
+      <p class="text-sm mb-1">Bildvorschau:</p>
+      <img
+        [src]="newImagePreview || currentImageUrl"
+        alt="Produktbild"
+        class="preview-image"
+      />
+    </div>
+
+    <div class="file-upload">
+      <label>Produktbild auswählen:</label>
+      <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+    </div>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+        Speichern
+      </button>
+    </div>
+  </form>
+</mat-card>

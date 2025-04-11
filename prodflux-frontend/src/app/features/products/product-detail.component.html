@@ -1,51 +1,101 @@
-<h2>Produktdetails</h2>
-<div *ngIf="product">
-  <p><strong>Bezeichnung:</strong> {{ product.bezeichnung }}</p>
-  <p><strong>Preis:</strong> {{ product.preis }} €</p>
-  <p><strong>Menge:</strong> {{ product.menge }}</p>
-
-  <button (click)="deleteProduct()">Produkt löschen</button>
-  <button (click)="toggleEditMode()">
-    {{ editMode ? 'Speichern & schließen' : 'Bearbeiten' }}
-  </button>
-
-  <!-- VIEW MODE -->
-  <div *ngIf="!editMode">
-    <h3>Zugeordnete Materialien</h3>
-    <ul>
-      <li *ngFor="let m of materials">
-        {{ getMaterialBezeichnung(m.material) }} – Menge: {{ m.quantity_per_unit }}
-      </li>
-    </ul>
+<mat-card class="product-card">
+  <!-- Löschen-Icon oben rechts -->
+  <div class="delete-button">
+    <button mat-icon-button color="warn" (click)="deleteProduct()" matTooltip="Produkt löschen">
+      <mat-icon>delete</mat-icon>
+    </button>
   </div>
 
-  <!-- EDIT MODE -->
-  <form *ngIf="editMode" (ngSubmit)="toggleEditMode()">
-    <h3>Material-Zuordnung bearbeiten</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Material</th>
-          <th>Hersteller</th>
-          <th>Menge pro Einheit</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let mat of materialsList">
-          <td>{{ mat.bezeichnung }}</td>
-          <td>{{ mat.hersteller_bezeichnung }}</td>
-          <td>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              [(ngModel)]="materialAssignments[mat.id]"
-              [name]="'qty_' + mat.id"
-            />
+  <mat-card-title>Produktdetails</mat-card-title>
+
+  <mat-card-content>
+    <p><strong>Bezeichnung:</strong> {{ product?.bezeichnung }}</p>
+    <p><strong>Artikelnummer:</strong> {{ product?.artikelnummer }}</p>
+
+    <div *ngIf="product?.bild" class="image-container">
+      <img [src]="product?.bild" alt="Produktbild" class="product-image" />
+    </div>
+
+    <!-- VIEW-MODE -->
+    <div *ngIf="!editMode" class="mt-4">
+      <div class="header-row">
+        <h3>Zugeordnete Materialien</h3>
+        <button mat-icon-button color="primary" (click)="toggleEditMode()" matTooltip="Bearbeiten">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </div>
+
+      <table mat-table [dataSource]="materials" class="mat-elevation-z1 full-width-table">
+
+        <!-- Nummerierungsspalte -->
+        <ng-container matColumnDef="nr">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let m; let i = index">{{ i + 1 }}</td>
+        </ng-container>
+
+        <!-- Menge -->
+        <ng-container matColumnDef="menge">
+          <th mat-header-cell *matHeaderCellDef>Menge</th>
+          <td mat-cell *matCellDef="let m">{{ m.quantity_per_unit }}</td>
+        </ng-container>
+
+        <!-- Materialbezeichnung -->
+        <ng-container matColumnDef="bezeichnung">
+          <th mat-header-cell *matHeaderCellDef>Material</th>
+          <td mat-cell *matCellDef="let m">{{ getMaterialBezeichnung(m.material) }}</td>
+        </ng-container>
+
+        <!-- Hersteller -->
+        <ng-container matColumnDef="hersteller">
+          <th mat-header-cell *matHeaderCellDef>Hersteller</th>
+          <td mat-cell *matCellDef="let m">{{ getMaterialHersteller(m.material) }}</td>
+        </ng-container>
+
+        <!-- Header + Rows -->
+        <tr mat-header-row *matHeaderRowDef="['nr', 'menge', 'bezeichnung', 'hersteller']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['nr', 'menge', 'bezeichnung', 'hersteller']"></tr>
+      </table>
+    </div>
+
+    <!-- EDIT-MODE -->
+    <form *ngIf="editMode" (ngSubmit)="toggleEditMode()" class="mt-4">
+      <div class="header-row">
+        <h3>Material-Zuordnung bearbeiten</h3>
+        <button mat-raised-button color="accent" type="submit">
+          <mat-icon class="mr-1">save</mat-icon> Speichern & schließen
+        </button>
+      </div>
+
+      <table mat-table [dataSource]="materialsList" class="mat-elevation-z1 full-width-table">
+        <ng-container matColumnDef="quantity">
+          <th mat-header-cell *matHeaderCellDef class="text-center">Menge</th>
+          <td mat-cell *matCellDef="let mat" class="text-center">
+            <mat-form-field appearance="outline" class="quantity-field">
+              <input
+                matInput
+                type="number"
+                step="1"
+                min="0"
+                [(ngModel)]="materialAssignments[mat.id]"
+                [name]="'qty_' + mat.id"
+              />
+            </mat-form-field>
           </td>
-        </tr>
-      </tbody>
-    </table>
-    <button type="submit">Speichern & schließen</button>
-  </form>
-</div>
+        </ng-container>
+
+        <ng-container matColumnDef="material">
+          <th mat-header-cell *matHeaderCellDef>Material</th>
+          <td mat-cell *matCellDef="let mat">{{ mat.bezeichnung }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="hersteller">
+          <th mat-header-cell *matHeaderCellDef>Hersteller</th>
+          <td mat-cell *matCellDef="let mat">{{ mat.hersteller_bezeichnung }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['quantity', 'material', 'hersteller']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['quantity', 'material', 'hersteller']"></tr>
+      </table>
+    </form>
+  </mat-card-content>
+</mat-card>

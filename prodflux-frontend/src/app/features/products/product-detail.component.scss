@@ -1,0 +1,51 @@
+.product-card {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.delete-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.image-container {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.product-image {
+  max-width: 300px;
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.full-width-table {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.quantity-field {
+  width: 80px;
+  margin-top: 20px;
+}
+
+.mat-form-field-infix {
+  text-align: center;
+}
+
+
+
+.full-width-table th.text-center,
+.full-width-table td.text-center {
+  text-align: center;
+}

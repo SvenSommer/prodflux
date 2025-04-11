@@ -4,12 +4,31 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProductsService, Product, ProductMaterial } from './products.service';
 import { FormsModule } from '@angular/forms';
 import { MaterialsService, Material } from '../materials/materials.service';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatTableModule,
+    MatFormFieldModule,
+    MatInputModule
+  ],
   templateUrl: './product-detail.component.html',
+  styleUrls: ['./product-detail.component.scss'],
 })
 export class ProductDetailComponent {
   private route = inject(ActivatedRoute);

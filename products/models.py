@@ -4,10 +4,9 @@ from materials.models import Material, MaterialMovement
 
 class Product(models.Model):
     bezeichnung = models.CharField(max_length=255)
-    menge = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    preis = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    g_preis_brutto = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    netto = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    artikelnummer = models.CharField(max_length=100, unique=True)
+    bild = models.ImageField(upload_to='product_images/', null=True, blank=True)
+    angelegt_am = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.bezeichnung

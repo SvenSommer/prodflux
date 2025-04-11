@@ -1,0 +1,36 @@
+.product-form-card {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  border: 1px solid #ccc;
+  padding: 4px;
+  background: #f9f9f9;
+  object-fit: contain;
+}
+
+.file-upload input[type='file'] {
+  margin-top: 4px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}

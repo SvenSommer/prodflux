@@ -1,14 +1,37 @@
-<h2>Materialien</h2>
+<mat-card class="material-list-header">
+  <div class="header-row">
+    <h2>Materialien</h2>
+    <a routerLink="/materials/new">
+      <button mat-raised-button color="primary">
+        <mat-icon>add</mat-icon> Neues Material
+      </button>
+    </a>
+  </div>
+</mat-card>
 
-<button routerLink="/materials/new">➕ Neues Material anlegen</button>
+<div class="material-grid" *ngIf="materials$ | async as materials">
+  <mat-card class="material-card" *ngFor="let mat of materials">
+    <mat-card-header>
+      <mat-card-title>{{ mat.bezeichnung }}</mat-card-title>
+      <mat-card-subtitle>{{ mat.hersteller_bezeichnung }}</mat-card-subtitle>
+    </mat-card-header>
 
-<ul>
-  <li *ngFor="let mat of materials$ | async">
-    <strong>{{ mat.bezeichnung }}</strong> –
-    {{ mat.hersteller_bezeichnung }} –
-    {{ mat.preis_brutto }} €
+    <!-- Optionales Bild -->
+    <img mat-card-image *ngIf="mat.bild" [src]="mat.bild" alt="Materialbild" />
 
-    <button [routerLink]="['/materials', mat.id, 'edit']">✏️ Bearbeiten</button>
-    <button (click)="delete(mat.id)">🗑️ Löschen</button>
-  </li>
-</ul>
+    <mat-card-content>
+      <p><strong>Preis (brutto):</strong> {{ mat.preis_brutto }} €</p>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <a [routerLink]="['/materials', mat.id, 'edit']">
+        <button mat-icon-button color="primary" matTooltip="Bearbeiten">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </a>
+      <button mat-icon-button color="warn" (click)="delete(mat.id)" matTooltip="Löschen">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

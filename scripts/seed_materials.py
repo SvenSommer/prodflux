@@ -1,5 +1,5 @@
 # scripts/seed_materials.py (manuell ausführen mit `python manage.py shell < scripts/seed_materials.py`)
-
+# python manage.py createsuperuser
 from materials.models import Material
 
 MATERIALS = [

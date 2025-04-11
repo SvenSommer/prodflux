@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ProductDetailView, ProductListCreateView, ProductMaterialCreateView, ProductMaterialDetailView, ProductMaterialListView, manufacture_product, producible_overview_view, producible_units_view, product_stock_view
+from .views import ProductDetailView, ProductListCreateView, ProductMaterialCreateView, ProductMaterialDetailView, ProductMaterialListView, manufacture_product, producible_overview_view, producible_units_view, product_stock_view, workshop_products_overview
 
 urlpatterns = [
     path('products/', ProductListCreateView.as_view(), name='product-list'),
@@ -11,4 +11,5 @@ urlpatterns = [
     path('products/<int:product_id>/materials/', ProductMaterialListView.as_view(), name='product-material-list'),
     path('products/<int:product_id>/producible', producible_units_view, name='product-producible'),
     path('products/producible', producible_overview_view, name='product-producible-overview'),
+    path('workshops/<int:workshop_id>/products/overview/', workshop_products_overview, name='workshop-products-overview'),
     ]

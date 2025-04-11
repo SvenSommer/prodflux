@@ -168,3 +168,20 @@ def producible_overview_view(request):
         })
 
     return Response(overview)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def workshop_products_overview(request, workshop_id):
+    stocks = ProductStock.objects.filter(workshop_id=workshop_id).select_related('product')
+    result = []
+
+    for stock in stocks:
+        result.append({
+            "product_id": stock.product.id,
+            "bezeichnung": stock.product.bezeichnung,
+            "artikelnummer": stock.product.artikelnummer,
+            "version": stock.product.version,
+            "bestand": stock.bestand
+        })
+
+    return Response(result)

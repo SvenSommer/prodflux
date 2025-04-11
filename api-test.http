@@ -243,6 +243,10 @@ Content-Type: application/json
   "quantity": 5
 }
 
+### Übersicht aller Produkte in Werkstatt 2
+GET http://localhost:8000/api/workshops/2/products/overview/
+Authorization: Bearer {{access_token}}
+
 ### Fertigbare Stückzahl für Produkt
 GET http://localhost:8000/api/products/{{product_id}}/producible?workshop_id={{workshop_id}}
 Authorization: Bearer {{access_token}}

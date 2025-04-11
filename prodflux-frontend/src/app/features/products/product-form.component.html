@@ -10,6 +10,11 @@
     </mat-form-field>
 
     <mat-form-field appearance="fill">
+      <mat-label>Version</mat-label>
+      <input matInput [(ngModel)]="product.version" name="version" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
       <mat-label>Artikelnummer</mat-label>
       <input matInput [(ngModel)]="product.artikelnummer" name="artikelnummer" required />
     </mat-form-field>

@@ -8,7 +8,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'bezeichnung', 'artikelnummer', 'bild', 'bild_url', 'angelegt_am']
+        fields = ['id', 'bezeichnung', 'version', 'artikelnummer', 'bild', 'bild_url', 'angelegt_am']
         read_only_fields = ['id', 'angelegt_am']
 
     def get_bild_url(self, obj):

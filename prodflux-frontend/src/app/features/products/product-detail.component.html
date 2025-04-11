@@ -11,6 +11,7 @@
   <mat-card-content>
     <p><strong>Bezeichnung:</strong> {{ product?.bezeichnung }}</p>
     <p><strong>Artikelnummer:</strong> {{ product?.artikelnummer }}</p>
+    <p><strong>Version:</strong> {{ product?.version }}</p>
 
     <div *ngIf="product?.bild" class="image-container">
       <img [src]="product?.bild" alt="Produktbild" class="product-image" />

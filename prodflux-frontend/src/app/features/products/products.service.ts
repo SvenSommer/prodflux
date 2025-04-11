@@ -7,7 +7,8 @@ export interface Product {
   id: number;
   bezeichnung: string;
   artikelnummer: string;
-  bild?: string; // optional: URL oder Pfad zur Vorschau
+  version: string;
+  bild?: string;
 }
 
 export interface ProductMaterial {
@@ -41,17 +42,19 @@ export class ProductsService {
   /**
    * Produkt anlegen (ohne oder mit Bild)
    */
-  createProduct(data: { bezeichnung: string; artikelnummer: string; bild?: File }): Observable<Product> {
+  createProduct(data: { bezeichnung: string; artikelnummer: string; version?: string; bild?: File }): Observable<Product> {
     if (data.bild) {
       const formData = new FormData();
       formData.append('bezeichnung', data.bezeichnung);
       formData.append('artikelnummer', data.artikelnummer);
+      if (data.version) formData.append('version', data.version);
       formData.append('bild', data.bild);
       return this.http.post<Product>(`${this.baseUrl}/products/`, formData);
     } else {
       return this.http.post<Product>(`${this.baseUrl}/products/`, {
         bezeichnung: data.bezeichnung,
         artikelnummer: data.artikelnummer,
+        version: data.version ?? '',
       });
     }
   }
@@ -59,17 +62,19 @@ export class ProductsService {
   /**
    * Produkt aktualisieren (ohne oder mit Bild)
    */
-  updateProduct(id: number, data: { bezeichnung: string; artikelnummer: string; bild?: File }): Observable<Product> {
+  updateProduct(id: number, data: { bezeichnung: string; artikelnummer: string; version?: string; bild?: File }): Observable<Product> {
     if (data.bild) {
       const formData = new FormData();
       formData.append('bezeichnung', data.bezeichnung);
       formData.append('artikelnummer', data.artikelnummer);
+      if (data.version) formData.append('version', data.version);
       formData.append('bild', data.bild);
       return this.http.put<Product>(`${this.baseUrl}/products/${id}/`, formData);
     } else {
       return this.http.put<Product>(`${this.baseUrl}/products/${id}/`, {
         bezeichnung: data.bezeichnung,
         artikelnummer: data.artikelnummer,
+        version: data.version ?? '',
       });
     }
   }

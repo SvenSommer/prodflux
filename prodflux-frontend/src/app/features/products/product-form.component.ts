@@ -34,6 +34,7 @@ export class ProductFormComponent {
   product = {
     bezeichnung: '',
     artikelnummer: '',
+    version: '',
     bild: null as File | null
   };
 
@@ -44,7 +45,8 @@ export class ProductFormComponent {
       this.productsService.getProduct(this.productId).subscribe(p => {
         this.product.bezeichnung = p.bezeichnung;
         this.product.artikelnummer = p.artikelnummer;
-        this.currentImageUrl = p.bild || null; // <- URL für Vorschau
+        this.product.version = p.version;
+        this.currentImageUrl = p.bild || null;
       });
     }
   }
@@ -68,6 +70,7 @@ export class ProductFormComponent {
     const payload = {
       bezeichnung: this.product.bezeichnung,
       artikelnummer: this.product.artikelnummer,
+      version: this.product.version,
       bild: this.product.bild || undefined
     };
 

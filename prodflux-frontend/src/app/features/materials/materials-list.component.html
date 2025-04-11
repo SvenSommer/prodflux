@@ -1,37 +1,75 @@
-<mat-card class="material-list-header">
+<div class="materials-table-wrapper">
   <div class="header-row">
     <h2>Materialien</h2>
     <a routerLink="/materials/new">
       <button mat-raised-button color="primary">
-        <mat-icon>add</mat-icon> Neues Material
+        <mat-icon>add</mat-icon>
+        Neues Material
       </button>
     </a>
   </div>
-</mat-card>
+  <div *ngIf="materials$ | async as materials">
+    <table
+      mat-table
+      [dataSource]="materials"
+      class="mat-elevation-z1 full-width-table"
+    >
+      <!-- Bild -->
+      <ng-container matColumnDef="bild">
+        <th mat-header-cell *matHeaderCellDef>Bild</th>
+        <td mat-cell *matCellDef="let mat">
+          <img
+            *ngIf="mat.bild_url"
+            [src]="mat.bild_url"
+            alt="Bild"
+            class="table-image"
+          />
+        </td>
+      </ng-container>
 
-<div class="material-grid" *ngIf="materials$ | async as materials">
-  <mat-card class="material-card" *ngFor="let mat of materials">
-    <mat-card-header>
-      <mat-card-title>{{ mat.bezeichnung }}</mat-card-title>
-      <mat-card-subtitle>{{ mat.hersteller_bezeichnung }}</mat-card-subtitle>
-    </mat-card-header>
+      <!-- Bezeichnung -->
+      <ng-container matColumnDef="bezeichnung">
+        <th mat-header-cell *matHeaderCellDef>Bezeichnung</th>
+        <td mat-cell *matCellDef="let mat">{{ mat.bezeichnung }}</td>
+      </ng-container>
 
-    <!-- Optionales Bild -->
-    <img mat-card-image *ngIf="mat.bild" [src]="mat.bild" alt="Materialbild" />
+      <!-- Hersteller -->
+      <ng-container matColumnDef="hersteller">
+        <th mat-header-cell *matHeaderCellDef>Hersteller</th>
+        <td mat-cell *matCellDef="let mat">{{ mat.hersteller_bezeichnung }}</td>
+      </ng-container>
 
-    <mat-card-content>
-      <p><strong>Preis (brutto):</strong> {{ mat.preis_brutto }} €</p>
-    </mat-card-content>
+      <!-- Aktionen -->
+      <ng-container matColumnDef="aktionen">
+        <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+        <td mat-cell *matCellDef="let mat">
+          <a [routerLink]="['/materials', mat.id, 'edit']">
+            <button mat-icon-button color="primary" matTooltip="Bearbeiten">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </a>
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="delete(mat.id)"
+            matTooltip="Löschen"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
 
-    <mat-card-actions align="end">
-      <a [routerLink]="['/materials', mat.id, 'edit']">
-        <button mat-icon-button color="primary" matTooltip="Bearbeiten">
-          <mat-icon>edit</mat-icon>
-        </button>
-      </a>
-      <button mat-icon-button color="warn" (click)="delete(mat.id)" matTooltip="Löschen">
-        <mat-icon>delete</mat-icon>
-      </button>
-    </mat-card-actions>
-  </mat-card>
+      <tr
+        mat-header-row
+        *matHeaderRowDef="['bild', 'bezeichnung', 'hersteller', 'aktionen']"
+      ></tr>
+      <tr
+        mat-row
+        *matRowDef="
+          let row;
+          columns: ['bild', 'bezeichnung', 'hersteller', 'aktionen']
+        "
+      ></tr>
+    </table>
+  </div>
 </div>

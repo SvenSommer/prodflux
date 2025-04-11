@@ -9,7 +9,7 @@ Content-Type: application/json
   "password": "meqban-seVny5-kofvyq"
 }
 
-@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0MzU3ODgwLCJpYXQiOjE3NDQzNTc1ODAsImp0aSI6IjJhYTcxNWVjM2YzMjQ4YTA4NjAwYjQyYmRhNDA1ZWM5IiwidXNlcl9pZCI6MX0.RdLXBoIFmlGToFmHwOqbB5ngmGUjVqImCZ6AskSO6v4
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0OTc5OTc5LCJpYXQiOjE3NDQzNzUxNzksImp0aSI6IjY0MWYzNjhjMTMzMDRiNzVhNjE2ZjNhZmE2MGI0YjQwIiwidXNlcl9pZCI6MX0.izo1vgp1TN9nbIuiZFfWwdvCv-5uRssvVKD6K28TYSE
 
 ### Token-Info
 GET http://localhost:8000/api/auth/me/
@@ -52,43 +52,89 @@ Authorization: Bearer {{access_token}}
 
 ### 🧱 MATERIALIEN
 
-### Alle Materialien anzeigen
+### 🔍 Alle Materialien anzeigen
 GET http://localhost:8000/api/materials/
 Authorization: Bearer {{access_token}}
 
-### Material anlegen
+### ➕ Material anlegen (ohne Bild)
 POST http://localhost:8000/api/materials/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
-{                                  
-    "bezeichnung": "D-Sub Schraubensatz",    
-    "hersteller_bezeichnung": "BKL 10120291",
-    "preis_brutto": 1.15,   
-    "quelle": "reichelt.de",    
-    "bestell_nr": "BKL 10120291"
-  }
+{
+  "bezeichnung": "D-Sub Schraubensatz",
+  "hersteller_bezeichnung": "BKL 10120291",
+  "bestell_nr": "BKL 10120291"
+}
 
+### 🖼️ Material anlegen mit Bild
+POST http://localhost:8000/api/materials/
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="bezeichnung"
+
+D-Sub Schraubensatz
+--boundary
+Content-Disposition: form-data; name="hersteller_bezeichnung"
+
+BKL 10120291
+--boundary
+Content-Disposition: form-data; name="bestell_nr"
+
+BKL 10120291
+--boundary
+Content-Disposition: form-data; name="bild"; filename="bild.jpg"
+Content-Type: image/jpeg
+
+< ./pfad/zum/bild.jpg
+--boundary--
 
 @material_id = 4
-### Material anzeigen
+
+### 🔍 Material anzeigen
 GET http://localhost:8000/api/materials/{{material_id}}/
 Authorization: Bearer {{access_token}}
 
-### Material aktualisieren
+### ✏️ Material aktualisieren (z. B. Bezeichnung ändern)
 PUT http://localhost:8000/api/materials/{{material_id}}/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
   "bezeichnung": "D-Sub Schraubensatz (aktualisiert)",
-  "preis_brutto": 5.00
+  "hersteller_bezeichnung": "BKL 10120291",
+  "bestell_nr": "BKL 10120291"
 }
 
-### Material löschen
+### Material aktualisieren mit Bild
+PUT http://localhost:8000/api/materials/{{material_id}}/
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="bezeichnung"
+
+D-Sub Schraubensatz (mit Bild)
+--boundary
+Content-Disposition: form-data; name="hersteller_bezeichnung"
+
+BKL 10120291
+--boundary
+Content-Disposition: form-data; name="bestell_nr"
+
+BKL 10120291
+--boundary
+Content-Disposition: form-data; name="bild"; filename="bild.jpg"
+Content-Type: image/jpeg
+
+< ./pfad/zum/bild.jpg
+--boundary--
+
+### 🗑️ Material löschen
 DELETE http://localhost:8000/api/materials/{{material_id}}/
 Authorization: Bearer {{access_token}}
-
 ### Materialbestand (in Werkstatt)
 GET http://localhost:8000/api/materials/{{material_id}}/stock?workshop_id={{workshop_id}}
 Authorization: Bearer {{access_token}}
@@ -111,7 +157,8 @@ Content-Type: application/json
 
 {
   "bezeichnung": "SD-ATR833-E (neu)",
-  "artikelnummer": "SD-ATR833-E"
+  "artikelnummer": "SD-ATR833-E",
+  "version": "v1.2"
 }
 
 ### Produkt mit Bild anlegen

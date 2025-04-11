@@ -1,0 +1,26 @@
+.form-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.material-form-card {
+  padding: 24px;
+}
+
+.image-preview img {
+  max-height: 150px;
+  object-fit: contain;
+  border: 1px solid #ccc;
+  margin-top: 8px;
+  background: #f9f9f9;
+  padding: 4px;
+}
+
+.file-upload {
+  margin: 16px 0;
+}
+
+.actions {
+  margin-top: 24px;
+}

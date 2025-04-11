@@ -1,10 +1,22 @@
+# serializers.py (in materials)
+
 from rest_framework import serializers
 from .models import Material, MaterialMovement, Delivery, DeliveryItem
 
 class MaterialSerializer(serializers.ModelSerializer):
+    bild_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Material
-        fields = '__all__'
+        fields = ['id', 'bezeichnung', 'hersteller_bezeichnung', 'bestell_nr', 'bild', 'bild_url']
+
+    def get_bild_url(self, obj):
+        request = self.context.get('request')
+        if obj.bild and request:
+            return request.build_absolute_uri(obj.bild.url)
+        elif obj.bild:
+            return obj.bild.url
+        return None
 
 class MaterialMovementSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,7 +26,7 @@ class MaterialMovementSerializer(serializers.ModelSerializer):
 class DeliveryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeliveryItem
-        fields = ['material', 'quantity', 'note']
+        fields = ['material', 'quantity', 'note', 'preis_pro_stueck', 'quelle']
 
 class DeliverySerializer(serializers.ModelSerializer):
     items = DeliveryItemSerializer(many=True)

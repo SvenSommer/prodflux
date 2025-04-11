@@ -1,11 +1,58 @@
-<h2 *ngIf="!isEdit">Neues Material anlegen</h2>
-<h2 *ngIf="isEdit">Material bearbeiten</h2>
+<div class="form-container">
+  <mat-card class="material-form-card">
+    <mat-card-title>
+      {{ materialId ? "Material bearbeiten" : "Neues Material anlegen" }}
+    </mat-card-title>
 
-<form (ngSubmit)="onSubmit()">
-  <label>Bezeichnung: <input [(ngModel)]="material.bezeichnung" name="bezeichnung" /></label><br />
-  <label>Hersteller-Bez.: <input [(ngModel)]="material.hersteller_bezeichnung" name="hersteller" /></label><br />
-  <label>Preis (brutto): <input type="number" [(ngModel)]="material.preis_brutto" name="preis" /></label><br />
-  <label>Quelle: <input [(ngModel)]="material.quelle" name="quelle" /></label><br />
-  <label>Bestell-Nr.: <input [(ngModel)]="material.bestell_nr" name="bestellnr" /></label><br />
-  <button type="submit">{{ isEdit ? 'Aktualisieren' : 'Anlegen' }}</button>
-</form>
+    <form
+      (ngSubmit)="save()"
+      enctype="multipart/form-data"
+      class="material-form"
+      #form="ngForm"
+    >
+      <mat-form-field appearance="fill">
+        <mat-label>Bezeichnung</mat-label>
+        <input
+          matInput
+          [(ngModel)]="material.bezeichnung"
+          name="bezeichnung"
+          required
+        />
+      </mat-form-field>
+      <br>
+      <mat-form-field appearance="fill">
+        <mat-label>Hersteller-Bezeichnung</mat-label>
+        <input
+          matInput
+          [(ngModel)]="material.hersteller_bezeichnung"
+          name="hersteller_bezeichnung"
+        />
+      </mat-form-field>
+
+      <div class="image-preview" *ngIf="currentImageUrl || newImagePreview">
+        <p class="text-sm mb-1">Bildvorschau:</p>
+        <img
+          [src]="newImagePreview || currentImageUrl"
+          alt="Materialbild"
+          class="preview-image"
+        />
+      </div>
+
+      <div class="file-upload">
+        <label>Materialbild auswählen:</label>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+      </div>
+
+      <div class="actions">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid"
+        >
+          Speichern
+        </button>
+      </div>
+    </form>
+  </mat-card>
+</div>

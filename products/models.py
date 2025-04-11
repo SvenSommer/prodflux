@@ -5,6 +5,7 @@ from materials.models import Material, MaterialMovement
 class Product(models.Model):
     bezeichnung = models.CharField(max_length=255)
     artikelnummer = models.CharField(max_length=100, unique=True)
+    version = models.CharField(max_length=50, blank=True)
     bild = models.ImageField(upload_to='product_images/', null=True, blank=True)
     angelegt_am = models.DateTimeField(auto_now_add=True)
 

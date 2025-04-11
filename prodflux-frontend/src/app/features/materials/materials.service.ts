@@ -7,9 +7,8 @@ export interface Material {
   id: number;
   bezeichnung: string;
   hersteller_bezeichnung: string;
-  preis_brutto: number;
-  quelle: string;
-  bestell_nr: string;
+  bild: File | null;
+  bild_url: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,5 +34,13 @@ export class MaterialsService {
 
   deleteMaterial(id: number) {
     return this.http.delete(`${this.baseUrl}${id}/`);
+  }
+
+  createMaterialFormData(data: FormData): Observable<Material> {
+    return this.http.post<Material>(this.baseUrl, data);
+  }
+
+  updateMaterialFormData(id: number, data: FormData) {
+    return this.http.put<Material>(`${this.baseUrl}${id}/`, data);
   }
 }

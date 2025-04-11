@@ -6,9 +6,8 @@ from core.models import Workshop
 class Material(models.Model):
     bezeichnung = models.CharField(max_length=255)
     hersteller_bezeichnung = models.CharField(max_length=255, blank=True)
-    preis_brutto = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    quelle = models.CharField(max_length=255, blank=True)
     bestell_nr = models.CharField(max_length=100, blank=True)
+    bild = models.ImageField(upload_to='material_images/', null=True, blank=True)
 
     def __str__(self):
         return self.bezeichnung
@@ -37,6 +36,8 @@ class DeliveryItem(models.Model):
     material = models.ForeignKey(Material, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.TextField(blank=True)
+    preis_pro_stueck = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    quelle = models.CharField(max_length=255, blank=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

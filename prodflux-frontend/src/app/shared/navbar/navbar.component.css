@@ -2,7 +2,10 @@
 .navbar {
   background: #eee;
   padding: 1rem;
+  position: relative; /* wichtig für z-index-Kaskade */
+  z-index: 10;
 }
+
 .navbar ul {
   list-style: none;
   display: flex;
@@ -17,4 +20,48 @@
 .navbar a.active {
   font-weight: bold;
   color: #007bff;
+}
+
+.dropdown {
+  position: relative; /* notwendig für absolutes Positionieren des Menüs */
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 9999; /* höher als alles andere */
+  background-color: white;
+  border: 1px solid #ccc;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* Optional: für schöne Optik */
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: block;
+  flex-direction: column;
+  background-color: white;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #ccc;
+  list-style: none;
+  width: max-content;
+}
+
+.dropdown-menu li a {
+  display: block;
+  padding: 8px 16px;
+  z-index: 9999;
+  text-decoration: none;
+  color: black;
+  white-space: nowrap;
+}
+
+.dropdown-menu li a:hover {
+  background-color: #f0f0f0;
 }

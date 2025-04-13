@@ -1,17 +1,22 @@
 <nav class="navbar">
   <ul>
     <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+
     <li *ngFor="let w of workshops">
       <a [routerLink]="['/workshops', w.id]" routerLinkActive="active">{{ w.name }}</a>
     </li>
 
-    <li><a routerLink="/materials" routerLinkActive="active">Materialien</a></li>
-    <li><a routerLink="/products" routerLinkActive="active">Produkte</a></li>
     <li><a routerLink="/deliveries" routerLinkActive="active">Lieferungen</a></li>
-    <li><a routerLink="/settings" routerLinkActive="active">Einstellungen</a></li>
 
-    <!-- Dynamisch generierte Werkstatt-Links -->
-
+    <!-- Einstellungen mit Dropdown -->
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" (click)="toggleDropdown($event)">Einstellungen</a>
+      <ul *ngIf="dropdownOpen" class="dropdown-menu">
+        <li><a routerLink="/settings" routerLinkActive="active">Allgemeine</a></li>
+        <li><a routerLink="/materials" routerLinkActive="active">Materialien</a></li>
+        <li><a routerLink="/products" routerLinkActive="active">Produkte</a></li>
+      </ul>
+    </li>
 
     <li><a routerLink="/login">Login</a></li>
   </ul>

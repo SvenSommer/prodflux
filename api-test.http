@@ -140,11 +140,11 @@ GET http://localhost:8000/api/materials/{{material_id}}/stock?workshop_id={{work
 Authorization: Bearer {{access_token}}
 
 ### Materialbewegungen (in Werkstatt)
-GET http://localhost:8000/api/materials/{{material_id}}/movements?workshop_id={{workshop_id}}
+GET http://localhost:8000/api/materials/1/movements?workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Bestand aller Materialien in Werkstatt anzeigen
-GET http://localhost:8000/api/workshops/2/material-stock/
+GET http://localhost:8000/api/workshops/1/material-stock/
 Authorization: Bearer {{access_token}}
 
 ### 📇 PRODUKTE
@@ -252,7 +252,7 @@ GET http://localhost:8000/api/products/{{product_id}}/producible?workshop_id={{w
 Authorization: Bearer {{access_token}}
 
 ### Übersicht fertigbarer Produkte
-GET http://localhost:8000/api/products/producible?workshop_id={{workshop_id}}
+GET http://localhost:8000/api/products/producible?workshop_id=2
 Authorization: Bearer {{access_token}}
 
 

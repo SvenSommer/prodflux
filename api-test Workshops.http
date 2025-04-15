@@ -1,0 +1,152 @@
+### 🔐 AUTHENTIFIZIERUNG
+
+### Login
+POST http://localhost:8000/api/auth/login/
+Content-Type: application/json
+
+{
+  "username": "rh",
+  "password": "meqban-seVny5-kofvyq"
+}
+
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0OTc5OTc5LCJpYXQiOjE3NDQzNzUxNzksImp0aSI6IjY0MWYzNjhjMTMzMDRiNzVhNjE2ZjNhZmE2MGI0YjQwIiwidXNlcl9pZCI6MX0.izo1vgp1TN9nbIuiZFfWwdvCv-5uRssvVKD6K28TYSE
+
+### Token-Info
+GET http://localhost:8000/api/auth/me/
+Authorization: Bearer {{access_token}}
+
+### Materialbewegungen (in Werkstatt)
+GET http://localhost:8000/api/materials/1/movements?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Bestand aller Materialien in Werkstatt anzeigen
+GET http://localhost:8000/api/workshops/1/material-stock/
+Authorization: Bearer {{access_token}}
+
+### 📇 PRODUKTE
+
+### Übersicht aller Produkte in Werkstatt 1
+GET http://localhost:8000/api/workshops/1/products/overview/
+Authorization: Bearer {{access_token}}
+
+### Produktbestand in Werkstatt für Produkt X
+GET http://localhost:8000/api/products/3/stock?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Benötigte Materialien für Produkt
+GET http://localhost:8000/api/products/3/materials/
+Authorization: Bearer {{access_token}}
+
+### Benötigte Materialien für Produkt (z. B. 5 Stück in Werkstatt 1)
+GET http://localhost:8000/api/products/3/requirements/?quantity=5&workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### Produkt fertigen
+POST http://localhost:8000/api/manufacture/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "product_id": {{product_id}},
+  "workshop_id": {{workshop_id}},
+  "quantity": 5
+}
+
+
+
+### Übersicht fertigbarer Produkte
+GET http://localhost:8000/api/products/producible?workshop_id=1
+Authorization: Bearer {{access_token}}
+
+### 📦 LIEFERUNGEN
+
+### Alle Lieferungen anzeigen
+GET http://localhost:8000/api/deliveries/
+Authorization: Bearer {{access_token}}
+
+### Lieferung anzeigen
+GET http://localhost:8000/api/deliveries/1/
+Authorization: Bearer {{access_token}}
+
+### Lieferung anlegen
+POST http://localhost:8000/api/deliveries/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "workshop": 1,
+  "note": "Initiale Lieferung",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 100,
+      "note": "Lagerauffüllung"
+    }
+  ]
+}
+
+
+
+### Bestellung anlegen
+POST http://localhost:8000/api/orders/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "bestellt_am": "2025-04-01",
+  "angekommen_am": "2025-04-09",
+  "versandkosten": 6.00,
+  "notiz": "Reichelt-Sammelbestellung",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 10,
+      "preis_pro_stueck": 0.95,
+      "quelle": "reichelt.de"
+    },
+    {
+      "material": 2,
+      "quantity": 30,
+      "preis_pro_stueck": 1.25,
+      "quelle": "reichelt.de"
+    }
+  ]
+}
+
+### Bestellung aktualisieren
+PUT http://localhost:8000/api/orders/2/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "bestellt_am": "2025-04-10",
+  "angekommen_am": "2025-04-13",
+  "versandkosten": 9.99,
+  "notiz": "Aktualisierte Bestellung mit korrigierten Mengen",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 15,
+      "preis_pro_stueck": 0.95,
+      "quelle": "reichelt.de"
+    },
+    {
+      "material": 2,
+      "quantity": 20,
+      "preis_pro_stueck": 1.19,
+      "quelle": "reichelt.de"
+    }
+  ]
+}
+
+### Alle Bestellungen anzeigen
+GET http://localhost:8000/api/orders/
+Authorization: Bearer {{access_token}}
+
+### Einzelne Bestellung anzeigen
+GET http://localhost:8000/api/orders/2/
+Authorization: Bearer {{access_token}}
+
+### Bestellung löschen
+DELETE http://localhost:8000/api/orders/1/
+Authorization: Bearer {{access_token}}

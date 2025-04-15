@@ -11,6 +11,15 @@ export interface Material {
   bild_url: string | null;
 }
 
+export interface MaterialMovement {
+  id: number;
+  quantity: number;
+  change_type: 'lieferung' | 'verbrauch' | 'korrektur' | 'verlust';
+  note?: string;
+  created_at: string;
+  delivery_id?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MaterialsService {
   private http = inject(HttpClient);
@@ -42,5 +51,17 @@ export class MaterialsService {
 
   updateMaterialFormData(id: number, data: FormData) {
     return this.http.put<Material>(`${this.baseUrl}${id}/`, data);
+  }
+
+  getMaterialMovements(materialId: number, workshopId: number): Observable<MaterialMovement[]> {
+    return this.http.get<MaterialMovement[]>(`${this.baseUrl}${materialId}/movements?workshop_id=${workshopId}`);
+  }
+
+  updateMaterialMovement(id: number, data: Partial<MaterialMovement>) {
+    return this.http.patch<MaterialMovement>(`${this.baseUrl}movements/${id}/`, data);
+  }
+
+  deleteMaterialMovement(id: number) {
+    return this.http.delete(`${this.baseUrl}movements/${id}/`);
   }
 }

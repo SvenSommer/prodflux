@@ -27,6 +27,11 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
         material_id = self.kwargs['pk']
         serializer.save(material_id=material_id)
 
+class MaterialMovementDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MaterialMovement.objects.all()
+    serializer_class = MaterialMovementSerializer
+    permission_classes = [IsAuthenticated]
+
 class DeliveryListCreateView(generics.ListCreateAPIView):
     queryset = Delivery.objects.all().order_by('-created_at')
     serializer_class = DeliverySerializer
@@ -94,7 +99,8 @@ def all_materials_stock_by_workshop(request, workshop_id):
         response_data.append({
             "material_id": material.id,
             "bezeichnung": material.bezeichnung,
-            "bestand": total
+            "bestand": total,
+            "bild_url": request.build_absolute_uri(material.bild.url) if material.bild else None
         })
 
     return Response(response_data)

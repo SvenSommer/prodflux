@@ -49,6 +49,66 @@ Content-Type: application/json
 DELETE http://localhost:8000/api/workshops/{{workshop_id}}/
 Authorization: Bearer {{access_token}}
 
+### Produktversionen 
+
+### Alle Produktversionen anzeigen
+GET http://localhost:8000/api/product-versions/
+Authorization: Bearer {{access_token}}
+
+### Produktversion anlegen
+POST http://localhost:8000/api/product-versions/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "v1.2",
+  "description": "neue Hauptversion, Bluetooth 4.0"
+}
+
+### Produktversion aktualisieren
+PUT http://localhost:8000/api/product-versions/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "v1.2",
+  "description": "neue Hauptversion"
+}
+
+### Produktversion löschen
+DELETE http://localhost:8000/api/product-versions/1/
+Authorization: Bearer {{access_token}}
+
+### 🧩 Produktvarianten
+
+### Alle Produktvarianten anzeigen
+GET http://localhost:8000/api/product-variants/
+Authorization: Bearer {{access_token}}
+
+### Produktvariante anlegen
+POST http://localhost:8000/api/product-variants/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "LEFT",
+  "description": "linke Einbauposition"
+}
+
+### Produktvariante aktualisieren
+PUT http://localhost:8000/api/product-variants/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "LEFT",
+  "description": "linksseitige Variante"
+}
+
+### Produktvariante löschen
+DELETE http://localhost:8000/api/product-variants/1/
+Authorization: Bearer {{access_token}}
+
 
 ### 🧱 MATERIALIEN
 
@@ -161,7 +221,8 @@ Content-Type: application/json
 {
   "bezeichnung": "SD-ATR833-E (neu)",
   "artikelnummer": "SD-ATR833-E",
-  "version": "v1.2"
+  "version": 1,
+  "varianten_ids": [1, 3]
 }
 
 ### Produkt mit Bild anlegen
@@ -225,11 +286,15 @@ DELETE http://localhost:8000/api/products/{{product_id}}/
 Authorization: Bearer {{access_token}}
 
 ### Produktbestand in Werkstatt
-GET http://localhost:8000/api/products/{{product_id}}/stock?workshop_id={{workshop_id}}
+GET http://localhost:8000/api/products/3/stock?workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Benötigte Materialien für Produkt
-GET http://localhost:8000/api/products/1/materials/
+GET http://localhost:8000/api/products/3/materials/
+Authorization: Bearer {{access_token}}
+
+### Benötigte Materialien für Produkt (z. B. 5 Stück in Werkstatt 1)
+GET http://localhost:8000/api/products/3/requirements/?quantity=5&workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Produkt fertigen
@@ -243,16 +308,16 @@ Content-Type: application/json
   "quantity": 5
 }
 
-### Übersicht aller Produkte in Werkstatt 2
-GET http://localhost:8000/api/workshops/2/products/overview/
+### Übersicht aller Produkte in Werkstatt 1
+GET http://localhost:8000/api/workshops/1/products/overview/
 Authorization: Bearer {{access_token}}
 
 ### Fertigbare Stückzahl für Produkt
-GET http://localhost:8000/api/products/{{product_id}}/producible?workshop_id={{workshop_id}}
+GET http://localhost:8000/api/products/{{product_id}}/producible?workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Übersicht fertigbarer Produkte
-GET http://localhost:8000/api/products/producible?workshop_id=2
+GET http://localhost:8000/api/products/producible?workshop_id=1
 Authorization: Bearer {{access_token}}
 
 
@@ -270,7 +335,7 @@ Content-Type: application/json
 }
 
 ### Material-Zuordnung löschen
-DELETE http://localhost:8000/api/product-materials/{{assignment_id}}/
+DELETE http://localhost:8000/api/product-materials/1
 Authorization: Bearer {{access_token}}
 
 

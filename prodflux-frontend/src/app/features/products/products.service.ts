@@ -7,8 +7,17 @@ export interface Product {
   id: number;
   bezeichnung: string;
   artikelnummer: string;
-  version: string;
   bild?: string;
+  version?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
+  varianten?: {
+    id: number;
+    name: string;
+    description?: string;
+  }[];
 }
 
 export interface ProductMaterial {
@@ -89,5 +98,15 @@ export class ProductsService {
 
   deleteProductMaterial(id: number) {
     return this.http.delete(`${this.baseUrl}/product-materials/${id}/`);
+  }
+
+  getMaterialRequirements(productId: number, quantity: number, workshopId: number) {
+    return this.http.get<{
+      material_id: number;
+      bezeichnung: string;
+      required_quantity: number;
+      available_quantity: number;
+      missing_quantity: number;
+    }[]>(`${this.baseUrl}/products/${productId}/requirements/?quantity=${quantity}&workshop_id=${workshopId}`);
   }
 }

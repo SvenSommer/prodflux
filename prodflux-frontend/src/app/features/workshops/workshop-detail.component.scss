@@ -20,3 +20,12 @@ mat-expansion-panel {
 .mt-2 {
   margin-top: 8px;
 }
+
+.table-image {
+  height: 48px;
+  object-fit: contain;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f9f9f9;
+  padding: 4px;
+}

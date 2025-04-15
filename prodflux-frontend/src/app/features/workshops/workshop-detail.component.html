@@ -2,33 +2,95 @@
   <mat-card class="workshop-header">
     <mat-card-title>{{ workshop.name }}</mat-card-title>
 
+    <mat-expansion-panel [expanded]="true">
+      <mat-expansion-panel-header>
+        <mat-panel-title>Produktübersicht</mat-panel-title>
+      </mat-expansion-panel-header>
 
-  <mat-expansion-panel>
-    <mat-expansion-panel-header>
-      <mat-panel-title>📦 Aktueller Materialbestand</mat-panel-title>
-    </mat-expansion-panel-header>
+      <table mat-table [dataSource]="producibleProducts" class="mat-elevation-z1 full-width-table mt-2">
+        <ng-container matColumnDef="nr">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
+        </ng-container>
 
-    <table mat-table [dataSource]="stock" class="mat-elevation-z1 full-width-table mt-2">
-      <ng-container matColumnDef="nr">
-        <th mat-header-cell *matHeaderCellDef>#</th>
-        <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
-      </ng-container>
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Produkt</th>
+          <td mat-cell *matCellDef="let element">{{ element.product }}</td>
+        </ng-container>
 
-      <ng-container matColumnDef="bezeichnung">
-        <th mat-header-cell *matHeaderCellDef>Material</th>
-        <td mat-cell *matCellDef="let element">{{ element.bezeichnung }}</td>
-      </ng-container>
+        <ng-container matColumnDef="possible_units">
+          <th mat-header-cell *matHeaderCellDef>Mögl. Einheiten</th>
+          <td mat-cell *matCellDef="let element">{{ element.possible_units }}</td>
+        </ng-container>
 
-      <ng-container matColumnDef="bestand">
-        <th mat-header-cell *matHeaderCellDef>Bestand</th>
-        <td mat-cell *matCellDef="let element">{{ element.bestand }}</td>
-      </ng-container>
+        <ng-container matColumnDef="produced">
+          <th mat-header-cell *matHeaderCellDef>Gefertigt</th>
+          <td mat-cell *matCellDef="let element">{{ element.produced_units || 0 }}</td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
-  </mat-expansion-panel>
-</mat-card>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Aktion</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button [matMenuTriggerFor]="manufactureMenu" (click)="selectedProduct = element">
+              <mat-icon>add</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['nr', 'product', 'possible_units', 'produced', 'actions']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['nr', 'product', 'possible_units', 'produced', 'actions']"></tr>
+      </table>
+
+      <mat-menu #manufactureMenu="matMenu">
+        <div class="menu-form">
+          <p class="mb-1">Stückzahl für {{ selectedProduct?.product }}:</p>
+          <mat-form-field appearance="outline">
+            <input matInput type="number" min="1" [(ngModel)]="manufactureQty" />
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="manufactureProduct()">
+            Bestätigen
+          </button>
+        </div>
+      </mat-menu>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Aktueller Materialbestand</mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <table mat-table [dataSource]="stock" class="mat-elevation-z1 full-width-table mt-2">
+        <ng-container matColumnDef="nr">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="bild">
+          <th mat-header-cell *matHeaderCellDef>Bild</th>
+          <td mat-cell *matCellDef="let element">
+            <img *ngIf="element.bild_url" [src]="element.bild_url" alt="Bild" class="table-image" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="bezeichnung">
+          <th mat-header-cell *matHeaderCellDef>Material</th>
+          <td mat-cell *matCellDef="let element">
+            <a [routerLink]="['/materials', element.material_id]">
+              {{ element.bezeichnung }}
+            </a>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="bestand">
+          <th mat-header-cell *matHeaderCellDef>Bestand</th>
+          <td mat-cell *matCellDef="let element">{{ element.bestand }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </mat-expansion-panel>
+  </mat-card>
 </div>
 
 <div *ngIf="!workshop">

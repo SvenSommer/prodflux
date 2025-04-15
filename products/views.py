@@ -2,10 +2,30 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .models import Product, ProductMaterial, ProductStock
+from .models import Product, ProductMaterial, ProductStock, ProductVariant, ProductVersion
 from materials.models import MaterialMovement
-from .serializers import ProductMaterialSerializer, ProductSerializer
+from .serializers import ProductMaterialSerializer, ProductSerializer, ProductVariantSerializer, ProductVersionSerializer
 from decimal import Decimal
+
+class ProductVersionListCreateView(generics.ListCreateAPIView):
+    queryset = ProductVersion.objects.all()
+    serializer_class = ProductVersionSerializer
+    permission_classes = [IsAuthenticated]
+
+class ProductVersionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProductVersion.objects.all()
+    serializer_class = ProductVersionSerializer
+    permission_classes = [IsAuthenticated]
+
+class ProductVariantListCreateView(generics.ListCreateAPIView):
+    queryset = ProductVariant.objects.all()
+    serializer_class = ProductVariantSerializer
+    permission_classes = [IsAuthenticated]
+
+class ProductVariantDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ProductVariant.objects.all()
+    serializer_class = ProductVariantSerializer
+    permission_classes = [IsAuthenticated]
 
 class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
@@ -185,3 +205,44 @@ def workshop_products_overview(request, workshop_id):
         })
 
     return Response(result)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def material_requirements_view(request, product_id):
+    try:
+        quantity = Decimal(str(request.query_params.get("quantity", "1")))
+        workshop_id = int(request.query_params.get("workshop_id"))
+    except (TypeError, ValueError):
+        return Response({"detail": "Ungültige Eingaben."}, status=400)
+
+    product = Product.objects.get(id=product_id)
+    requirements = ProductMaterial.objects.filter(product=product)
+    response = []
+
+    for req in requirements:
+        required_total = req.quantity_per_unit * quantity
+
+        movements = MaterialMovement.objects.filter(
+            material=req.material,
+            workshop_id=workshop_id
+        )
+
+        total = Decimal(0)
+        for m in movements:
+            if m.change_type in ['lieferung', 'korrektur']:
+                total += m.quantity
+            elif m.change_type in ['verbrauch', 'verlust']:
+                total -= m.quantity
+
+        missing = max(Decimal(0), required_total - total)
+
+        response.append({
+            "material_id": req.material.id,
+            "bezeichnung": req.material.bezeichnung,
+            "required_quantity": float(required_total),
+            "available_quantity": float(total),
+            "missing_quantity": float(missing),
+        })
+
+    return Response(response)

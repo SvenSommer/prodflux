@@ -1,0 +1,34 @@
+.material-detail-container {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+.material-detail-card {
+  padding: 24px;
+}
+
+.workshop-select {
+  width: 100%;
+  max-width: 400px;
+  margin-top: 16px;
+}
+
+.full-width-table {
+  width: 100%;
+  margin-top: 24px;
+}
+
+.image-preview {
+  margin-top: 12px;
+  text-align: center;
+
+  img {
+    max-height: 180px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f9f9f9;
+    padding: 4px;
+    object-fit: contain;
+  }
+}

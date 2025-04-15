@@ -10,13 +10,23 @@
     </mat-form-field>
 
     <mat-form-field appearance="fill">
-      <mat-label>Version</mat-label>
-      <input matInput [(ngModel)]="product.version" name="version" />
+      <mat-label>Artikelnummer</mat-label>
+      <input matInput [(ngModel)]="product.artikelnummer" name="artikelnummer" required />
     </mat-form-field>
 
     <mat-form-field appearance="fill">
-      <mat-label>Artikelnummer</mat-label>
-      <input matInput [(ngModel)]="product.artikelnummer" name="artikelnummer" required />
+      <mat-label>Produktversion</mat-label>
+      <mat-select [(ngModel)]="product.version_id" name="version_id">
+        <mat-option [value]="null">Keine</mat-option>
+        <mat-option *ngFor="let v of versions" [value]="v.id">{{ v.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Produktvarianten</mat-label>
+      <mat-select multiple [(ngModel)]="product.varianten_ids" name="varianten_ids">
+        <mat-option *ngFor="let v of variants" [value]="v.id">{{ v.name }}</mat-option>
+      </mat-select>
     </mat-form-field>
 
     <div class="image-preview" *ngIf="currentImageUrl || newImagePreview">

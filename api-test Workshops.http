@@ -37,8 +37,21 @@ Authorization: Bearer {{access_token}}
 GET http://localhost:8000/api/products/3/materials/
 Authorization: Bearer {{access_token}}
 
+### Benötigte Materialien für mehrere Produkte
+POST http://localhost:8000/api/material-requirements/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "workshop_id": 1,
+  "products": [
+    { "product_id": 3, "quantity": 5 },
+    { "product_id": 1, "quantity": 2 }
+  ]
+}
+
 ### Benötigte Materialien für Produkt (z. B. 5 Stück in Werkstatt 1)
-GET http://localhost:8000/api/products/3/requirements/?quantity=5&workshop_id=1
+GET http://localhost:8000/api/products/1/requirements/?quantity=5&workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Produkt fertigen

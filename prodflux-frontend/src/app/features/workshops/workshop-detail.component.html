@@ -109,12 +109,13 @@
       </mat-form-field>
       <table *ngIf="materialRequirements.length" class="full-width-table mt-2">
         <thead>
-          <tr><th>Material</th><th>Benötigt</th><th>Vorhanden</th><th>Fehlend</th></tr>
+          <tr><th>Material</th><th>Benötigt</th><th>Bestellt</th><th>Vorhanden</th><th>Fehlend</th></tr>
         </thead>
         <tbody>
           <tr *ngFor="let req of materialRequirements">
             <td>{{ req.bezeichnung }}</td>
             <td>{{ req.required_quantity }}</td>
+            <td>{{ req.ordered_quantity }}</td>
             <td>{{ req.available_quantity }}</td>
             <td>{{ req.missing_quantity }}</td>
           </tr>

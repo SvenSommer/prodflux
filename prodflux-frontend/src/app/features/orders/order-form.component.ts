@@ -48,10 +48,14 @@ export class OrderFormComponent {
   } = {};
 
   ngOnInit() {
+    console.log('[OrderForm] Init');
     this.orderId = Number(this.route.snapshot.paramMap.get('id')) || null;
 
     this.materialsService.getMaterials().subscribe(mats => {
       this.materialsList = mats;
+      console.log('[OrderForm] materialsList:', mats);
+
+      // Initialisiere alle Materialzuweisungen auf 0
       for (const mat of mats) {
         this.materialAssignments[mat.id] = {
           quantity: 0,
@@ -59,24 +63,38 @@ export class OrderFormComponent {
           quelle: ''
         };
       }
-    });
 
-    if (this.orderId) {
-      this.ordersService.get(this.orderId).subscribe(order => {
-        this.bestellt_am = order.bestellt_am;
-        this.angekommen_am = order.angekommen_am;
-        this.versandkosten = order.versandkosten;
-        this.notiz = order.notiz || '';
+      // Bestellung laden (falls im Edit-Modus)
+      if (this.orderId) {
+        this.ordersService.get(this.orderId).subscribe(order => {
+          console.log('[OrderForm] fetched order:', order);
 
-        order.items.forEach(item => {
-          this.materialAssignments[item.material] = {
-            quantity: item.quantity,
-            preis: item.preis_pro_stueck,
-            quelle: item.quelle
-          };
+          this.bestellt_am = order.bestellt_am;
+          this.angekommen_am = order.angekommen_am;
+          this.versandkosten = order.versandkosten;
+          this.notiz = order.notiz || '';
+
+          order.items.forEach(item => {
+            // Achtung: Material-ID muss in der Liste vorhanden sein
+            if (!this.materialAssignments[item.material]) {
+              console.warn('[OrderForm] WARN: material id not found in materialAssignments:', item.material);
+              // Optional: Dynamisch hinzufügen (falls gewünscht)
+              this.materialAssignments[item.material] = {
+                quantity: item.quantity,
+                preis: item.preis_pro_stueck,
+                quelle: item.quelle
+              };
+            } else {
+              this.materialAssignments[item.material].quantity = item.quantity;
+              this.materialAssignments[item.material].preis = item.preis_pro_stueck;
+              this.materialAssignments[item.material].quelle = item.quelle;
+            }
+          });
+
+          console.log('[OrderForm] materialAssignments after load:', this.materialAssignments);
         });
-      });
-    }
+      }
+    });
   }
 
   save() {
@@ -97,11 +115,14 @@ export class OrderFormComponent {
       items
     };
 
+    console.log('[OrderForm] Saving payload:', payload);
+
     const request = this.orderId
       ? this.ordersService.update(this.orderId, payload)
       : this.ordersService.create(payload);
 
-    request.subscribe(() => {
+    request.subscribe(result => {
+      console.log('[OrderForm] Save successful, result:', result);
       this.router.navigate(['/orders']);
     });
   }

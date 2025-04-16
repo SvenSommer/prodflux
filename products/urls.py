@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ProductDetailView, ProductListCreateView, ProductMaterialCreateView, ProductMaterialDetailView, ProductMaterialListView, ProductVariantDetailView, ProductVariantListCreateView, ProductVersionDetailView, ProductVersionListCreateView, manufacture_product, material_requirements_view, producible_overview_view, producible_units_view, product_lifecycle_overview, product_stock_view, workshop_products_overview
+from .views import ProductDetailView, ProductListCreateView, ProductMaterialCreateView, ProductMaterialDetailView, ProductMaterialListView, ProductVariantDetailView, ProductVariantListCreateView, ProductVersionDetailView, ProductVersionListCreateView, aggregated_material_requirements_view, manufacture_product, material_requirements_view, producible_overview_view, producible_units_view, product_lifecycle_overview, product_stock_view, workshop_products_overview
 
 urlpatterns = [
     path('product-versions/', ProductVersionListCreateView.as_view(), name='product-version-list'),
@@ -14,6 +14,7 @@ urlpatterns = [
     path('manufacture/', manufacture_product, name='manufacture-product'),
     path('products/<int:product_id>/stock', product_stock_view, name='product-stock'),
     path('products/<int:product_id>/materials/', ProductMaterialListView.as_view(), name='product-material-list'),
+    path('material-requirements/', aggregated_material_requirements_view, name='aggregated-material-requirements'),
     path('products/<int:product_id>/producible', producible_units_view, name='product-producible'),
     path('products/producible', producible_overview_view, name='product-producible-overview'),
     path('workshops/<int:workshop_id>/products/overview/', workshop_products_overview, name='workshop-products-overview'),

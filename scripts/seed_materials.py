@@ -81,8 +81,6 @@ for data in MATERIALS:
         bezeichnung=data["bezeichnung"],
         defaults={
             "hersteller_bezeichnung": data["hersteller_bezeichnung"],
-            "preis_brutto": data["preis_brutto"],
-            "quelle": data["quelle"],
             "bestell_nr": data["bestell_nr"]
         }
     )

@@ -40,6 +40,13 @@ export const routes: Routes = [
       { path: 'deliveries/:id/edit', loadComponent: () => import('./features/deliveries/delivery-form.component').then(m => m.DeliveryFormComponent), canActivate: [authGuard] },
       { path: 'deliveries/:id', loadComponent: () => import('./features/deliveries/delivery-detail.component').then(m => m.DeliveryDetailComponent) },
 
+      // BESTELLUNGEN
+      { path: 'orders', loadComponent: () => import('./features/orders/orders-list.component').then(m => m.OrdersListComponent), canActivate: [authGuard] },
+      { path: 'orders/new', loadComponent: () => import('./features/orders/order-form.component').then(m => m.OrderFormComponent), canActivate: [authGuard] },
+      { path: 'orders/:id/edit', loadComponent: () => import('./features/orders/order-form.component').then(m => m.OrderFormComponent), canActivate: [authGuard] },
+      { path: 'orders/:id', loadComponent: () => import('./features/orders/order-detail.component').then(m => m.OrderDetailComponent), canActivate: [authGuard] },
+
+
       // WERKSTATTEN
       { path: 'workshops/:id', loadComponent: () => import('./features/workshops/workshop-detail.component').then(m => m.WorkshopDetailComponent), canActivate: [authGuard] },
     ]

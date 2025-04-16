@@ -3,9 +3,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .models import Product, ProductMaterial, ProductStock, ProductVariant, ProductVersion
-from materials.models import MaterialMovement
+from materials.models import MaterialMovement, OrderItem
 from .serializers import ProductMaterialSerializer, ProductSerializer, ProductVariantSerializer, ProductVersionSerializer
 from decimal import Decimal
+from django.db.models import Sum
 
 class ProductVersionListCreateView(generics.ListCreateAPIView):
     queryset = ProductVersion.objects.all()
@@ -246,3 +247,61 @@ def material_requirements_view(request, product_id):
         })
 
     return Response(response)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def product_lifecycle_overview(request):
+    workshop_id = request.query_params.get("workshop_id")
+    if not workshop_id:
+        return Response({'detail': 'workshop_id is required'}, status=400)
+
+    result = []
+    products = Product.objects.all()
+
+    for product in products:
+        # 1. Mögliche Einheiten aus offenen Bestellungen
+        bestellung_limits = []
+        for req in ProductMaterial.objects.filter(product=product):
+            offene_bestellungen = OrderItem.objects.filter(
+                material=req.material,
+                order__angekommen_am__isnull=True
+            ).aggregate(total=Sum("quantity"))["total"] or 0
+
+            limit = offene_bestellungen // req.quantity_per_unit if req.quantity_per_unit > 0 else 0
+            bestellung_limits.append(limit)
+
+        bestellungen_moeglich = int(min(bestellung_limits)) if bestellung_limits else 0
+
+        # 2. Mögliche Einheiten aus vorhandenem Lager
+        lager_limits = []
+        for req in ProductMaterial.objects.filter(product=product):
+            bewegungen = MaterialMovement.objects.filter(
+                material=req.material,
+                workshop_id=workshop_id
+            )
+
+            lager = sum([
+                m.quantity if m.change_type in ['lieferung', 'korrektur'] else -m.quantity
+                for m in bewegungen
+            ])
+            limit = lager // req.quantity_per_unit if req.quantity_per_unit > 0 else 0
+            lager_limits.append(limit)
+
+        lager_fertigung_moeglich = int(min(lager_limits)) if lager_limits else 0
+
+        # 3. Bestand an gefertigten Produkten
+        try:
+            bestand = ProductStock.objects.get(product=product, workshop_id=workshop_id).bestand
+        except ProductStock.DoesNotExist:
+            bestand = 0
+
+        result.append({
+            "product_id": product.id,
+            "product": product.bezeichnung,
+            "bestellungen_moeglich": bestellungen_moeglich,
+            "lager_fertigung_moeglich": lager_fertigung_moeglich,
+            "bestand_fertig": float(bestand),
+            "verkauft": 0  # noch nicht implementiert
+        })
+
+    return Response(result)

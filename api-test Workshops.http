@@ -52,7 +52,9 @@ Content-Type: application/json
   "quantity": 5
 }
 
-
+### Kompakte Lifecycle-Übersicht
+GET http://localhost:8000/api/products/lifecycle-overview/?workshop_id=1
+Authorization: Bearer {{access_token}}
 
 ### Übersicht fertigbarer Produkte
 GET http://localhost:8000/api/products/producible?workshop_id=1

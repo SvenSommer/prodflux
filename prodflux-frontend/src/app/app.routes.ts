@@ -33,11 +33,12 @@ export const routes: Routes = [
       // EINSTELLUNGEN
       { path: 'settings', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent), canActivate: [authGuard] },
 
+
       // LIEFERUNGEN
       { path: 'deliveries', loadComponent: () => import('./features/deliveries/deliveries-list.component').then(m => m.DeliveriesListComponent), canActivate: [authGuard] },
-      { path: 'deliveries/:id', loadComponent: () => import('./features/deliveries/delivery-detail.component').then(m => m.DeliveryDetailComponent) },
       { path: 'deliveries/new', loadComponent: () => import('./features/deliveries/delivery-form.component').then(m => m.DeliveryFormComponent), canActivate: [authGuard] },
       { path: 'deliveries/:id/edit', loadComponent: () => import('./features/deliveries/delivery-form.component').then(m => m.DeliveryFormComponent), canActivate: [authGuard] },
+      { path: 'deliveries/:id', loadComponent: () => import('./features/deliveries/delivery-detail.component').then(m => m.DeliveryDetailComponent) },
 
       // WERKSTATTEN
       { path: 'workshops/:id', loadComponent: () => import('./features/workshops/workshop-detail.component').then(m => m.WorkshopDetailComponent), canActivate: [authGuard] },

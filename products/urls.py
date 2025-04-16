@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ProductDetailView, ProductListCreateView, ProductMaterialCreateView, ProductMaterialDetailView, ProductMaterialListView, ProductVariantDetailView, ProductVariantListCreateView, ProductVersionDetailView, ProductVersionListCreateView, manufacture_product, material_requirements_view, producible_overview_view, producible_units_view, product_stock_view, workshop_products_overview
+from .views import ProductDetailView, ProductListCreateView, ProductMaterialCreateView, ProductMaterialDetailView, ProductMaterialListView, ProductVariantDetailView, ProductVariantListCreateView, ProductVersionDetailView, ProductVersionListCreateView, manufacture_product, material_requirements_view, producible_overview_view, producible_units_view, product_lifecycle_overview, product_stock_view, workshop_products_overview
 
 urlpatterns = [
     path('product-versions/', ProductVersionListCreateView.as_view(), name='product-version-list'),
@@ -17,4 +17,5 @@ urlpatterns = [
     path('products/<int:product_id>/producible', producible_units_view, name='product-producible'),
     path('products/producible', producible_overview_view, name='product-producible-overview'),
     path('workshops/<int:workshop_id>/products/overview/', workshop_products_overview, name='workshop-products-overview'),
+    path('products/lifecycle-overview/', product_lifecycle_overview, name='product-lifecycle-overview'),
     ]

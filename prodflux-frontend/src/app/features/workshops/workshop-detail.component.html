@@ -7,6 +7,10 @@
         <mat-panel-title>Produktübersicht</mat-panel-title>
       </mat-expansion-panel-header>
 
+      <button mat-raised-button color="primary" class="mb-2" (click)="openMultiOrderModal()">
+        <mat-icon>playlist_add</mat-icon> Materialbedarf planen
+      </button>
+
       <table mat-table [dataSource]="productLifecycle" class="mat-elevation-z1 full-width-table mt-2">
         <ng-container matColumnDef="nr">
           <th mat-header-cell *matHeaderCellDef>#</th>
@@ -99,7 +103,7 @@
     </mat-expansion-panel>
   </mat-card>
 
-  <!-- Modal für Bestellung -->
+  <!-- Modal für Material Bestellung eines Produktes-->
   <ng-template #orderDialog let-dialog>
     <h2 mat-dialog-title>Material für {{ selectedProduct?.product }} nachbestellen</h2>
     <mat-dialog-content>
@@ -125,6 +129,50 @@
     <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close>Abbrechen</button>
       <button mat-raised-button color="primary" (click)="confirmOrder(dialog)">Bestellen</button>
+    </mat-dialog-actions>
+  </ng-template>
+
+  <!-- Modal für Material Bestellung mehrerer Produkte-->
+
+  <ng-template #multiOrderDialog let-dialog>
+    <h2 mat-dialog-title>Materialbedarf für mehrere Produkte</h2>
+    <mat-dialog-content>
+      <table class="full-width-table">
+        <thead>
+          <tr><th>Produkt</th><th>Menge</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of multiOrderProducts">
+            <td>{{ entry.product }}</td>
+            <td>
+              <mat-form-field appearance="outline">
+                <input matInput type="number" min="0" [(ngModel)]="entry.quantity" (change)="loadAggregatedRequirements()" />
+              </mat-form-field>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table *ngIf="materialRequirements.length" class="full-width-table mt-4">
+        <thead>
+          <tr><th>Material</th><th>Benötigt</th><th>Bestellt</th><th>Vorhanden</th><th>Fehlend</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let req of materialRequirements">
+            <td>{{ req.bezeichnung }}</td>
+            <td>{{ req.required_quantity }}</td>
+            <td>{{ req.ordered_quantity }}</td>
+            <td>{{ req.available_quantity }}</td>
+            <td>{{ req.missing_quantity }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button mat-dialog-close>Schließen</button>
+      <button mat-raised-button color="primary" [disabled]="!materialRequirements.length" (click)="confirmAggregatedOrder(dialog)">
+        Bestellen
+      </button>
     </mat-dialog-actions>
   </ng-template>
 

@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/enviroment';
 
 export interface Material {
   id: number;
@@ -23,7 +24,8 @@ export interface MaterialMovement {
 @Injectable({ providedIn: 'root' })
 export class MaterialsService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8000/api/materials/';
+  private baseUrl = `${environment.apiUrl}/api/materials/`;
+
 
   getMaterials(): Observable<Material[]> {
     return this.http.get<Material[]>(this.baseUrl);

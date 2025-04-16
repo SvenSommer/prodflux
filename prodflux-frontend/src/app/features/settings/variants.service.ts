@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/enviroment';
 
 export interface ProductVariant {
   id: number;
@@ -12,7 +13,7 @@ export interface ProductVariant {
 @Injectable({ providedIn: 'root' })
 export class VariantsService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8000/api/product-variants/';
+  private baseUrl = `${environment.apiUrl}/api/product-variants/`;
 
   getAll(): Observable<ProductVariant[]> {
     return this.http.get<ProductVariant[]>(this.baseUrl);

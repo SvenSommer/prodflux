@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/enviroment';
 
 export interface ProductVersion {
   id: number;
@@ -11,7 +12,7 @@ export interface ProductVersion {
 @Injectable({ providedIn: 'root' })
 export class VersionsService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8000/api/product-versions/';
+  private baseUrl = `${environment.apiUrl}/api/orders/`;
 
   getAll(): Observable<ProductVersion[]> {
     return this.http.get<ProductVersion[]>(this.baseUrl);

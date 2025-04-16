@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/enviroment';
 
 export interface OrderItem {
   id?: number; // optional, weil beim Anlegen nicht notwendig
@@ -30,7 +31,7 @@ export interface CreateOrUpdateOrder {
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8000/api/orders/';
+  private baseUrl = `${environment.apiUrl}/api/orders/`;
 
   getAll(): Observable<Order[]> {
     return this.http.get<Order[]>(this.baseUrl);

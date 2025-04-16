@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/enviroment';
 
 export interface DeliveryItem {
   material: number;
@@ -19,7 +20,7 @@ export interface Delivery {
 @Injectable({ providedIn: 'root' })
 export class DeliveriesService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8000/api/deliveries/';
+  private baseUrl = `${environment.apiUrl}/api/deliveries/`;
 
   getAll(): Observable<Delivery[]> {
     return this.http.get<Delivery[]>(this.baseUrl);

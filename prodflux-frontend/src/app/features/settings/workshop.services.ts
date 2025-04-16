@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/enviroment';
 
 export interface Workshop {
   id: number;
@@ -10,7 +11,7 @@ export interface Workshop {
 @Injectable({ providedIn: 'root' })
 export class WorkshopsService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8000/api/workshops/';
+  private baseUrl = `${environment.apiUrl}/api/workshops/`;
 
   getAll(): Observable<Workshop[]> {
     return this.http.get<Workshop[]>(this.baseUrl);

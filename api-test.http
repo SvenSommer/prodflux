@@ -9,7 +9,8 @@ Content-Type: application/json
   "password": "meqban-seVny5-kofvyq"
 }
 
-@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ0OTc5OTc5LCJpYXQiOjE3NDQzNzUxNzksImp0aSI6IjY0MWYzNjhjMTMzMDRiNzVhNjE2ZjNhZmE2MGI0YjQwIiwidXNlcl9pZCI6MX0.izo1vgp1TN9nbIuiZFfWwdvCv-5uRssvVKD6K28TYSE
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ1NDkyMjE2LCJpYXQiOjE3NDQ4ODc0MTYsImp0aSI6ImE5OTVhNGFiNjU3YjQwMjg5MWQ4OWU1MzFhMGY1ZGQwIiwidXNlcl9pZCI6MX0.Ehn0BRDFJFqP6ErwIJynSQC2qkdevbSBf3Mu_5emaCQ
+
 
 ### Token-Info
 GET http://localhost:8000/api/auth/me/
@@ -282,7 +283,7 @@ Content-Type: image/jpeg
 --boundary--
 
 ### Produkt löschen
-DELETE http://localhost:8000/api/products/{{product_id}}/
+DELETE http://localhost:8000/api/products/3/
 Authorization: Bearer {{access_token}}
 
 ### Produktbestand in Werkstatt

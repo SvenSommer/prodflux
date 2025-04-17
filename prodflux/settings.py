@@ -5,7 +5,7 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Environment Flags
-RENDER = os.environ.get("RENDER", False)
+RENDER = os.environ.get("RENDER") is not None
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -129,7 +129,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "https://prodflux-frontend.onrender.com",  
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
 # Logging
 LOGGING = {

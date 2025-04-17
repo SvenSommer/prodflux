@@ -38,9 +38,25 @@
             </td>
           </ng-container>
 
+          <ng-container matColumnDef="bild">
+            <th mat-header-cell *matHeaderCellDef>Bild</th>
+            <td mat-cell *matCellDef="let mat">
+              <img
+                *ngIf="mat.bild_url"
+                [src]="mat.bild_url"
+                alt="Bild"
+                class="table-image"
+              />
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="material">
             <th mat-header-cell *matHeaderCellDef>Material</th>
-            <td mat-cell *matCellDef="let mat">{{ mat.bezeichnung }}</td>
+            <td mat-cell *matCellDef="let mat">
+              <a [routerLink]="['/materials', mat.id]">
+                {{ mat.bezeichnung }}
+              </a>
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="hersteller">
@@ -48,8 +64,8 @@
             <td mat-cell *matCellDef="let mat">{{ mat.hersteller_bezeichnung }}</td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="['quantity', 'material', 'hersteller']"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['quantity', 'material', 'hersteller']"></tr>
+          <tr mat-header-row *matHeaderRowDef="['quantity', 'bild', 'material', 'hersteller']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['quantity', 'bild', 'material', 'hersteller']"></tr>
         </table>
       </div>
 

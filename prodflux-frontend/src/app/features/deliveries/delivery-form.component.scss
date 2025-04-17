@@ -34,3 +34,12 @@
   display: flex;
   justify-content: flex-end;
 }
+
+.table-image {
+  max-height: 40px;
+  border-radius: 0.25rem;
+}
+
+mat-icon-button {
+  margin-right: 0.25rem;
+}

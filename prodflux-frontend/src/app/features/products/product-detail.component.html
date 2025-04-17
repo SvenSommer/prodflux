@@ -43,7 +43,11 @@
         <!-- Materialbezeichnung -->
         <ng-container matColumnDef="bezeichnung">
           <th mat-header-cell *matHeaderCellDef>Material</th>
-          <td mat-cell *matCellDef="let m">{{ getMaterialBezeichnung(m.material) }}</td>
+          <td mat-cell *matCellDef="let m">
+            <a [routerLink]="['/materials', m.material.id]">
+              {{ getMaterialBezeichnung(m.material) }}
+            </a>
+          </td>
         </ng-container>
 
         <!-- Hersteller -->

@@ -9,17 +9,15 @@
     <li><a routerLink="/orders" routerLinkActive="active">Bestellungen</a></li>
     <li><a routerLink="/deliveries" routerLinkActive="active">Lieferungen</a></li>
 
-
-    <!-- Einstellungen mit Dropdown -->
-    <li class="dropdown">
-      <a href="#" class="dropdown-toggle" (click)="toggleDropdown($event)">Einstellungen</a>
-      <ul *ngIf="dropdownOpen" class="dropdown-menu">
+    <li class="dropdown" [class.open]="dropdownOpen">
+      <a href="#" (click)="toggleDropdown($event)" class="dropdown-toggle">Einstellungen ▾</a>
+      <ul class="dropdown-menu" *ngIf="dropdownOpen">
         <li><a routerLink="/settings" routerLinkActive="active">Allgemeine</a></li>
         <li><a routerLink="/materials" routerLinkActive="active">Materialien</a></li>
         <li><a routerLink="/products" routerLinkActive="active">Produkte</a></li>
       </ul>
     </li>
 
-    <li><a routerLink="/login">Login</a></li>
+    <li><a routerLink="/login" routerLinkActive="active">Login</a></li>
   </ul>
 </nav>

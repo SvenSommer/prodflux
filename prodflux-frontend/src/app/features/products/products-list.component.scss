@@ -1,42 +1,62 @@
 .product-list-card {
-  position: relative;
-  max-width: 900px;
-  margin: 0 auto;
+  padding: 2rem;
+  border-radius: 1rem;
 
-}
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
 
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
 
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
 
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-  padding: 0 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
 
-.product-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  margin-bottom: 30px;
-}
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      border-radius: 1rem;
+      overflow: hidden;
 
-mat-card-image {
-  max-height: 180px;
-  object-fit: cover;
-}
+      mat-card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
 
-.preview img {
-  max-height: 150px;
-  margin-top: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  object-fit: contain;
+      mat-card-subtitle {
+        font-size: 0.85rem;
+        color: #666;
+      }
+
+      img[mat-card-image] {
+        object-fit: cover;
+        max-height: 180px;
+      }
+
+      mat-card-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 0.5rem;
+        padding-bottom: 0.5rem;
+
+        button {
+          margin-left: 0.25rem;
+        }
+      }
+    }
+  }
 }

@@ -104,10 +104,11 @@ export class WorkshopDetailComponent {
     this.orderQty = 1;
     this.materialRequirements = [];
     this.dialog.open(this.orderDialog);
+    this.loadOrderRequirements()
   }
 
   loadOrderRequirements() {
-    if (!this.selectedProduct?.product_id || this.orderQty < 1) {
+    if (!this.selectedProduct?.product_id || this.orderQty < 0) {
       this.materialRequirements = [];
       return;
     }

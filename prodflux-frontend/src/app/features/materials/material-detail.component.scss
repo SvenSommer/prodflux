@@ -1,34 +1,73 @@
 .material-detail-container {
-  max-width: 900px;
-  margin: 32px auto;
-  padding: 0 16px;
-}
+  padding: 2rem;
 
-.material-detail-card {
-  padding: 24px;
-}
+  .material-detail-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
 
-.workshop-select {
-  width: 100%;
-  max-width: 400px;
-  margin-top: 16px;
-}
+    mat-card-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
 
-.full-width-table {
-  width: 100%;
-  margin-top: 24px;
-}
+      small {
+        font-weight: normal;
+        font-size: 1rem;
+        margin-left: 0.5rem;
+        color: #666;
+      }
+    }
 
-.image-preview {
-  margin-top: 12px;
-  text-align: center;
+    .image-preview {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
 
-  img {
-    max-height: 180px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: #f9f9f9;
-    padding: 4px;
-    object-fit: contain;
+      .preview-image {
+        max-height: 160px;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .workshop-select {
+      width: 100%;
+      max-width: 300px;
+      margin-bottom: 1.5rem;
+    }
+
+    .full-width-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+
+      th, td {
+        padding: 0.75rem;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        background-color: #eceff1;
+        font-weight: 600;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f7f9fc;
+      }
+
+      .quantity-input {
+        width: 80px;
+      }
+
+      mat-form-field.full-width {
+        width: 100%;
+        margin: 0;
+      }
+
+      button {
+        margin-right: 0.25rem;
+      }
+    }
   }
 }

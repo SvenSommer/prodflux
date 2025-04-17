@@ -1,67 +1,72 @@
-/* src/app/shared/navbar/navbar.component.css */
 .navbar {
-  background: #eee;
-  padding: 1rem;
-  position: relative; /* wichtig für z-index-Kaskade */
-  z-index: 10;
-}
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 2rem;
 
-.navbar ul {
-  list-style: none;
-  display: flex;
-  gap: 1rem;
-  margin: 0;
-  padding: 0;
-}
-.navbar a {
-  text-decoration: none;
-  color: black;
-}
-.navbar a.active {
-  font-weight: bold;
-  color: #007bff;
-}
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 
-.dropdown {
-  position: relative; /* notwendig für absolutes Positionieren des Menüs */
-}
+    li {
+      position: relative;
 
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 9999; /* höher als alles andere */
-  background-color: white;
-  border: 1px solid #ccc;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* Optional: für schöne Optik */
-}
+      a {
+        text-decoration: none;
+        color: #333;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: background-color 0.2s, color 0.2s;
 
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  display: block;
-  flex-direction: column;
-  background-color: white;
-  padding: 0;
-  margin: 0;
-  border: 1px solid #ccc;
-  list-style: none;
-  width: max-content;
-}
+        &:hover {
+          background-color: #f0f0f5;
+        }
 
-.dropdown-menu li a {
-  display: block;
-  padding: 8px 16px;
-  z-index: 9999;
-  text-decoration: none;
-  color: black;
-  white-space: nowrap;
-}
+        &.active {
+          background-color: #3f51b5;
+          color: white;
+        }
+      }
 
-.dropdown-menu li a:hover {
-  background-color: #f0f0f0;
+      &.dropdown {
+        .dropdown-toggle::after {
+          content: '';
+        }
+
+        .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 0.5rem;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+          padding: 0.5rem 0;
+          min-width: 180px;
+          z-index: 10;
+
+          li {
+            a {
+              display: block;
+              width: 100%;
+              padding: 0.5rem 1rem;
+
+              &:hover {
+                background-color: #f0f0f5;
+              }
+
+              &.active {
+                background-color: #3f51b5;
+                color: white;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

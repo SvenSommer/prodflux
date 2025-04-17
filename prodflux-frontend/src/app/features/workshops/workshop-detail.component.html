@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <div class="workshop-container" *ngIf="workshop">
   <mat-card class="workshop-header">
     <mat-card-title>{{ workshop.name }}</mat-card-title>
@@ -12,56 +13,58 @@
       </button>
 
       <table mat-table [dataSource]="productLifecycle" class="mat-elevation-z1 full-width-table mt-2">
+
+        <!-- Nr -->
         <ng-container matColumnDef="nr">
           <th mat-header-cell *matHeaderCellDef>#</th>
           <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
         </ng-container>
 
+        <!-- Produkt -->
         <ng-container matColumnDef="product">
           <th mat-header-cell *matHeaderCellDef>Produkt</th>
           <td mat-cell *matCellDef="let element">{{ element.product }}</td>
         </ng-container>
 
+        <!-- Fertigbar (mit Bestellung) -->
         <ng-container matColumnDef="with_ordered_material">
           <th mat-header-cell *matHeaderCellDef>Fertigbar (inkl. bestelltem Material)</th>
-          <td mat-cell *matCellDef="let element">{{ element.bestellungen_moeglich }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="with_stock_material">
-          <th mat-header-cell *matHeaderCellDef>Fertigbar (aus Lagerbestand)</th>
-          <td mat-cell *matCellDef="let element">{{ element.lager_fertigung_moeglich }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="produced">
-          <th mat-header-cell *matHeaderCellDef>Bereits gefertigt</th>
-          <td mat-cell *matCellDef="let element">{{ element.bestand_fertig }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="sold">
-          <th mat-header-cell *matHeaderCellDef>Verkauft</th>
-          <td mat-cell *matCellDef="let element">{{ element.verkauft || 0 }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Aktionen</th>
           <td mat-cell *matCellDef="let element">
-            <button mat-icon-button color="primary" (click)="openOrderModal(element)">
-              <mat-icon>add_shopping_cart</mat-icon>
-            </button>
-            <button mat-icon-button color="accent" [routerLink]="['/deliveries/new']">
-              <mat-icon>local_shipping</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" [matMenuTriggerFor]="manufactureMenu" (click)="selectedProduct = element">
-              <mat-icon>precision_manufacturing</mat-icon>
-            </button>
-            <button mat-icon-button (click)="openSellDialog(element)">
-              <mat-icon>sell</mat-icon>
-            </button>
+            {{ element.bestellungen_moeglich }}
+            <i class="fa fa-plus plus-icon" matTooltip="Materialbedarf für Produkt bestellen" (click)="openOrderModal(element)"></i>
           </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="['nr', 'product', 'with_ordered_material', 'with_stock_material', 'produced', 'sold', 'actions']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['nr', 'product', 'with_ordered_material', 'with_stock_material', 'produced', 'sold', 'actions']"></tr>
+        <!-- Fertigbar (aus Lager) -->
+        <ng-container matColumnDef="with_stock_material">
+          <th mat-header-cell *matHeaderCellDef>Fertigbar (aus Lagerbestand)</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.lager_fertigung_moeglich }}
+            <i class="fa fa-plus plus-icon" matTooltip="Lieferung anlegen" [routerLink]="['/deliveries/new']"></i>
+          </td>
+        </ng-container>
+
+        <!-- Bereits gefertigt -->
+        <ng-container matColumnDef="produced">
+          <th mat-header-cell *matHeaderCellDef>Bereits gefertigt</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.bestand_fertig }}
+            <i class="fa fa-plus plus-icon" matTooltip="gefertigtes Produkt hinzufügen" [matMenuTriggerFor]="manufactureMenu" (click)="selectedProduct = element"></i>
+          </td>
+        </ng-container>
+
+        <!-- Verkauft -->
+        <ng-container matColumnDef="sold">
+          <th mat-header-cell *matHeaderCellDef>Verkauft</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.verkauft || 0 }}
+            <i class="fa fa-plus plus-icon" matTooltip="Verkauf anlegen" (click)="openSellDialog(element)"></i>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['nr', 'product', 'with_ordered_material', 'with_stock_material', 'produced', 'sold']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['nr', 'product', 'with_ordered_material', 'with_stock_material', 'produced', 'sold']"></tr>
+
       </table>
     </mat-expansion-panel>
 

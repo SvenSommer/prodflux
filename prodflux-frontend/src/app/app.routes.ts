@@ -20,9 +20,10 @@ export const routes: Routes = [
 
       // MATERIAL
       { path: 'materials', component: MaterialsListComponent },
+      { path: 'materials/new', component: MaterialFormComponent },
       { path: 'materials/:id',loadComponent: () => import('./features/materials/material-detail.component').then(m => m.MaterialDetailComponent),canActivate: [authGuard]},
       { path: 'materials/:id/edit', component: MaterialFormComponent },
-      { path: 'materials/new', component: MaterialFormComponent },
+
 
       // PRODUKTE
       { path: 'products', component: ProductsListComponent, canActivate: [authGuard] },

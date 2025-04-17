@@ -127,7 +127,7 @@ REST_FRAMEWORK = {
 # CORS
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
-    "https://prodflux-symt.onrender.com",  
+    "https://prodflux-frontend.onrender.com",  
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 

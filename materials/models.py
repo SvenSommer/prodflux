@@ -72,7 +72,17 @@ class DeliveryItem(models.Model):
     note = models.TextField(blank=True)
 
     def save(self, *args, **kwargs):
+        # Lösche ggf. alte Bewegungen für diese Kombination
+        MaterialMovement.objects.filter(
+            workshop=self.delivery.workshop,
+            material=self.material,
+            change_type='lieferung',
+            note__startswith=f"Lieferung #{self.delivery.id}"
+        ).delete()
+
         super().save(*args, **kwargs)
+
+        # Neue Bewegung anlegen
         MaterialMovement.objects.create(
             workshop=self.delivery.workshop,
             material=self.material,

@@ -38,6 +38,24 @@ class MaterialMovementDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MaterialMovementSerializer
     permission_classes = [IsAuthenticated]
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.content_type:
+            return Response(
+                {"detail": "Verknüpfte Materialbewegungen (z.B. aus Lieferungen oder Transfers) können nicht bearbeitet werden."},
+                status=400
+            )
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.content_type:
+            return Response(
+                {"detail": "Verknüpfte Materialbewegungen (z.B. aus Lieferungen oder Transfers) können nicht gelöscht werden."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)
+
 class MaterialTransferListCreateView(generics.ListCreateAPIView):
     queryset = MaterialTransfer.objects.all().order_by('-created_at')
     serializer_class = MaterialTransferSerializer

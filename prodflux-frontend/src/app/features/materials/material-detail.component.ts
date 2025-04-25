@@ -42,6 +42,8 @@ export class MaterialDetailComponent {
   editMovementId: number | null = null;
   editedMovement: Partial<MaterialMovement> = {};
 
+  errorMessage: string | null = null;
+
   ngOnInit() {
     this.materialsService.getMaterial(this.materialId).subscribe(mat => this.material = mat);
     this.workshopsService.getAll().subscribe(ws => {
@@ -79,6 +81,7 @@ export class MaterialDetailComponent {
       case 'verbrauch': return 'Verbrauch';
       case 'korrektur': return 'Korrektur';
       case 'verlust': return 'Verlust';
+      case 'transfer': return 'Transfer';
       default: return type;
     }
   }
@@ -92,16 +95,35 @@ export class MaterialDetailComponent {
 
   saveEdit(m: MaterialMovement) {
     if (!this.editedMovement) return;
-    this.materialsService.updateMaterialMovement(m.id, this.editedMovement).subscribe(() => {
-      Object.assign(m, this.editedMovement);
-      this.cancelEdit();
+    this.materialsService.updateMaterialMovement(m.id, this.editedMovement).subscribe({
+      next: () => {
+        Object.assign(m, this.editedMovement);
+        this.cancelEdit();
+        this.errorMessage = null; // Fehler zurücksetzen
+      },
+      error: (err) => {
+        if (err.status === 400 && err.error?.detail) {
+          this.errorMessage = err.error.detail;
+        } else {
+          this.errorMessage = 'Speichern fehlgeschlagen.';
+        }
+      }
     });
   }
-
   deleteMovement(id: number) {
     if (confirm('Wirklich löschen?')) {
-      this.materialsService.deleteMaterialMovement(id).subscribe(() => {
-        this.movements = this.movements.filter(m => m.id !== id);
+      this.materialsService.deleteMaterialMovement(id).subscribe({
+        next: () => {
+          this.movements = this.movements.filter(m => m.id !== id);
+          this.errorMessage = null;
+        },
+        error: (err) => {
+          if (err.status === 400 && err.error?.detail) {
+            this.errorMessage = err.error.detail;
+          } else {
+            this.errorMessage = 'Löschen fehlgeschlagen.';
+          }
+        }
       });
     }
   }

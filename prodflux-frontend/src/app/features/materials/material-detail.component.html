@@ -1,4 +1,8 @@
 <div class="material-detail-container">
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
   <mat-card class="material-detail-card">
     <mat-card-title>
       {{ material?.bezeichnung }}
@@ -6,6 +10,7 @@
         ({{ material?.hersteller_bezeichnung }})
       </small>
     </mat-card-title>
+
 
     <!-- Bildvorschau -->
     <div class="image-preview" *ngIf="material?.bild_url">
@@ -38,6 +43,7 @@
                 <mat-option value="verbrauch">Verbrauch</mat-option>
                 <mat-option value="korrektur">Korrektur</mat-option>
                 <mat-option value="verlust">Verlust</mat-option>
+                <mat-option value="transfer">Transfer</mat-option>
               </mat-select>
             </mat-form-field>
           </ng-container>

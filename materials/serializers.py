@@ -23,6 +23,19 @@ class MaterialMovementSerializer(serializers.ModelSerializer):
     class Meta:
         model = MaterialMovement
         fields = '__all__'
+        read_only_fields = []
+
+    def update(self, instance, validated_data):
+        # Prüfen: Gehört diese Bewegung zu einem Transfer oder einer Lieferung?
+        if instance.content_type:
+            raise serializers.ValidationError("Verknüpfte Materialbewegungen können nicht bearbeitet werden.")
+        return super().update(instance, validated_data)
+
+    def delete(self, instance):
+        # (falls du Löschfunktion in Serializer selbst kontrollierst)
+        if instance.content_type:
+            raise serializers.ValidationError("Verknüpfte Materialbewegungen können nicht gelöscht werden.")
+        return super().delete(instance)
 
 
 class MaterialTransferItemSerializer(serializers.ModelSerializer):

@@ -100,7 +100,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+if RENDER:
+    MEDIA_ROOT = '/media'  # Pfad zur Persistent Disk bei Render
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'  # Lokal weiterhin normal
 
 # Custom User Model
 AUTH_USER_MODEL = 'core.User'

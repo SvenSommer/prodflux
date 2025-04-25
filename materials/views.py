@@ -21,12 +21,18 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         material_id = self.kwargs['pk']
-        return MaterialMovement.objects.filter(material_id=material_id)
+        workshop_id = self.request.query_params.get('workshop_id')
+
+        queryset = MaterialMovement.objects.filter(material_id=material_id)
+
+        if workshop_id:
+            queryset = queryset.filter(workshop_id=workshop_id)
+
+        return queryset
 
     def perform_create(self, serializer):
         material_id = self.kwargs['pk']
         serializer.save(material_id=material_id)
-
 class MaterialMovementDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MaterialMovement.objects.all()
     serializer_class = MaterialMovementSerializer
@@ -76,7 +82,7 @@ def material_stock_view(request, material_id):
 
     total = 0
     for m in movements:
-        if m.change_type in ['lieferung', 'korrektur']:
+        if m.change_type in ['lieferung', 'korrektur', 'transfer']:
             total += m.quantity
         elif m.change_type in ['verbrauch', 'verlust']:
             total -= m.quantity
@@ -101,7 +107,7 @@ def all_materials_stock_by_workshop(request, workshop_id):
 
         total = 0
         for m in movements:
-            if m.change_type in ['lieferung', 'korrektur']:
+            if m.change_type in ['lieferung', 'korrektur', 'transfer']:
                 total += m.quantity
             elif m.change_type in ['verbrauch', 'verlust']:
                 total -= m.quantity

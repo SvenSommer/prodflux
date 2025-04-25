@@ -196,7 +196,7 @@ Content-Type: image/jpeg
 DELETE http://localhost:8000/api/materials/{{material_id}}/
 Authorization: Bearer {{access_token}}
 ### Materialbestand (in Werkstatt)
-GET http://localhost:8000/api/materials/{{material_id}}/stock?workshop_id={{workshop_id}}
+GET http://localhost:8000/api/materials/1/stock?workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Materialbewegungen (in Werkstatt)
@@ -252,12 +252,12 @@ Content-Type: application/json
   "items": [
     {
       "material": 1,
-      "quantity": 100,
+      "quantity": 10,
       "note": "Weniger Schrauben als geplant"
     },
     {
       "material": 2,
-      "quantity": 50,
+      "quantity": 1,
       "note": "Neues Material hinzugefügt"
     }
   ]

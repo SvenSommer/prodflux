@@ -130,7 +130,7 @@ def producible_units_view(request, product_id):
 
         total = 0
         for m in movements:
-            if m.change_type in ['lieferung', 'korrektur']:
+            if m.change_type in ['lieferung', 'korrektur', 'transfer']:
                 total += m.quantity
             elif m.change_type in ['verbrauch', 'verlust']:
                 total -= m.quantity
@@ -173,7 +173,7 @@ def producible_overview_view(request):
 
             total = 0
             for m in movements:
-                if m.change_type in ['lieferung', 'korrektur']:
+                if m.change_type in ['lieferung', 'korrektur', 'transfer']:
                     total += m.quantity
                 elif m.change_type in ['verbrauch', 'verlust']:
                     total -= m.quantity
@@ -238,7 +238,7 @@ def material_requirements_view(request, product_id):
 
         available_quantity = Decimal(0)
         for m in movements:
-            if m.change_type in ['lieferung', 'korrektur']:
+            if m.change_type in ['lieferung', 'korrektur', 'transfer']:
                 available_quantity += m.quantity
             elif m.change_type in ['verbrauch', 'verlust']:
                 available_quantity -= m.quantity
@@ -305,7 +305,7 @@ def aggregated_material_requirements_view(request):
 
         available_quantity = Decimal(0)
         for m in movements:
-            if m.change_type in ['lieferung', 'korrektur']:
+            if m.change_type in ['lieferung', 'korrektur', 'transfer']:
                 available_quantity += m.quantity
             elif m.change_type in ['verbrauch', 'verlust']:
                 available_quantity -= m.quantity

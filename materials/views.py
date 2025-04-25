@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .models import Delivery, Material, MaterialMovement, Order
-from .serializers import DeliverySerializer, MaterialSerializer, MaterialMovementSerializer, OrderSerializer
+from .models import Delivery, Material, MaterialMovement, MaterialTransfer, Order
+from .serializers import DeliverySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
@@ -30,6 +30,16 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
 class MaterialMovementDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MaterialMovement.objects.all()
     serializer_class = MaterialMovementSerializer
+    permission_classes = [IsAuthenticated]
+
+class MaterialTransferListCreateView(generics.ListCreateAPIView):
+    queryset = MaterialTransfer.objects.all().order_by('-created_at')
+    serializer_class = MaterialTransferSerializer
+    permission_classes = [IsAuthenticated]
+
+class MaterialTransferDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MaterialTransfer.objects.all()
+    serializer_class = MaterialTransferSerializer
     permission_classes = [IsAuthenticated]
 
 class DeliveryListCreateView(generics.ListCreateAPIView):

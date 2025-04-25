@@ -1,5 +1,7 @@
 # models.py (in materials)
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from core.models import Workshop
 from decimal import Decimal, ROUND_HALF_UP
@@ -20,6 +22,7 @@ class MaterialMovement(models.Model):
         ('verbrauch', 'Verbrauch'),
         ('verlust', 'Verlust'),
         ('korrektur', 'Korrektur'),
+        ('transfer', 'Transfer'),
     ]
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE)
     material = models.ForeignKey(Material, on_delete=models.CASCADE)
@@ -27,6 +30,26 @@ class MaterialMovement(models.Model):
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # Erweiterung: Verknüpfung zu auslösendem Objekt (Lieferung, Transfer etc.)
+    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    source_object = GenericForeignKey('content_type', 'object_id')
+
+class MaterialTransfer(models.Model):
+    source_workshop = models.ForeignKey(Workshop, related_name='outgoing_transfers', on_delete=models.CASCADE)
+    target_workshop = models.ForeignKey(Workshop, related_name='incoming_transfers', on_delete=models.CASCADE)
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Transfer {self.id} von {self.source_workshop} zu {self.target_workshop}"
+
+class MaterialTransferItem(models.Model):
+    transfer = models.ForeignKey(MaterialTransfer, related_name='items', on_delete=models.CASCADE)
+    material = models.ForeignKey(Material, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    note = models.TextField(blank=True)
 
 class Order(models.Model):
     bestellt_am = models.DateField()

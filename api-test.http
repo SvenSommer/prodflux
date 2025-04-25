@@ -207,6 +207,66 @@ Authorization: Bearer {{access_token}}
 GET http://localhost:8000/api/workshops/1/material-stock/
 Authorization: Bearer {{access_token}}
 
+### TRANSFERS
+
+### Alle Transfers anzeigen
+GET http://localhost:8000/api/transfers/
+Authorization: Bearer {{access_token}}
+
+### Transfer anlegen
+POST http://localhost:8000/api/transfers/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "source_workshop": 1,
+  "target_workshop": 2,
+  "note": "Materialausgleich",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 10,
+      "note": "Überschuss an Schrauben"
+    },
+    {
+      "material": 2,
+      "quantity": 5,
+      "note": "Zusatzbedarf Kabelbinder"
+    }
+  ]
+}
+
+### spezifischen Transfer abrufen:
+GET http://localhost:8000/api/transfers/1/
+Authorization: Bearer {{access_token}}
+
+### Transfer aktualisieren
+PUT http://localhost:8000/api/transfers/2/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "source_workshop": 1,
+  "target_workshop": 2,
+  "note": "Geänderter Vermerk",
+  "items": [
+    {
+      "material": 1,
+      "quantity": 100,
+      "note": "Weniger Schrauben als geplant"
+    },
+    {
+      "material": 2,
+      "quantity": 50,
+      "note": "Neues Material hinzugefügt"
+    }
+  ]
+}
+
+### Transfer löschen
+DELETE http://localhost:8000/api/transfers/1/
+Authorization: Bearer {{access_token}}
+
 ### 📇 PRODUKTE
 
 ### Alle Produkte anzeigen

@@ -3,6 +3,8 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+
+from materials.utils import group_materials_by_category
 from .models import Product, ProductMaterial, ProductStock, ProductVariant, ProductVersion
 from materials.models import DeliveryItem, MaterialMovement, OrderItem
 from .serializers import ProductMaterialSerializer, ProductSerializer, ProductVariantSerializer, ProductVersionSerializer
@@ -57,8 +59,14 @@ class ProductMaterialListView(generics.ListAPIView):
     serializer_class = ProductMaterialSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return ProductMaterial.objects.filter(product_id=self.kwargs['product_id'])
+    def list(self, request, *args, **kwargs):
+        from materials.utils import group_materials_by_category
+
+        product_id = self.kwargs['product_id']
+        product_materials = ProductMaterial.objects.filter(product_id=product_id)
+
+        materials = [pm.material for pm in product_materials]
+        return Response(group_materials_by_category(materials, request))
 
 
 @api_view(['POST'])
@@ -225,14 +233,17 @@ def material_requirements_view(request, product_id):
 
     product = Product.objects.get(id=product_id)
     requirements = ProductMaterial.objects.filter(product=product)
-    response = []
+    materials_with_data = []
 
     for req in requirements:
         required_total = req.quantity_per_unit * quantity
 
+        # Alle Material-IDs: Hauptmaterial + Alternativen
+        material_ids = [req.material.id] + list(req.material.alternatives.values_list('id', flat=True))
+
         # 1. Lagerbestand
         movements = MaterialMovement.objects.filter(
-            material=req.material,
+            material_id__in=material_ids,
             workshop_id=workshop_id
         )
 
@@ -243,26 +254,29 @@ def material_requirements_view(request, product_id):
             elif m.change_type in ['verbrauch', 'verlust']:
                 available_quantity -= m.quantity
 
-        # 2. Bestellte Menge (alle Bestellungen)
+        # 2. Bestellte Menge
         ordered_quantity = OrderItem.objects.filter(
-            material=req.material
+            material_id__in=material_ids
         ).aggregate(total=Sum("quantity"))["total"] or Decimal(0)
 
-        # 3. Fehlmenge berechnen unter Berücksichtigung von Bestellungen
+        # 3. Fehlmenge
         missing_quantity = max(Decimal(0), required_total - (available_quantity + ordered_quantity))
 
-        response.append({
-            "material_id": req.material.id,
-            "bezeichnung": req.material.bezeichnung,
+        # Hauptmaterialobjekt für Gruppierung
+        materials_with_data.append({
+            "material": req.material,
             "required_quantity": float(required_total),
             "ordered_quantity": float(ordered_quantity),
             "available_quantity": float(available_quantity),
-            "missing_quantity": float(missing_quantity),
+            "missing_quantity": float(missing_quantity)
         })
 
-    return Response(response)
+    # Materialien für Ausgabe vorbereiten
+    return Response(group_materials_by_category([item["material"] for item in materials_with_data], request))
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def aggregated_material_requirements_view(request):
@@ -273,9 +287,8 @@ def aggregated_material_requirements_view(request):
     if not workshop_id or not isinstance(products_data, list):
         return Response({"detail": "Ungültige Eingaben."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Materialbedarfe aufsummieren: {material_id: total_required_quantity}
     material_requirements = defaultdict(lambda: {
-        "bezeichnung": "",
+        "material": None,
         "required_quantity": Decimal(0)
     })
 
@@ -289,17 +302,22 @@ def aggregated_material_requirements_view(request):
         product = Product.objects.get(id=product_id)
         for req in ProductMaterial.objects.filter(product=product):
             material_id = req.material.id
-            material_requirements[material_id]["bezeichnung"] = req.material.bezeichnung
+            material_requirements[material_id]["material"] = req.material
             material_requirements[material_id]["required_quantity"] += req.quantity_per_unit * quantity
 
-    response = []
+    materials_with_data = []
 
     for material_id, info in material_requirements.items():
         required_total = info["required_quantity"]
 
+        material = info["material"]
+
+        # Material + Alternativen
+        material_ids = [material.id] + list(material.alternatives.values_list('id', flat=True))
+
         # 1. Lagerbestand
         movements = MaterialMovement.objects.filter(
-            material_id=material_id,
+            material_id__in=material_ids,
             workshop_id=workshop_id
         )
 
@@ -312,22 +330,21 @@ def aggregated_material_requirements_view(request):
 
         # 2. Bestellte Menge
         ordered_quantity = OrderItem.objects.filter(
-            material_id=material_id
+            material_id__in=material_ids
         ).aggregate(total=Sum("quantity"))["total"] or Decimal(0)
 
-        # 3. Fehlmenge (unter Berücksichtigung von Bestellung)
+        # 3. Fehlmenge
         missing_quantity = max(Decimal(0), required_total - (available_quantity + ordered_quantity))
 
-        response.append({
-            "material_id": material_id,
-            "bezeichnung": info["bezeichnung"],
+        materials_with_data.append({
+            "material": material,
             "required_quantity": float(required_total),
             "ordered_quantity": float(ordered_quantity),
             "available_quantity": float(available_quantity),
             "missing_quantity": float(missing_quantity)
         })
 
-    return Response(response)
+    return Response(group_materials_by_category([item["material"] for item in materials_with_data], request))
 
 
 @api_view(['GET'])

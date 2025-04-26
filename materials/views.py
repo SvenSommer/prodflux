@@ -1,14 +1,23 @@
+from decimal import Decimal
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .models import Delivery, Material, MaterialCategory, MaterialMovement, MaterialTransfer, Order
 from .serializers import DeliverySerializer, MaterialCategorySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from collections import defaultdict
+from rest_framework import status
+from .utils import group_materials_by_category
+
 
 class MaterialListCreateView(generics.ListCreateAPIView):
-    queryset = Material.objects.all()
+    queryset = Material.objects.select_related('category').all()
     serializer_class = MaterialSerializer
     permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        return Response(group_materials_by_category(queryset, request))
 
 class MaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Material.objects.all()
@@ -139,29 +148,78 @@ def material_stock_view(request, material_id):
     if not workshop_id:
         return Response({'detail': 'workshop_id is required'}, status=400)
 
+    try:
+        material = Material.objects.select_related('category').prefetch_related('alternatives').get(pk=material_id)
+    except Material.DoesNotExist:
+        return Response({'detail': 'Material nicht gefunden.'}, status=404)
+
+    # Bewegungen für Hauptmaterial
     movements = MaterialMovement.objects.filter(
-        material_id=material_id,
+        material=material,
         workshop_id=workshop_id
     )
 
-    total = 0
+    total_stock = Decimal(0)
     for m in movements:
         if m.change_type in ['lieferung', 'korrektur', 'transfer']:
-            total += m.quantity
+            total_stock += m.quantity
         elif m.change_type in ['verbrauch', 'verlust']:
-            total -= m.quantity
+            total_stock -= m.quantity
+
+    # Bewegungen für Alternativen
+    alternative_stocks = []
+    for alt_material in material.alternatives.all():
+        alt_movements = MaterialMovement.objects.filter(
+            material=alt_material,
+            workshop_id=workshop_id
+        )
+
+        alt_total = Decimal(0)
+        for m in alt_movements:
+            if m.change_type in ['lieferung', 'korrektur', 'transfer']:
+                alt_total += m.quantity
+            elif m.change_type in ['verbrauch', 'verlust']:
+                alt_total -= m.quantity
+
+        # Bild-URL für Alternative holen
+        bild_url = None
+        if alt_material.bild:
+            request_context = request if request else None
+            if request_context:
+                bild_url = request.build_absolute_uri(alt_material.bild.url)
+            else:
+                bild_url = alt_material.bild.url
+
+        alternative_stocks.append({
+            "id": alt_material.id,
+            "bezeichnung": alt_material.bezeichnung,
+            "hersteller_bezeichnung": alt_material.hersteller_bezeichnung,
+            "bestell_nr": alt_material.bestell_nr,
+            "category": MaterialCategorySerializer(alt_material.category).data if alt_material.category else None,
+            "bild": alt_material.bild.url if alt_material.bild else None,
+            "bild_url": bild_url,
+            "current_stock": float(alt_total)
+        })
 
     return Response({
-        "material_id": material_id,
-        "workshop_id": workshop_id,
-        "current_stock": total
+        "material_id": material.id,
+        "bezeichnung": material.bezeichnung,
+        "bestell_nr": material.bestell_nr,
+        "hersteller_bezeichnung": material.hersteller_bezeichnung,
+        "category": material.category.name if material.category else None,
+        "current_stock": float(total_stock),
+        "workshop_id": int(workshop_id),
+        "material_details": MaterialSerializer(material, context={'request': request}).data,
+        "alternatives": alternative_stocks
     })
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_materials_stock_by_workshop(request, workshop_id):
+    from .utils import group_materials_by_category
+
     materials = Material.objects.all()
-    response_data = []
+    materials_with_stock = []
 
     for material in materials:
         movements = MaterialMovement.objects.filter(
@@ -176,11 +234,7 @@ def all_materials_stock_by_workshop(request, workshop_id):
             elif m.change_type in ['verbrauch', 'verlust']:
                 total -= m.quantity
 
-        response_data.append({
-            "material_id": material.id,
-            "bezeichnung": material.bezeichnung,
-            "bestand": total,
-            "bild_url": request.build_absolute_uri(material.bild.url) if material.bild else None
-        })
+        material.current_stock = total
+        materials_with_stock.append(material)
 
-    return Response(response_data)
+    return Response(group_materials_by_category(materials_with_stock, request))

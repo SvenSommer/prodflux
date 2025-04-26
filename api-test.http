@@ -124,7 +124,8 @@ Content-Type: application/json
 {
   "bezeichnung": "D-Sub Schraubensatz",
   "hersteller_bezeichnung": "BKL 10120291",
-  "bestell_nr": "BKL 10120291"
+  "bestell_nr": "BKL 10120291",
+  "category_id": 4
 }
 
 ### 🖼️ Material anlegen mit Bild
@@ -145,8 +146,15 @@ Content-Disposition: form-data; name="bestell_nr"
 
 BKL 10120291
 --boundary
+Content-Disposition: form-data; name="category_id"
+
+4
+--boundary
 Content-Disposition: form-data; name="bild"; filename="bild.jpg"
 Content-Type: image/jpeg
+
+< ./pfad/zum/bild.jpg
+--boundary--
 
 < ./pfad/zum/bild.jpg
 --boundary--
@@ -165,7 +173,8 @@ Content-Type: application/json
 {
   "bezeichnung": "D-Sub Schraubensatz (aktualisiert)",
   "hersteller_bezeichnung": "BKL 10120291",
-  "bestell_nr": "BKL 10120291"
+  "bestell_nr": "BKL 10120291",
+  "category_id": 4
 }
 
 ### Material aktualisieren mit Bild
@@ -186,17 +195,20 @@ Content-Disposition: form-data; name="bestell_nr"
 
 BKL 10120291
 --boundary
+Content-Disposition: form-data; name="category_id"
+
+4
+--boundary
 Content-Disposition: form-data; name="bild"; filename="bild.jpg"
 Content-Type: image/jpeg
 
 < ./pfad/zum/bild.jpg
 --boundary--
-
 ### 🗑️ Material löschen
 DELETE http://localhost:8000/api/materials/{{material_id}}/
 Authorization: Bearer {{access_token}}
 ### Materialbestand (in Werkstatt)
-GET http://localhost:8000/api/materials/1/stock?workshop_id=1
+GET http://localhost:8000/api/materials/30/stock?workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Materialbewegungen (in Werkstatt)
@@ -217,18 +229,18 @@ Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "name": "Etiketten & Aufkleber",
-  "order": 11
+  "name": "Versandmaterial",
+  "order": 12
 }
 
 ### Materialkategorie aktualisieren
-PUT http://localhost:8000/api/material-categories/11/
+PUT http://localhost:8000/api/material-categories/12/
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
 
 {
-  "name": "Etiketten & Aufkleber",
-  "order": 11
+  "name": "Lötzubehör & Kabelmaterial",
+  "order": 12
 }
 
 ### Materialkategorie löschen
@@ -397,12 +409,13 @@ GET http://localhost:8000/api/products/3/stock?workshop_id=1
 Authorization: Bearer {{access_token}}
 
 ### Benötigte Materialien für Produkt
-GET http://localhost:8000/api/products/3/materials/
+GET http://localhost:8000/api/products/2/materials/
 Authorization: Bearer {{access_token}}
 
 ### Benötigte Materialien für Produkt (z. B. 5 Stück in Werkstatt 1)
-GET http://localhost:8000/api/products/3/requirements/?quantity=5&workshop_id=1
+GET http://localhost:8000/api/products/1/requirements/?quantity=5&workshop_id=1
 Authorization: Bearer {{access_token}}
+
 
 ### Produkt fertigen
 POST http://localhost:8000/api/manufacture/

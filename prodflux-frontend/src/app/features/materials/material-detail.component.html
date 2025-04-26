@@ -9,6 +9,11 @@
       <small *ngIf="material?.hersteller_bezeichnung">
         ({{ material?.hersteller_bezeichnung }})
       </small>
+      <a [routerLink]="['/materials', material?.id, 'edit']">
+        <button mat-icon-button class="edit-button" matTooltip="Bearbeiten">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </a>
     </mat-card-title>
 
 
@@ -24,6 +29,10 @@
         <mat-option *ngFor="let w of workshops" [value]="w.id">{{ w.name }}</mat-option>
       </mat-select>
     </mat-form-field>
+
+    <div class="material-actions">
+
+    </div>
 
     <!-- Tabelle -->
     <table mat-table [dataSource]="movements" class="mat-elevation-z1 full-width-table mt-4">

@@ -35,6 +35,54 @@
   </table>
 </mat-card>
 
+<!-- Materialkategorien-Verwaltung -->
+<mat-card class="settings-card mt-6">
+  <mat-card-title>Materialkategorien verwalten</mat-card-title>
+
+  <form (ngSubmit)="saveMaterialCategory()" class="form-row">
+    <mat-form-field appearance="fill" class="grow">
+      <mat-label>Name der Kategorie</mat-label>
+      <input matInput [(ngModel)]="newMaterialCategoryName" name="materialCategoryName" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="grow">
+      <mat-label>Sortierreihenfolge</mat-label>
+      <input matInput type="number" [(ngModel)]="newMaterialCategoryOrder" name="materialCategoryOrder" required />
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" type="submit">
+      {{ editingMaterialCategory ? 'Aktualisieren' : 'Anlegen' }}
+    </button>
+  </form>
+
+  <table mat-table [dataSource]="materialCategories" class="mat-elevation-z1 full-width-table mt-4">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <td mat-cell *matCellDef="let mc">{{ mc.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="order">
+      <th mat-header-cell *matHeaderCellDef>Sortierreihenfolge</th>
+      <td mat-cell *matCellDef="let mc">{{ mc.order }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="aktionen">
+      <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+      <td mat-cell *matCellDef="let mc">
+        <button mat-icon-button color="primary" (click)="editMaterialCategory(mc)" matTooltip="Bearbeiten">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteMaterialCategory(mc.id)" matTooltip="Löschen">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="['name', 'order', 'aktionen']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['name', 'order', 'aktionen']"></tr>
+  </table>
+</mat-card>
+
 <!-- Produktversionen-Verwaltung -->
 <mat-card class="settings-card mt-6">
   <mat-card-title>Produktversionen verwalten</mat-card-title>

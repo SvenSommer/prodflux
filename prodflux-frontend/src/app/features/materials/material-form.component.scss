@@ -22,5 +22,27 @@
 }
 
 .actions {
-  margin-top: 24px;
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+
+  button {
+    min-width: 120px;
+  }
+}
+
+.form-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  span {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .delete-button {
+    color: #d32f2f; // kräftiges Rot
+  }
 }

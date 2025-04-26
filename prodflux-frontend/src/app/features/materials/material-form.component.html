@@ -1,7 +1,21 @@
 <div class="form-container">
   <mat-card class="material-form-card">
-    <mat-card-title>
-      {{ materialId ? "Material bearbeiten" : "Neues Material anlegen" }}
+    <mat-card-title class="form-title-row">
+      <span>{{
+        materialId ? "Material bearbeiten" : "Neues Material anlegen"
+      }}</span>
+
+      <!-- Löschen Button nur wenn bearbeiten -->
+      <button
+        *ngIf="materialId"
+        mat-icon-button
+        color="warn"
+        (click)="confirmDelete()"
+        matTooltip="Material löschen"
+        class="delete-button"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
     </mat-card-title>
 
     <form
@@ -10,6 +24,7 @@
       class="material-form"
       #form="ngForm"
     >
+      <!-- Formularfelder -->
       <mat-form-field appearance="fill">
         <mat-label>Bezeichnung</mat-label>
         <input
@@ -19,7 +34,7 @@
           required
         />
       </mat-form-field>
-      <br>
+      <br />
       <mat-form-field appearance="fill">
         <mat-label>Hersteller-Bezeichnung</mat-label>
         <input
@@ -41,6 +56,63 @@
       <div class="file-upload">
         <label>Materialbild auswählen:</label>
         <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+      </div>
+
+      <!-- Materialkategorie auswählen -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Kategorie</mat-label>
+        <mat-select [(ngModel)]="selectedCategoryId" name="category_id">
+          <mat-option [value]="null">Keine Kategorie</mat-option>
+          <mat-option *ngFor="let cat of categories" [value]="cat.id">
+            {{ cat.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Alternativen verwalten -->
+      <div class="alternatives-section">
+        <h3>Alternativmaterialien</h3>
+
+        <!-- Alternative hinzufügen -->
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Alternative hinzufügen</mat-label>
+          <mat-select [(ngModel)]="newAlternativeId" name="newAlternative">
+            <mat-option *ngFor="let mat of availableAlternatives" [value]="mat.id" [disabled]="isAlreadyAlternative(mat.id)">
+              {{ mat.bezeichnung }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="addAlternative()"
+          [disabled]="!newAlternativeId"
+        >
+          Hinzufügen
+        </button>
+
+        <!-- Alternative Liste -->
+        <div
+          *ngIf="alternatives.length > 0; else noAlternatives"
+          class="alternatives-list"
+        >
+          <div *ngFor="let alt of alternatives" class="alternative-item">
+            {{ alt.bezeichnung }}
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="removeAlternative(alt.id)"
+              matTooltip="Entfernen"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <ng-template #noAlternatives>
+          <p class="no-alternatives">Keine Alternativen definiert.</p>
+        </ng-template>
       </div>
 
       <div class="actions">

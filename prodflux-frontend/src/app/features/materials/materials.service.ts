@@ -4,12 +4,26 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+
 export interface Material {
   id: number;
   bezeichnung: string;
   hersteller_bezeichnung: string;
   bild: File | null;
   bild_url: string | null;
+  category?: {
+    id: number;
+    name: string;
+    order: number;
+  };
+  alternatives: number[]; // IDs der Alternativen
+}
+
+
+export interface MaterialCategoryGroup {
+  category_id: number | null;
+  category_name: string;
+  materials: Material[];
 }
 
 export interface MaterialMovement {
@@ -31,6 +45,10 @@ export class MaterialsService {
     return this.http.get<Material[]>(this.baseUrl);
   }
 
+  getMaterialsGrouped(): Observable<MaterialCategoryGroup[]> {
+    return this.http.get<MaterialCategoryGroup[]>(this.baseUrl);
+  }
+
   getMaterial(id: number) {
     return this.http.get<Material>(`${this.baseUrl}${id}/`);
   }
@@ -45,6 +63,20 @@ export class MaterialsService {
 
   deleteMaterial(id: number) {
     return this.http.delete(`${this.baseUrl}${id}/`);
+  }
+
+  getMaterialAlternatives(materialId: number): Observable<Material[]> {
+    return this.http.get<Material[]>(`${this.baseUrl}${materialId}/alternatives/`);
+  }
+
+  addAlternative(materialId: number, alternativeId: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}${materialId}/alternatives/`, {
+      alternative_material_id: alternativeId,
+    });
+  }
+
+  removeAlternative(materialId: number, alternativeId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}${materialId}/alternatives/${alternativeId}/`);
   }
 
   createMaterialFormData(data: FormData): Observable<Material> {

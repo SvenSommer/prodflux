@@ -10,6 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { WorkshopsService, Workshop } from './workshop.services';
 import { VersionsService, ProductVersion } from './versions.service';
 import { VariantsService, ProductVariant } from './variants.service';
+import { MaterialCategoriesService, MaterialCategory } from './material-categories.service';
 
 @Component({
   selector: 'app-settings',
@@ -31,10 +32,16 @@ export class SettingsComponent {
   private workshopsService = inject(WorkshopsService);
   private versionsService = inject(VersionsService);
   private variantsService = inject(VariantsService);
+  private materialCategoriesService = inject(MaterialCategoriesService);
 
   workshops: Workshop[] = [];
   newWorkshopName = '';
   editingWorkshop: Workshop | null = null;
+
+  materialCategories: MaterialCategory[] = [];
+  newMaterialCategoryName = '';
+  newMaterialCategoryOrder: number | null = null;
+  editingMaterialCategory: MaterialCategory | null = null;
 
   versions: ProductVersion[] = [];
   newVersionName = '';
@@ -54,6 +61,7 @@ export class SettingsComponent {
     this.workshopsService.getAll().subscribe(ws => this.workshops = ws);
     this.versionsService.getAll().subscribe(v => this.versions = v);
     this.variantsService.getAll().subscribe(v => this.variants = v);
+    this.materialCategoriesService.getAll().subscribe(mc => this.materialCategories = mc);
   }
 
   saveWorkshop() {
@@ -77,6 +85,40 @@ export class SettingsComponent {
   deleteWorkshop(id: number) {
     if (confirm('Wirklich löschen?')) {
       this.workshopsService.delete(id).subscribe(() => this.load());
+    }
+  }
+
+  saveMaterialCategory() {
+    if (this.newMaterialCategoryName.trim() === '' || this.newMaterialCategoryOrder == null) {
+      return;
+    }
+
+    const payload = {
+      name: this.newMaterialCategoryName,
+      order: this.newMaterialCategoryOrder,
+    };
+
+    const request = this.editingMaterialCategory
+      ? this.materialCategoriesService.update(this.editingMaterialCategory.id, payload)
+      : this.materialCategoriesService.create(payload);
+
+    request.subscribe(() => {
+      this.newMaterialCategoryName = '';
+      this.newMaterialCategoryOrder = null;
+      this.editingMaterialCategory = null;
+      this.load();
+    });
+  }
+
+  editMaterialCategory(mc: MaterialCategory) {
+    this.editingMaterialCategory = mc;
+    this.newMaterialCategoryName = mc.name;
+    this.newMaterialCategoryOrder = mc.order;
+  }
+
+  deleteMaterialCategory(id: number) {
+    if (confirm('Wirklich löschen?')) {
+      this.materialCategoriesService.delete(id).subscribe(() => this.load());
     }
   }
 

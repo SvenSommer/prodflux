@@ -1,7 +1,7 @@
 // src/app/features/materials/material-detail.component.ts
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MaterialsService, Material, MaterialMovement } from './materials.service';
 import { MatCardModule } from '@angular/material/card';
@@ -20,6 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     MatCardModule,
     MatFormFieldModule,
     MatIconModule,

@@ -207,6 +207,53 @@ Authorization: Bearer {{access_token}}
 GET http://localhost:8000/api/workshops/1/material-stock/
 Authorization: Bearer {{access_token}}
 
+### Materialkategorien abrufen
+GET http://localhost:8000/api/material-categories/
+Authorization: Bearer {{access_token}}
+
+### Neue Materialkategorie erstellen
+POST http://localhost:8000/api/material-categories/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "Etiketten & Aufkleber",
+  "order": 11
+}
+
+### Materialkategorie aktualisieren
+PUT http://localhost:8000/api/material-categories/11/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "Etiketten & Aufkleber",
+  "order": 11
+}
+
+### Materialkategorie löschen
+DELETE http://localhost:8000/api/material-categories/13/
+Authorization: Bearer {{access_token}}
+
+---
+
+### Materialalternativen abrufen (für ein Material)
+GET http://localhost:8000/api/materials/24/alternatives/
+Authorization: Bearer {{access_token}}
+
+### Materialalternative hinzufügen
+POST http://localhost:8000/api/materials/24/alternatives/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "alternative_material_id": 30
+}
+
+### Materialalternative entfernen
+DELETE http://localhost:8000/api/materials/5/alternatives/8/
+Authorization: Bearer {{access_token}}
+
 ### TRANSFERS
 
 ### Alle Transfers anzeigen

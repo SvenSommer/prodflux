@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .models import Delivery, Material, MaterialMovement, MaterialTransfer, Order
-from .serializers import DeliverySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer
+from .models import Delivery, Material, MaterialCategory, MaterialMovement, MaterialTransfer, Order
+from .serializers import DeliverySerializer, MaterialCategorySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
@@ -65,6 +65,52 @@ class MaterialTransferDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MaterialTransfer.objects.all()
     serializer_class = MaterialTransferSerializer
     permission_classes = [IsAuthenticated]
+
+class MaterialCategoryListCreateView(generics.ListCreateAPIView):
+    queryset = MaterialCategory.objects.all()
+    serializer_class = MaterialCategorySerializer
+    permission_classes = [IsAuthenticated]
+
+class MaterialCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MaterialCategory.objects.all()
+    serializer_class = MaterialCategorySerializer
+    permission_classes = [IsAuthenticated]
+
+class MaterialAlternativesView(generics.ListCreateAPIView):
+    serializer_class = MaterialSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        material_id = self.kwargs['pk']
+        material = Material.objects.get(pk=material_id)
+        return material.alternatives.all()
+
+    def post(self, request, pk):
+        material = Material.objects.get(pk=pk)
+        alternative_id = request.data.get('alternative_material_id')
+
+        if not alternative_id:
+            return Response({'detail': 'alternative_material_id is required.'}, status=400)
+
+        if int(alternative_id) == material.id:
+            return Response({'detail': 'Ein Material kann nicht sich selbst als Alternative haben.'}, status=400)
+
+        alternative = Material.objects.get(pk=alternative_id)
+
+        # Alternative symmetrisch hinzufügen
+        material.alternatives.add(alternative)
+        alternative.alternatives.add(material)
+
+        return Response({'detail': 'Alternative symmetrisch hinzugefügt.'}, status=201)
+
+    def delete(self, request, pk, alternative_pk):
+        material = Material.objects.get(pk=pk)
+        alternative = Material.objects.get(pk=alternative_pk)
+
+        material.alternatives.remove(alternative)
+        alternative.alternatives.remove(material)
+
+        return Response({'detail': 'Alternative symmetrisch entfernt.'}, status=204)
 
 class DeliveryListCreateView(generics.ListCreateAPIView):
     queryset = Delivery.objects.all().order_by('-created_at')

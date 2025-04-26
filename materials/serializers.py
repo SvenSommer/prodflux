@@ -1,15 +1,23 @@
 # serializers.py (in materials)
 
 from rest_framework import serializers
-from .models import Material, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem
+from .models import Material, MaterialCategory, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem
 from django.contrib.contenttypes.models import ContentType
+
+class MaterialCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MaterialCategory
+        fields = ['id', 'name', 'order']
 
 class MaterialSerializer(serializers.ModelSerializer):
     bild_url = serializers.SerializerMethodField()
+    category = MaterialCategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(queryset=MaterialCategory.objects.all(), source='category', write_only=True, required=False)
+    alternatives = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), many=True, required=False)
 
     class Meta:
         model = Material
-        fields = ['id', 'bezeichnung', 'hersteller_bezeichnung', 'bestell_nr', 'bild', 'bild_url']
+        fields = ['id', 'bezeichnung', 'hersteller_bezeichnung', 'bestell_nr', 'bild', 'bild_url', 'category', 'category_id', 'alternatives']
 
     def get_bild_url(self, obj):
         request = self.context.get('request')

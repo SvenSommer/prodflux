@@ -7,11 +7,23 @@ from core.models import Workshop
 from decimal import Decimal, ROUND_HALF_UP
 
 
+class MaterialCategory(models.Model):
+    name = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
 class Material(models.Model):
     bezeichnung = models.CharField(max_length=255)
     hersteller_bezeichnung = models.CharField(max_length=255, blank=True)
     bestell_nr = models.CharField(max_length=100, blank=True)
     bild = models.ImageField(upload_to='material_images/', null=True, blank=True)
+    category = models.ForeignKey(MaterialCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='materials')
+    alternatives = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='alternative_to')
 
     def __str__(self):
         return self.bezeichnung

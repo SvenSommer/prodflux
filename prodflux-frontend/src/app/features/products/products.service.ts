@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { MaterialCategoryGroup } from '../materials/materials.service';
 
 export interface Product {
   id: number;
@@ -89,8 +90,8 @@ export class ProductsService {
     }
   }
 
-  getProductMaterials(id: number): Observable<ProductMaterial[]> {
-    return this.http.get<ProductMaterial[]>(`${this.baseUrl}/products/${id}/materials/`);
+  getProductMaterials(productId: number): Observable<MaterialCategoryGroup[]> {
+    return this.http.get<MaterialCategoryGroup[]>(`${this.baseUrl}/products/${productId}/materials/`);
   }
 
   addProductMaterial(data: ProductMaterial): Observable<ProductMaterial> {

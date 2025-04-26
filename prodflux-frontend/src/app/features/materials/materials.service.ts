@@ -16,7 +16,8 @@ export interface Material {
     name: string;
     order: number;
   };
-  alternatives: number[]; // IDs der Alternativen
+  alternatives: number[];
+  required_quantity_per_unit?: number;
 }
 
 
@@ -40,10 +41,6 @@ export class MaterialsService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/api/materials/`;
 
-
-  getMaterials(): Observable<Material[]> {
-    return this.http.get<Material[]>(this.baseUrl);
-  }
 
   getMaterialsGrouped(): Observable<MaterialCategoryGroup[]> {
     return this.http.get<MaterialCategoryGroup[]>(this.baseUrl);

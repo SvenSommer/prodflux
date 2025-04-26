@@ -49,3 +49,56 @@
 .full-width-table td.text-center {
   text-align: center;
 }
+
+.material-category-block {
+  margin-top: 2rem;
+}
+
+.category-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.25rem;
+}
+
+.alternatives-wrapper {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #f1f3f5;
+  border-left: 3px solid #64b5f6;
+  border-radius: 4px;
+}
+
+.alternative-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1976d2;
+}
+
+.oder-text {
+  display: inline-block;
+  margin-right: 0.5rem;
+  font-style: italic;
+  color: #555;
+}
+
+.alternative-item {
+  margin-bottom: 0.5rem;
+}
+
+.material-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 60px; /* Größere Zeilenhöhe */
+}
+
+.material-inline-image {
+  width: 48px;       /* Größeres Bild */
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+}

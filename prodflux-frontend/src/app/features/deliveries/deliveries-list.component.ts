@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DeliveriesService, Delivery } from './deliveries.service';
-import { MaterialsService } from '../materials/materials.service';
+import { MaterialCategoryGroup, MaterialsService } from '../materials/materials.service';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,15 +30,22 @@ export class DeliveriesListComponent {
   materialsMap = new Map<number, string>();
   workshopsMap = new Map<number, string>();
 
+  materialGroups: MaterialCategoryGroup[] = [];
+
 
   ngOnInit() {
     this.deliveriesService.getAll().subscribe(list => {
       this.deliveries = list;
     });
 
-    this.materialsService.getMaterials().subscribe(materials => {
-      materials.forEach(m => {
-        this.materialsMap.set(m.id, m.bezeichnung);
+    this.materialsService.getMaterialsGrouped().subscribe(groups => {
+      this.materialGroups = groups;
+
+      // Materialien in Map schreiben (für Materialnamen)
+      groups.forEach(group => {
+        group.materials.forEach(mat => {
+          this.materialsMap.set(mat.id, mat.bezeichnung);
+        });
       });
     });
 
@@ -46,7 +53,6 @@ export class DeliveriesListComponent {
       ws.forEach(w => this.workshopsMap.set(w.id, w.name));
     });
   }
-
   delete(id: number) {
     if (confirm('Lieferung wirklich löschen?')) {
       this.deliveriesService.delete(id).subscribe(() => {
@@ -69,5 +75,23 @@ export class DeliveriesListComponent {
   formatQuantity(qty: any): string {
     const num = parseFloat(qty);
     return Number.isInteger(num) ? num.toString() : num.toFixed(2);
+  }
+
+  getCategoryNameForMaterial(materialId: number): string {
+    for (const group of this.materialGroups) {
+      if (group.materials.find(m => m.id === materialId)) {
+        return group.category_name;
+      }
+    }
+    return 'Unbekannte Kategorie';
+  }
+
+  getItemsByCategory(items: { material: number; quantity: number }[], categoryId: number | null) {
+    const group = this.materialGroups.find(g => g.category_id === categoryId);
+    if (!group) {
+      return [];
+    }
+    const materialIdsInCategory = group.materials.map(m => m.id);
+    return items.filter(i => materialIdsInCategory.includes(i.material));
   }
 }

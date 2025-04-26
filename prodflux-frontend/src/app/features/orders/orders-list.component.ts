@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { OrdersService, Order } from './orders.service';
-import { MaterialsService } from '../materials/materials.service';
+import { MaterialCategoryGroup, MaterialsService } from '../materials/materials.service';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,14 +27,20 @@ export class OrdersListComponent {
   orders: Order[] = [];
   materialsMap = new Map<number, string>();
 
+  materialGroups: MaterialCategoryGroup[] = [];
+
   ngOnInit() {
     this.ordersService.getAll().subscribe(list => {
       this.orders = list;
     });
 
-    this.materialsService.getMaterials().subscribe(materials => {
-      materials.forEach(m => {
-        this.materialsMap.set(m.id, m.bezeichnung);
+    this.materialsService.getMaterialsGrouped().subscribe(groups => {
+      this.materialGroups = groups;
+
+      groups.forEach(group => {
+        group.materials.forEach(m => {
+          this.materialsMap.set(m.id, m.bezeichnung);
+        });
       });
     });
   }
@@ -63,5 +69,14 @@ export class OrdersListComponent {
     const num = typeof value === 'number' ? value : parseFloat(value);
     if (isNaN(num)) return '—';
     return `${num.toFixed(2)} €`;
+  }
+
+  getItemsByCategory(items: { material: number; quantity: number; preis_pro_stueck: number; quelle: string }[], categoryId: number | null) {
+    const group = this.materialGroups.find(g => g.category_id === categoryId);
+    if (!group) {
+      return [];
+    }
+    const materialIdsInGroup = group.materials.map(m => m.id);
+    return items.filter(i => materialIdsInGroup.includes(i.material));
   }
 }

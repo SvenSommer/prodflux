@@ -1,7 +1,12 @@
 <mat-card class="product-card">
   <!-- Löschen-Icon oben rechts -->
   <div class="delete-button">
-    <button mat-icon-button color="warn" (click)="deleteProduct()" matTooltip="Produkt löschen">
+    <button
+      mat-icon-button
+      color="warn"
+      (click)="deleteProduct()"
+      matTooltip="Produkt löschen"
+    >
       <mat-icon>delete</mat-icon>
     </button>
   </div>
@@ -21,45 +26,118 @@
     <div *ngIf="!editMode" class="mt-4">
       <div class="header-row">
         <h3>Zugeordnete Materialien</h3>
-        <button mat-icon-button color="primary" (click)="toggleEditMode()" matTooltip="Bearbeiten">
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="toggleEditMode()"
+          matTooltip="Bearbeiten"
+        >
           <mat-icon>edit</mat-icon>
         </button>
       </div>
 
-      <table mat-table [dataSource]="materials" class="mat-elevation-z1 full-width-table">
+      <ng-container *ngFor="let group of materialGroups">
+        <div
+          *ngIf="getMaterialsByCategory(group.category_id).length > 0"
+          class="material-category-block"
+        >
+          <h4 class="category-title">{{ group.category_name }}</h4>
 
-        <!-- Nummerierungsspalte -->
-        <ng-container matColumnDef="nr">
-          <th mat-header-cell *matHeaderCellDef>#</th>
-          <td mat-cell *matCellDef="let m; let i = index">{{ i + 1 }}</td>
-        </ng-container>
+          <table
+            mat-table
+            [dataSource]="getMaterialsByCategory(group.category_id)"
+            class="mat-elevation-z1 full-width-table mb-6"
+          >
+            <!-- Spalte # -->
+            <ng-container matColumnDef="nr">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let m; let i = index">{{ i + 1 }}</td>
+            </ng-container>
 
-        <!-- Menge -->
-        <ng-container matColumnDef="menge">
-          <th mat-header-cell *matHeaderCellDef>Menge</th>
-          <td mat-cell *matCellDef="let m">{{ m.quantity_per_unit }}</td>
-        </ng-container>
+            <!-- Spalte Material -->
+            <ng-container matColumnDef="material">
+              <th mat-header-cell *matHeaderCellDef>Material</th>
+              <td mat-cell *matCellDef="let m">
+                <div class="material-info">
+                  <img
+                    *ngIf="
+                      getMaterialOrAlternativeBildUrl(m.material) as bildUrl
+                    "
+                    [src]="bildUrl"
+                    alt="Bild"
+                    class="material-inline-image"
+                  />
+                  <a [routerLink]="['/materials', m.material]">
+                    {{ getMaterialBezeichnung(m.material) }}
+                  </a>
+                </div>
 
-        <!-- Materialbezeichnung -->
-        <ng-container matColumnDef="bezeichnung">
-          <th mat-header-cell *matHeaderCellDef>Material</th>
-          <td mat-cell *matCellDef="let m">
-            <a [routerLink]="['/materials', m.material.id]">
-              {{ getMaterialBezeichnung(m.material) }}
-            </a>
-          </td>
-        </ng-container>
+                <!-- Alternativen -->
+                <div
+                  *ngIf="getMaterialAlternatives(m.material).length > 0"
+                  class="alternatives-wrapper"
+                >
+                  <p class="alternative-label">
+                    {{
+                      getMaterialAlternatives(m.material).length > 1
+                        ? "Alternativen:"
+                        : "Alternative:"
+                    }}
+                  </p>
 
-        <!-- Hersteller -->
-        <ng-container matColumnDef="hersteller">
-          <th mat-header-cell *matHeaderCellDef>Hersteller</th>
-          <td mat-cell *matCellDef="let m">{{ getMaterialHersteller(m.material) }}</td>
-        </ng-container>
+                  <div
+                    *ngFor="let altId of getMaterialAlternatives(m.material)"
+                    class="alternative-item"
+                  >
+                    <span class="oder-text">oder</span>
+                    <div class="material-info">
+                      <img
+                        *ngIf="getMaterialBildUrl(altId)"
+                        [src]="getMaterialBildUrl(altId)"
+                        alt="Bild Alternative"
+                        class="material-inline-image"
+                      />
+                      <a [routerLink]="['/materials', altId]">
+                        {{ getMaterialBezeichnung(altId) }}
+                      </a>
+                    </div>
+                    <span *ngIf="getMaterialHersteller(altId)"
+                      >– {{ getMaterialHersteller(altId) }}</span
+                    >
+                  </div>
+                </div>
+              </td>
+            </ng-container>
 
-        <!-- Header + Rows -->
-        <tr mat-header-row *matHeaderRowDef="['nr', 'menge', 'bezeichnung', 'hersteller']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['nr', 'menge', 'bezeichnung', 'hersteller']"></tr>
-      </table>
+            <!-- Spalte Hersteller-Bezeichnung -->
+            <ng-container matColumnDef="hersteller">
+              <th mat-header-cell *matHeaderCellDef>Hersteller-Bezeichnung</th>
+              <td mat-cell *matCellDef="let m">
+                {{ getMaterialHersteller(m.material) }}
+              </td>
+            </ng-container>
+
+            <!-- Spalte Menge -->
+            <ng-container matColumnDef="menge">
+              <th mat-header-cell *matHeaderCellDef>Menge</th>
+              <td mat-cell *matCellDef="let m">{{ m.quantity_per_unit }}</td>
+            </ng-container>
+
+            <!-- Tabellenaufbau -->
+            <tr
+              mat-header-row
+              *matHeaderRowDef="['nr', 'material', 'hersteller', 'menge']"
+            ></tr>
+            <tr
+              mat-row
+              *matRowDef="
+                let row;
+                columns: ['nr', 'material', 'hersteller', 'menge']
+              "
+            ></tr>
+          </table>
+        </div>
+      </ng-container>
     </div>
 
     <!-- EDIT-MODE -->
@@ -71,36 +149,116 @@
         </button>
       </div>
 
-      <table mat-table [dataSource]="materialsList" class="mat-elevation-z1 full-width-table">
-        <ng-container matColumnDef="quantity">
-          <th mat-header-cell *matHeaderCellDef class="text-center">Menge</th>
-          <td mat-cell *matCellDef="let mat" class="text-center">
-            <mat-form-field appearance="outline" class="quantity-field">
-              <input
-                matInput
-                type="number"
-                step="1"
-                min="0"
-                [(ngModel)]="materialAssignments[mat.id]"
-                [name]="'qty_' + mat.id"
-              />
-            </mat-form-field>
-          </td>
-        </ng-container>
+      <ng-container *ngFor="let group of materialGroups">
+        <div *ngIf="group.materials.length > 0" class="material-category-block">
+          <h4 class="category-title">{{ group.category_name }}</h4>
 
-        <ng-container matColumnDef="material">
-          <th mat-header-cell *matHeaderCellDef>Material</th>
-          <td mat-cell *matCellDef="let mat">{{ mat.bezeichnung }}</td>
-        </ng-container>
+          <table
+            mat-table
+            [dataSource]="group.materials"
+            class="mat-elevation-z1 full-width-table mb-6"
+          >
+            <!-- Material -->
+            <ng-container matColumnDef="material">
+              <th mat-header-cell *matHeaderCellDef>Material</th>
+              <td mat-cell *matCellDef="let mat">
+                <div class="material-info">
+                  <img
+                    *ngIf="mat.bild_url"
+                    [src]="mat.bild_url"
+                    alt="Bild"
+                    class="material-inline-image"
+                  />
+                  <a [routerLink]="['/materials', mat.id]">{{
+                    mat.bezeichnung
+                  }}</a>
+                </div>
 
-        <ng-container matColumnDef="hersteller">
-          <th mat-header-cell *matHeaderCellDef>Hersteller</th>
-          <td mat-cell *matCellDef="let mat">{{ mat.hersteller_bezeichnung }}</td>
-        </ng-container>
+                <!-- Alternativen darstellen -->
+                <div
+                  *ngIf="mat.alternatives.length > 0"
+                  class="alternatives-wrapper"
+                >
+                  <p class="alternative-label">
+                    {{
+                      mat.alternatives.length > 1
+                        ? "Alternativen:"
+                        : "Alternative:"
+                    }}
+                  </p>
 
-        <tr mat-header-row *matHeaderRowDef="['quantity', 'material', 'hersteller']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['quantity', 'material', 'hersteller']"></tr>
-      </table>
+                  <div
+                    *ngFor="let altId of mat.alternatives"
+                    class="alternative-item"
+                  >
+                    <span class="oder-text">oder</span>
+                    <div class="material-info">
+                      <img
+                        *ngIf="getMaterialBildUrl(altId)"
+                        [src]="getMaterialBildUrl(altId)"
+                        alt="Bild Alternative"
+                        class="material-inline-image"
+                      />
+                      <a [routerLink]="['/materials', altId]">{{
+                        getMaterialBezeichnung(altId)
+                      }}</a>
+                    </div>
+                    <span *ngIf="getMaterialHersteller(altId)"
+                      >– {{ getMaterialHersteller(altId) }}</span
+                    >
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Hersteller-Bezeichnung -->
+            <ng-container matColumnDef="hersteller">
+              <th mat-header-cell *matHeaderCellDef>Hersteller-Bezeichnung</th>
+              <td mat-cell *matCellDef="let mat">
+                {{ mat.hersteller_bezeichnung }}
+              </td>
+            </ng-container>
+            <!-- Menge -->
+            <ng-container matColumnDef="quantity">
+              <th mat-header-cell *matHeaderCellDef class="text-center">
+                Menge
+              </th>
+              <td mat-cell *matCellDef="let mat" class="text-center">
+                <mat-form-field appearance="outline" class="quantity-field">
+                  <input
+                    matInput
+                    type="number"
+                    step="1"
+                    min="0"
+                    [(ngModel)]="materialAssignments[mat.id]"
+                    [name]="'qty_' + mat.id"
+                  />
+                </mat-form-field>
+              </td>
+            </ng-container>
+
+            <!-- Tabellenaufbau -->
+            <tr
+              mat-header-row
+              *matHeaderRowDef="['material', 'hersteller', 'quantity']"
+            ></tr>
+            <tr
+              mat-row
+              *matRowDef="
+                let row;
+                columns: ['material', 'hersteller', 'quantity']
+              "
+            ></tr>
+          </table>
+
+          <!-- ➡️ Speicher-Button am Ende jeder Tabelle -->
+          <div class="text-right mb-6">
+            <button mat-raised-button color="primary" type="submit">
+              <mat-icon class="mr-1">save</mat-icon> Speichern & schließen
+            </button>
+          </div>
+        </div>
+      </ng-container>
     </form>
   </mat-card-content>
 </mat-card>

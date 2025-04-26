@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { OrdersService, OrderItem } from './orders.service';
-import { MaterialsService, Material } from '../materials/materials.service';
+import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -42,6 +42,8 @@ export class OrderFormComponent {
   versandkosten: number = 0;
   notiz: string = '';
 
+  materialGroups: MaterialCategoryGroup[] = [];
+
   materialsList: Material[] = [];
   materialAssignments: {
     [materialId: number]: { quantity: number; preis: number; quelle: string };
@@ -51,12 +53,15 @@ export class OrderFormComponent {
     console.log('[OrderForm] Init');
     this.orderId = Number(this.route.snapshot.paramMap.get('id')) || null;
 
-    this.materialsService.getMaterials().subscribe(mats => {
-      this.materialsList = mats;
-      console.log('[OrderForm] materialsList:', mats);
+    this.materialsService.getMaterialsGrouped().subscribe(groups => {
+      this.materialGroups = groups;
 
-      // Initialisiere alle Materialzuweisungen auf 0
-      for (const mat of mats) {
+      const allMaterials = groups.flatMap(g => g.materials);
+      this.materialsList = allMaterials;
+
+      console.log('[OrderForm] materialsList:', allMaterials);
+
+      for (const mat of allMaterials) {
         this.materialAssignments[mat.id] = {
           quantity: 0,
           preis: 0,
@@ -64,7 +69,6 @@ export class OrderFormComponent {
         };
       }
 
-      // Bestellung laden (falls im Edit-Modus)
       if (this.orderId) {
         this.ordersService.get(this.orderId).subscribe(order => {
           console.log('[OrderForm] fetched order:', order);
@@ -75,10 +79,8 @@ export class OrderFormComponent {
           this.notiz = order.notiz || '';
 
           order.items.forEach(item => {
-            // Achtung: Material-ID muss in der Liste vorhanden sein
             if (!this.materialAssignments[item.material]) {
               console.warn('[OrderForm] WARN: material id not found in materialAssignments:', item.material);
-              // Optional: Dynamisch hinzufügen (falls gewünscht)
               this.materialAssignments[item.material] = {
                 quantity: item.quantity,
                 preis: item.preis_pro_stueck,

@@ -32,11 +32,16 @@
     <ng-container matColumnDef="items">
       <th mat-header-cell *matHeaderCellDef>Materialien</th>
       <td mat-cell *matCellDef="let d">
-        <ul class="material-list">
-          <li *ngFor="let i of d.items">
-            {{ formatQuantity(i.quantity) }}x {{ getMaterialName(i.material) }}
-          </li>
-        </ul>
+        <ng-container *ngFor="let group of materialGroups">
+          <div *ngIf="getItemsByCategory(d.items, group.category_id).length > 0" class="material-category-block">
+            <div class="category-title">{{ group.category_name }}</div>
+            <ul class="material-list">
+              <li *ngFor="let item of getItemsByCategory(d.items, group.category_id)">
+                {{ formatQuantity(item.quantity) }}x {{ getMaterialName(item.material) }}
+              </li>
+            </ul>
+          </div>
+        </ng-container>
       </td>
     </ng-container>
 

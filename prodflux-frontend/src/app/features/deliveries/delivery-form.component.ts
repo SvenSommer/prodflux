@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { DeliveriesService, DeliveryItem } from './deliveries.service';
-import { MaterialsService, Material } from '../materials/materials.service';
+import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -45,7 +45,10 @@ export class DeliveryFormComponent {
 
   workshops: Workshop[] = [];
   materialsList: Material[] = [];
+
+  materialGroups: MaterialCategoryGroup[] = [];
   materialAssignments: { [materialId: number]: number } = {};
+
 
   editMode = true;
 
@@ -53,10 +56,12 @@ export class DeliveryFormComponent {
     this.deliveryId = Number(this.route.snapshot.paramMap.get('id')) || null;
 
     this.workshopsService.getAll().subscribe(ws => this.workshops = ws);
-    this.materialsService.getMaterials().subscribe(mats => {
-      this.materialsList = mats;
-      this.materialAssignments = {};
-      for (const mat of mats) {
+    this.materialsService.getMaterialsGrouped().subscribe(groups => {
+      this.materialGroups = groups;
+
+      // Alle Materialien extrahieren, um materialAssignments vorzubereiten
+      const allMaterials = groups.flatMap(g => g.materials);
+      for (const mat of allMaterials) {
         this.materialAssignments[mat.id] = 0;
       }
     });
@@ -93,10 +98,18 @@ export class DeliveryFormComponent {
   }
 
   getMaterialBezeichnung(id: number) {
-    return this.materialsList.find(m => m.id === id)?.bezeichnung || `#${id}`;
+    for (const group of this.materialGroups) {
+      const mat = group.materials.find(m => m.id === id);
+      if (mat) return mat.bezeichnung;
+    }
+    return `#${id}`;
   }
 
   getMaterialHersteller(id: number) {
-    return this.materialsList.find(m => m.id === id)?.hersteller_bezeichnung || '';
+    for (const group of this.materialGroups) {
+      const mat = group.materials.find(m => m.id === id);
+      if (mat) return mat.hersteller_bezeichnung;
+    }
+    return '';
   }
 }

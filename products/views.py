@@ -4,9 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
+from materials.serializers import MaterialSerializer
 from materials.utils import group_materials_by_category
 from .models import Product, ProductMaterial, ProductStock, ProductVariant, ProductVersion
-from materials.models import DeliveryItem, MaterialMovement, OrderItem
+from materials.models import DeliveryItem, MaterialCategory, MaterialMovement, OrderItem
 from .serializers import ProductMaterialSerializer, ProductSerializer, ProductVariantSerializer, ProductVersionSerializer
 from decimal import Decimal
 from django.db.models import Sum
@@ -56,17 +57,45 @@ class ProductMaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 class ProductMaterialListView(generics.ListAPIView):
-    serializer_class = ProductMaterialSerializer
     permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        from materials.utils import group_materials_by_category
-
         product_id = self.kwargs['product_id']
-        product_materials = ProductMaterial.objects.filter(product_id=product_id)
+        product_materials = ProductMaterial.objects.select_related('material__category').filter(product_id=product_id)
 
-        materials = [pm.material for pm in product_materials]
-        return Response(group_materials_by_category(materials, request))
+        # Vorbereiten: Material + benötigte Menge
+        grouped_materials = defaultdict(list)
+
+        for pm in product_materials:
+            material = pm.material
+            category_name = material.category.name if material.category else "Ohne Kategorie"
+
+            material_data = MaterialSerializer(material, context={'request': request}).data
+            material_data["required_quantity_per_unit"] = float(pm.quantity_per_unit)
+
+            grouped_materials[category_name].append(material_data)
+
+        # Nach Kategorien sortieren
+        sorted_response = []
+        categories = MaterialCategory.objects.all().order_by('order')
+
+        for category in categories:
+            materials_in_category = grouped_materials.get(category.name, [])
+            sorted_response.append({
+                "category_id": category.id,
+                "category_name": category.name,
+                "materials": materials_in_category
+            })
+
+        # Materialien ohne Kategorie (falls vorhanden)
+        if "Ohne Kategorie" in grouped_materials:
+            sorted_response.append({
+                "category_id": None,
+                "category_name": "Ohne Kategorie",
+                "materials": grouped_materials["Ohne Kategorie"]
+            })
+
+        return Response(sorted_response)
 
 
 @api_view(['POST'])

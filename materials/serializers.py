@@ -14,10 +14,17 @@ class MaterialSerializer(serializers.ModelSerializer):
     category = MaterialCategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(queryset=MaterialCategory.objects.all(), source='category', write_only=True, required=False)
     alternatives = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), many=True, required=False)
+    current_stock = serializers.SerializerMethodField()
 
     class Meta:
         model = Material
-        fields = ['id', 'bezeichnung', 'hersteller_bezeichnung', 'bestell_nr', 'bild', 'bild_url', 'category', 'category_id', 'alternatives']
+        fields = [
+            'id', 'bezeichnung', 'hersteller_bezeichnung', 'bestell_nr',
+            'bild', 'bild_url',
+            'category', 'category_id',
+            'alternatives',
+            'current_stock'   # ✅ NEU: aktueller Bestand
+        ]
 
     def get_bild_url(self, obj):
         request = self.context.get('request')
@@ -26,6 +33,9 @@ class MaterialSerializer(serializers.ModelSerializer):
         elif obj.bild:
             return obj.bild.url
         return None
+
+    def get_current_stock(self, obj):
+        return getattr(obj, 'current_stock', None)
 
 class MaterialMovementSerializer(serializers.ModelSerializer):
     class Meta:

@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { WorkshopService, Workshop, MaterialStockEntry, ProductLifecycleEntry, MaterialRequirement } from './workshop.service';
+import { WorkshopService, Workshop, ProductLifecycleEntry, MaterialRequirement, MaterialStockGroup } from './workshop.service';
 
 
 
@@ -42,7 +42,8 @@ export class WorkshopDetailComponent {
   workshopId = 0;
   workshop: Workshop | null = null;
 
-  stock: MaterialStockEntry[] = [];
+
+  stock: MaterialStockGroup[] = [];
   displayedColumns = ['nr', 'bild', 'bezeichnung', 'bestand'];
 
   productLifecycle: ProductLifecycleEntry[] = [];

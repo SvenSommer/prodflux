@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface Workshop {
@@ -8,12 +9,22 @@ export interface Workshop {
   name: string;
 }
 
-export interface MaterialStockEntry {
-  material_id: number;
+export interface MaterialStockMaterial {
+  id: number;
   bezeichnung: string;
-  bestand: number;
-  bild_url?: string;
+  hersteller_bezeichnung: string;
+  bestell_nr: string;
+  bild_url: string | null;
+  bestand: number; // Aus current_stock
+  alternatives: number[];
 }
+
+export interface MaterialStockGroup {
+  category_id: number | null;
+  category_name: string;
+  materials: MaterialStockMaterial[];
+}
+
 
 export interface ProductLifecycleEntry {
   product_id: number;
@@ -43,8 +54,31 @@ export class WorkshopService {
     return this.http.get<Workshop[]>(`${this.baseUrl}/workshops/`);
   }
 
-  getStock(workshopId: number): Observable<MaterialStockEntry[]> {
-    return this.http.get<MaterialStockEntry[]>(`${this.baseUrl}/workshops/${workshopId}/material-stock/`);
+  getStock(workshopId: number): Observable<MaterialStockGroup[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/workshops/${workshopId}/material-stock/`).pipe(
+      tap((response) => {
+        console.log('[WorkshopService] Material-Stock API Response:', response);
+      }),
+      map((response) => {
+        // Das Backend liefert bereits Gruppen, wir müssen sie nur mappen
+        const mappedGroups: MaterialStockGroup[] = response.map(group => ({
+          category_id: group.category_id,
+          category_name: group.category_name,
+          materials: group.materials.map((mat: any) => ({
+            id: mat.id,
+            bezeichnung: mat.bezeichnung,
+            hersteller_bezeichnung: mat.hersteller_bezeichnung,
+            bestell_nr: mat.bestell_nr,
+            bild_url: mat.bild_url ?? null,
+            bestand: mat.current_stock ?? 0,  // 🛠 Hier musst du aufpassen, evtl. heißt das anders
+            alternatives: mat.alternatives ?? [],
+          }))
+        }));
+
+        console.log('[WorkshopService] Mapped MaterialStockGroups:', mappedGroups);
+        return mappedGroups;
+      })
+    );
   }
 
   getLifecycleOverview(workshopId: number): Observable<ProductLifecycleEntry[]> {

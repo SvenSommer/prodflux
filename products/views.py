@@ -306,14 +306,12 @@ def material_requirements_view(request, product_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def aggregated_material_requirements_view(request):
     data = request.data
-    products_data = data.get("products", [])
+    products_data = data.get("products")
     workshop_id = data.get("workshop_id")
 
-    if not workshop_id or not isinstance(products_data, list):
+    if not workshop_id or not isinstance(products_data, list) or not products_data:
         return Response({"detail": "Ungültige Eingaben."}, status=status.HTTP_400_BAD_REQUEST)
 
     material_requirements = defaultdict(lambda: {
@@ -321,30 +319,38 @@ def aggregated_material_requirements_view(request):
         "required_quantity": Decimal(0)
     })
 
+    # Materialien und Mengen aufaddieren
     for entry in products_data:
-        try:
-            product_id = int(entry["product_id"])
-            quantity = Decimal(str(entry["quantity"]))
-        except (KeyError, ValueError, TypeError):
-            return Response({"detail": f"Ungültiger Eintrag: {entry}"}, status=400)
+        product_id = entry.get("product_id")
+        quantity = entry.get("quantity")
 
-        product = Product.objects.get(id=product_id)
+        if not product_id or quantity is None:
+            return Response({"detail": f"Ungültiger Eintrag: {entry}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            product = Product.objects.get(id=product_id)
+            quantity = Decimal(str(quantity))
+        except (Product.DoesNotExist, ValueError, TypeError):
+            return Response({"detail": f"Ungültiger Eintrag: {entry}"}, status=status.HTTP_400_BAD_REQUEST)
+
         for req in ProductMaterial.objects.filter(product=product):
             material_id = req.material.id
             material_requirements[material_id]["material"] = req.material
             material_requirements[material_id]["required_quantity"] += req.quantity_per_unit * quantity
 
-    materials_with_data = []
+    response_data = []
 
-    for material_id, info in material_requirements.items():
+    for info in material_requirements.values():
+        material = info["material"]
         required_total = info["required_quantity"]
 
-        material = info["material"]
+        if not material:
+            continue  # Sicherheit, sollte aber eigentlich nicht vorkommen
 
-        # Material + Alternativen
+        # IDs von Material und Alternativen
         material_ids = [material.id] + list(material.alternatives.values_list('id', flat=True))
 
-        # 1. Lagerbestand
+        # Lagerbestand
         movements = MaterialMovement.objects.filter(
             material_id__in=material_ids,
             workshop_id=workshop_id
@@ -357,24 +363,24 @@ def aggregated_material_requirements_view(request):
             elif m.change_type in ['verbrauch', 'verlust']:
                 available_quantity -= m.quantity
 
-        # 2. Bestellte Menge
+        # Bestellte Menge
         ordered_quantity = OrderItem.objects.filter(
             material_id__in=material_ids
         ).aggregate(total=Sum("quantity"))["total"] or Decimal(0)
 
-        # 3. Fehlmenge
+        # Fehlmenge
         missing_quantity = max(Decimal(0), required_total - (available_quantity + ordered_quantity))
 
-        materials_with_data.append({
-            "material": material,
+        response_data.append({
+            "material_id": material.id,
+            "bezeichnung": material.bezeichnung,
             "required_quantity": float(required_total),
             "ordered_quantity": float(ordered_quantity),
             "available_quantity": float(available_quantity),
-            "missing_quantity": float(missing_quantity)
+            "missing_quantity": float(missing_quantity),
         })
 
-    return Response(group_materials_by_category([item["material"] for item in materials_with_data], request))
-
+    return Response(response_data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

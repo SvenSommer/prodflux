@@ -44,6 +44,24 @@ export interface MaterialRequirement {
   missing_quantity: number;
 }
 
+export interface MaterialRequirementGroup {
+  category_id: number;
+  category_name: string;
+  materials: MaterialRequirementExtended[];
+}
+
+export interface MaterialRequirementExtended {
+  id: number;
+  bezeichnung: string;
+  hersteller_bezeichnung: string;
+  bestell_nr: string;
+  bild_url: string | null;
+  required_quantity: number;
+  ordered_quantity: number;
+  available_quantity: number;
+  missing_quantity: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WorkshopService {
   private http = inject(HttpClient);
@@ -101,12 +119,5 @@ export class WorkshopService {
     return this.http.post(`${this.baseUrl}/manufacture/`, payload);
   }
 
-  getSingleProductRequirements(
-    productId: number,
-    quantity: number,
-    workshopId: number
-  ): Observable<MaterialRequirement[]> {
-    const url = `${this.baseUrl}/products/${productId}/requirements/?quantity=${quantity}&workshop_id=${workshopId}`;
-    return this.http.get<MaterialRequirement[]>(url);
-  }
+
 }

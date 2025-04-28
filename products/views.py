@@ -260,17 +260,23 @@ def material_requirements_view(request, product_id):
     except (TypeError, ValueError):
         return Response({"detail": "Ungültige Eingaben."}, status=400)
 
-    product = Product.objects.get(id=product_id)
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response({"detail": "Produkt nicht gefunden."}, status=404)
+
     requirements = ProductMaterial.objects.filter(product=product)
-    materials_with_data = []
+    grouped = {}
 
     for req in requirements:
         required_total = req.quantity_per_unit * quantity
 
-        # Alle Material-IDs: Hauptmaterial + Alternativen
-        material_ids = [req.material.id] + list(req.material.alternatives.values_list('id', flat=True))
+        material = req.material
+        category = material.category
 
-        # 1. Lagerbestand
+        material_ids = [material.id] + list(material.alternatives.values_list('id', flat=True))
+
+        # Lagerbestand berechnen
         movements = MaterialMovement.objects.filter(
             material_id__in=material_ids,
             workshop_id=workshop_id
@@ -283,25 +289,34 @@ def material_requirements_view(request, product_id):
             elif m.change_type in ['verbrauch', 'verlust']:
                 available_quantity -= m.quantity
 
-        # 2. Bestellte Menge
         ordered_quantity = OrderItem.objects.filter(
             material_id__in=material_ids
         ).aggregate(total=Sum("quantity"))["total"] or Decimal(0)
 
-        # 3. Fehlmenge
         missing_quantity = max(Decimal(0), required_total - (available_quantity + ordered_quantity))
 
-        # Hauptmaterialobjekt für Gruppierung
-        materials_with_data.append({
-            "material": req.material,
+        # Gruppe nach Kategorie
+        if category.id not in grouped:
+            grouped[category.id] = {
+                "category_id": category.id,
+                "category_name": category.name,
+                "materials": []
+            }
+
+        grouped[category.id]["materials"].append({
+            "id": material.id,
+            "bezeichnung": material.bezeichnung,
+            "hersteller_bezeichnung": material.hersteller_bezeichnung,
+            "bestell_nr": material.bestell_nr,
+            "bild_url": material.bild.url if material.bild else None,
             "required_quantity": float(required_total),
             "ordered_quantity": float(ordered_quantity),
             "available_quantity": float(available_quantity),
-            "missing_quantity": float(missing_quantity)
+            "missing_quantity": float(missing_quantity),
         })
 
-    # Materialien für Ausgabe vorbereiten
-    return Response(group_materials_by_category([item["material"] for item in materials_with_data], request))
+    # Rückgabe als Liste der Gruppen
+    return Response(list(grouped.values()))
 
 
 @api_view(['POST'])

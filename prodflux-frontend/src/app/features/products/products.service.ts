@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MaterialCategoryGroup } from '../materials/materials.service';
+import { MaterialRequirementGroup } from '../workshops/workshop.service';
 
 export interface Product {
   id: number;
@@ -103,12 +104,6 @@ export class ProductsService {
   }
 
   getMaterialRequirements(productId: number, quantity: number, workshopId: number) {
-    return this.http.get<{
-      material_id: number;
-      bezeichnung: string;
-      required_quantity: number;
-      available_quantity: number;
-      missing_quantity: number;
-    }[]>(`${this.baseUrl}/products/${productId}/requirements/?quantity=${quantity}&workshop_id=${workshopId}`);
+    return this.http.get<MaterialRequirementGroup[]>(`${this.baseUrl}/products/${productId}/requirements/?quantity=${quantity}&workshop_id=${workshopId}`);
   }
 }

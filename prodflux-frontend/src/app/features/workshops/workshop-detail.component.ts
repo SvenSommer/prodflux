@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { WorkshopService, Workshop, ProductLifecycleEntry, MaterialRequirement, MaterialStockGroup } from './workshop.service';
+import { ProductsService } from '../products/products.service';
 
 
 
@@ -37,6 +38,7 @@ import { WorkshopService, Workshop, ProductLifecycleEntry, MaterialRequirement, 
 export class WorkshopDetailComponent {
   private route = inject(ActivatedRoute);
   private workshopService = inject(WorkshopService);
+  private productService = inject(ProductsService);
   private dialog = inject(MatDialog);
 
   workshopId = 0;
@@ -114,11 +116,22 @@ export class WorkshopDetailComponent {
       return;
     }
 
-    this.workshopService
-      .getSingleProductRequirements(this.selectedProduct.product_id, this.orderQty, this.workshopId)
-      .subscribe((data) => {
-        this.materialRequirements = data;
-      });
+    this.productService
+    .getMaterialRequirements(this.selectedProduct.product_id, this.orderQty, this.workshopId)
+    .subscribe((data) => {
+      const flattenedMaterials = data.flatMap(group =>
+        group.materials.map((material) => ({
+          material_id: material.id,
+          bezeichnung: material.bezeichnung,
+          required_quantity: material.required_quantity,
+          ordered_quantity: material.ordered_quantity,
+          available_quantity: material.available_quantity,
+          missing_quantity: material.missing_quantity,
+        }))
+      );
+
+      this.materialRequirements = flattenedMaterials;
+    });
   }
 
   confirmOrder(dialogRef: any) {

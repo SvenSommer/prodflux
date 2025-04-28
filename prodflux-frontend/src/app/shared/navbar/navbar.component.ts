@@ -1,4 +1,3 @@
-// src/app/shared/navbar/navbar.component.ts
 import { Component, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -15,21 +14,29 @@ export class NavbarComponent {
   workshopsService = inject(WorkshopsService);
   router = inject(Router);
   workshops: Workshop[] = [];
-  dropdownOpen = false;
+  openDropdown: string | null = null; // <-- WICHTIG: Welches Dropdown ist offen
 
   ngOnInit() {
     this.workshopsService.getAll().subscribe(ws => this.workshops = ws);
 
-    // Dropdown automatisch schließen nach Navigation
+    // Dropdown schließen bei Navigation
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        this.dropdownOpen = false;
+        this.openDropdown = null;
       }
     });
   }
 
-  toggleDropdown(event: MouseEvent) {
+  toggleDropdown(dropdownName: string, event: MouseEvent) {
     event.preventDefault();
-    this.dropdownOpen = !this.dropdownOpen;
+    if (this.openDropdown === dropdownName) {
+      this.openDropdown = null;
+    } else {
+      this.openDropdown = dropdownName;
+    }
+  }
+
+  isDropdownOpen(dropdownName: string): boolean {
+    return this.openDropdown === dropdownName;
   }
 }

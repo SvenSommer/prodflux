@@ -8,6 +8,7 @@ import { ProductsListComponent } from './features/products/products-list.compone
 import { ProductDetailComponent } from './features/products/product-detail.component';
 import { ProductFormComponent } from './features/products/product-form.component';
 
+
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
 
@@ -40,6 +41,14 @@ export const routes: Routes = [
       { path: 'deliveries/new', loadComponent: () => import('./features/deliveries/delivery-form.component').then(m => m.DeliveryFormComponent), canActivate: [authGuard] },
       { path: 'deliveries/:id/edit', loadComponent: () => import('./features/deliveries/delivery-form.component').then(m => m.DeliveryFormComponent), canActivate: [authGuard] },
       { path: 'deliveries/:id', loadComponent: () => import('./features/deliveries/delivery-detail.component').then(m => m.DeliveryDetailComponent) },
+
+
+      // TRANSFERS
+      // TRANSFERS
+      { path: 'transfers', loadComponent: () => import('./features/transfers/transfers-list.component').then(m => m.TransfersListComponent), canActivate: [authGuard] },
+      { path: 'transfers/new', loadComponent: () => import('./features/transfers/transfer-form.component').then(m => m.TransferFormComponent), canActivate: [authGuard] },
+      { path: 'transfers/:id', loadComponent: () => import('./features/transfers/transfer-detail.component').then(m => m.TransferDetailComponent), canActivate: [authGuard] },
+      { path: 'transfers/:id/edit', loadComponent: () => import('./features/transfers/transfer-form.component').then(m => m.TransferFormComponent), canActivate: [authGuard] },
 
       // BESTELLUNGEN
       { path: 'orders', loadComponent: () => import('./features/orders/orders-list.component').then(m => m.OrdersListComponent), canActivate: [authGuard] },

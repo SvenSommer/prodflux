@@ -1,0 +1,60 @@
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.transfers-table-wrapper {
+  padding: 2rem;
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  .full-width-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 0.75rem;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background-color: #eceff1;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f7f9fc;
+    }
+  }
+
+  .materials-preview {
+    font-size: 0.9rem;
+  }
+
+  .material-category-summary {
+    margin-bottom: 0.25rem;
+  }
+}
+
+.clickable-row {
+  cursor: pointer;
+}

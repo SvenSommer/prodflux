@@ -6,12 +6,20 @@
       <a [routerLink]="['/workshops', w.id]" routerLinkActive="active">{{ w.name }}</a>
     </li>
 
-    <li><a routerLink="/orders" routerLinkActive="active">Bestellungen</a></li>
-    <li><a routerLink="/deliveries" routerLinkActive="active">Lieferungen</a></li>
+    <!-- MATERIAL Dropdown -->
+    <li class="dropdown" [class.open]="isDropdownOpen('material')">
+      <a href="#" (click)="toggleDropdown('material', $event)" class="dropdown-toggle">Materialbewegungen ▾</a>
+      <ul class="dropdown-menu" *ngIf="isDropdownOpen('material')">
+        <li><a routerLink="/orders" routerLinkActive="active">Bestellungen</a></li>
+        <li><a routerLink="/deliveries" routerLinkActive="active">Lieferungen</a></li>
+        <li><a routerLink="/transfers" routerLinkActive="active">Transfers</a></li>
+      </ul>
+    </li>
 
-    <li class="dropdown" [class.open]="dropdownOpen">
-      <a href="#" (click)="toggleDropdown($event)" class="dropdown-toggle">Einstellungen ▾</a>
-      <ul class="dropdown-menu" *ngIf="dropdownOpen">
+    <!-- EINSTELLUNGEN Dropdown -->
+    <li class="dropdown" [class.open]="isDropdownOpen('settings')">
+      <a href="#" (click)="toggleDropdown('settings', $event)" class="dropdown-toggle">Einstellungen ▾</a>
+      <ul class="dropdown-menu" *ngIf="isDropdownOpen('settings')">
         <li><a routerLink="/settings" routerLinkActive="active">Allgemeine</a></li>
         <li><a routerLink="/materials" routerLinkActive="active">Materialien</a></li>
         <li><a routerLink="/products" routerLinkActive="active">Produkte</a></li>

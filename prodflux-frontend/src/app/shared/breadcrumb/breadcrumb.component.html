@@ -1,0 +1,10 @@
+<nav class="breadcrumb">
+  <ng-container *ngFor="let link of links; let last = last">
+    <ng-container *ngIf="!last">
+      <a [routerLink]="link.url">{{ link.label }}</a> /
+    </ng-container>
+    <ng-container *ngIf="last">
+      <span>{{ link.label }}</span>
+    </ng-container>
+  </ng-container>
+</nav>

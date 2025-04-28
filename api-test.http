@@ -466,7 +466,7 @@ GET http://localhost:8000/api/deliveries/
 Authorization: Bearer {{access_token}}
 
 ### Lieferung anzeigen
-GET http://localhost:8000/api/deliveries/1/
+GET http://localhost:8000/api/deliveries/2/
 Authorization: Bearer {{access_token}}
 
 ### Lieferung anlegen

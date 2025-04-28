@@ -1,3 +1,24 @@
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+  color: #3f51b5; /* oder deine Theme-Farbe */
+}
+
+.breadcrumb span {
+  color: #666;
+}
+
+
 .deliveries-table-wrapper {
   padding: 2rem;
 
@@ -65,4 +86,7 @@
     color: #555;
     margin-bottom: 0.25rem;
   }
+}
+.clickable-row {
+  cursor: pointer;
 }

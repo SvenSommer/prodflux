@@ -40,7 +40,7 @@
         <td mat-cell *matCellDef="let d">
           <div class="materials-preview">
             <ng-container *ngFor="let group of materialGroups">
-              <div *ngIf="getItemsByCategory(d.items, group.category_id).length > 0" class="material-category-summary">
+              <div *ngIf="group.category_id !== null && getItemsByCategory(d.items, group.category_id).length > 0" class="material-category-summary">
                 {{ group.category_name }}:
                 {{ getTotalQuantityByCategory(d.items, group.category_id) }} Materialien
               </div>

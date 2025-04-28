@@ -1,20 +1,23 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { OrdersService, Order } from './orders.service';
 import { MaterialCategoryGroup, MaterialsService } from '../materials/materials.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatTableModule],
+  imports: [CommonModule, MatCardModule, MatTableModule, BreadcrumbComponent, RouterModule, MatIconModule],
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.scss'],
 })
 export class OrderDetailComponent {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private ordersService = inject(OrdersService);
   private materialsService = inject(MaterialsService);
 
@@ -59,5 +62,13 @@ export class OrderDetailComponent {
     }
     const materialIdsInGroup = group.materials.map(m => m.id);
     return items.filter(i => materialIdsInGroup.includes(i.material));
+  }
+
+  deleteOrder() {
+    if (confirm('Bestellung wirklich löschen?')) {
+      this.ordersService.delete(this.orderId).subscribe(() => {
+        this.router.navigate(['/orders']);
+      });
+    }
   }
 }

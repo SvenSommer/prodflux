@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { OrdersService, Order } from './orders.service';
@@ -6,6 +7,7 @@ import { MaterialCategoryGroup, MaterialsService } from '../materials/materials.
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-orders-list',
@@ -18,11 +20,14 @@ import { MatIconModule } from '@angular/material/icon';
     MatTableModule,
     MatButtonModule,
     MatIconModule,
+    RouterModule,
+    BreadcrumbComponent
   ],
 })
 export class OrdersListComponent {
-  private ordersService = inject(OrdersService);
   private materialsService = inject(MaterialsService);
+  private router = inject(Router);
+  private ordersService = inject(OrdersService);
 
   orders: Order[] = [];
   materialsMap = new Map<number, string>();
@@ -71,12 +76,27 @@ export class OrdersListComponent {
     return `${num.toFixed(2)} €`;
   }
 
-  getItemsByCategory(items: { material: number; quantity: number; preis_pro_stueck: number; quelle: string }[], categoryId: number | null) {
+  getItemsByCategory(
+    items: { material: number; quantity: number }[],
+    categoryId: number | null
+  ): { material: number; quantity: number }[] {
+    if (categoryId === null) {
+      return [];
+    }
     const group = this.materialGroups.find(g => g.category_id === categoryId);
     if (!group) {
       return [];
     }
-    const materialIdsInGroup = group.materials.map(m => m.id);
-    return items.filter(i => materialIdsInGroup.includes(i.material));
+    const materialIds = group.materials.map(m => m.id);
+    return items.filter(item => materialIds.includes(item.material));
+  }
+
+  navigateToDetail(id: number): void {
+    this.router.navigate(['/orders', id]);
+  }
+
+  getTotalQuantityByCategory(items: { material: number; quantity: number; preis_pro_stueck: number; quelle: string }[], categoryId: number | null): number {
+    const categoryItems = this.getItemsByCategory(items, categoryId);
+    return categoryItems.reduce((sum, item) => sum + parseFloat(item.quantity as any), 0);
   }
 }

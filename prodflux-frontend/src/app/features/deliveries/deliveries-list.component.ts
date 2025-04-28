@@ -90,7 +90,10 @@ export class DeliveriesListComponent {
     return Number.isInteger(num) ? num.toString() : num.toFixed(2);
   }
 
-  getItemsByCategory(items: { material: number; quantity: number }[], categoryId: number): { material: number; quantity: number }[] {
+  getItemsByCategory(items: { material: number; quantity: number }[], categoryId: number | null): { material: number; quantity: number }[] {
+    if (categoryId === null) {
+      return [];
+    }
     const group = this.materialGroups.find(g => g.category_id === categoryId);
     if (!group) {
       return [];
@@ -118,7 +121,10 @@ export class DeliveriesListComponent {
     return 'Unbekannte Kategorie';
   }
 
-  getTotalQuantityByCategory(items: { material: number; quantity: number }[], categoryId: number): number {
+  getTotalQuantityByCategory(items: Array<{ material: number; quantity: number } & Record<string, any>>, categoryId: number | null): number {
+    if (categoryId === null) {
+      return 0;
+    }
     const categoryItems = this.getItemsByCategory(items, categoryId);
     return categoryItems.reduce((sum, item) => sum + parseFloat(item.quantity as any), 0);
   }

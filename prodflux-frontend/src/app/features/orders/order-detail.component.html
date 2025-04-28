@@ -1,48 +1,96 @@
-<mat-card class="order-detail-card" *ngIf="order">
-  <mat-card-title>Bestellung #{{ order.id }}</mat-card-title>
+<div class="page-container">
+  <app-breadcrumb
+    [links]="[
+      { label: 'Bestellungen', url: '/orders' },
+      { label: 'Bestellung #' + order?.id, url: '/orders/' + order?.id }
+    ]"
+  ></app-breadcrumb>
 
-  <p><strong>Bestellt am:</strong> {{ formatDate(order.bestellt_am) }}</p>
-  <p><strong>Angekommen am:</strong> {{ formatDate(order.angekommen_am) }}</p>
-  <p><strong>Versandkosten:</strong> {{ formatCurrency(order.versandkosten) }}</p>
-  <p><strong>Notiz:</strong> {{ order.notiz || '—' }}</p>
+  <mat-card class="order-detail-card" *ngIf="order">
+    <mat-card-title>Bestellung #{{ order.id }}</mat-card-title>
 
-  <div class="mt-4">
-    <h3>Bestellte Materialien</h3>
+    <div class="detail-actions">
+      <button mat-stroked-button color="primary" [routerLink]="['/orders', order.id, 'edit']">
+        <mat-icon>edit</mat-icon> Bearbeiten
+      </button>
+      <button mat-stroked-button color="warn" (click)="deleteOrder()">
+        <mat-icon>delete</mat-icon> Löschen
+      </button>
+    </div>
 
-    <ng-container *ngFor="let group of materialGroups">
-      <div *ngIf="getItemsByCategory(order.items, group.category_id).length > 0" class="material-category-block">
-        <h4 class="category-title">{{ group.category_name }}</h4>
+    <p><strong>Bestellt am:</strong> {{ formatDate(order.bestellt_am) }}</p>
+    <p><strong>Angekommen am:</strong> {{ formatDate(order.angekommen_am) }}</p>
+    <p>
+      <strong>Versandkosten:</strong> {{ formatCurrency(order.versandkosten) }}
+    </p>
+    <p><strong>Notiz:</strong> {{ order.notiz || "—" }}</p>
 
-        <table mat-table [dataSource]="getItemsByCategory(order.items, group.category_id)" class="mat-elevation-z1 full-width-table mb-6">
-          <ng-container matColumnDef="nr">
-            <th mat-header-cell *matHeaderCellDef>#</th>
-            <td mat-cell *matCellDef="let i; let idx = index">{{ idx + 1 }}</td>
-          </ng-container>
+    <div class="mt-4">
+      <h3>Bestellte Materialien</h3>
 
-          <ng-container matColumnDef="material">
-            <th mat-header-cell *matHeaderCellDef>Material</th>
-            <td mat-cell *matCellDef="let m">{{ getMaterialName(m.material) }}</td>
-          </ng-container>
+      <ng-container *ngFor="let group of materialGroups">
+        <div
+          *ngIf="getItemsByCategory(order.items, group.category_id).length > 0"
+          class="material-category-block"
+        >
+          <h4 class="category-title">{{ group.category_name }}</h4>
 
-          <ng-container matColumnDef="quantity">
-            <th mat-header-cell *matHeaderCellDef>Menge</th>
-            <td mat-cell *matCellDef="let m">{{ m.quantity }}</td>
-          </ng-container>
+          <table
+            mat-table
+            [dataSource]="getItemsByCategory(order.items, group.category_id)"
+            class="mat-elevation-z1 full-width-table mb-6"
+          >
+            <ng-container matColumnDef="nr">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let i; let idx = index">
+                {{ idx + 1 }}
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="preis">
-            <th mat-header-cell *matHeaderCellDef>Preis/Stk.</th>
-            <td mat-cell *matCellDef="let m">{{ formatCurrency(m.preis_pro_stueck) }}</td>
-          </ng-container>
+            <ng-container matColumnDef="material">
+              <th mat-header-cell *matHeaderCellDef>Material</th>
+              <td mat-cell *matCellDef="let m">
+                {{ getMaterialName(m.material) }}
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="quelle">
-            <th mat-header-cell *matHeaderCellDef>Quelle</th>
-            <td mat-cell *matCellDef="let m">{{ m.quelle }}</td>
-          </ng-container>
+            <ng-container matColumnDef="quantity">
+              <th mat-header-cell *matHeaderCellDef>Menge</th>
+              <td mat-cell *matCellDef="let m">{{ m.quantity }}</td>
+            </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="['nr', 'material', 'quantity', 'preis', 'quelle']"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['nr', 'material', 'quantity', 'preis', 'quelle']"></tr>
-        </table>
-      </div>
-    </ng-container>
-  </div>
-</mat-card>
+            <ng-container matColumnDef="preis">
+              <th mat-header-cell *matHeaderCellDef>Preis/Stk.</th>
+              <td mat-cell *matCellDef="let m">
+                {{ formatCurrency(m.preis_pro_stueck) }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="quelle">
+              <th mat-header-cell *matHeaderCellDef>Quelle</th>
+              <td mat-cell *matCellDef="let m">{{ m.quelle }}</td>
+            </ng-container>
+
+            <tr
+              mat-header-row
+              *matHeaderRowDef="[
+                'nr',
+                'material',
+                'quantity',
+                'preis',
+                'quelle'
+              ]"
+            ></tr>
+            <tr
+              mat-row
+              *matRowDef="
+                let row;
+                columns: ['nr', 'material', 'quantity', 'preis', 'quelle']
+              "
+            ></tr>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+  </mat-card>
+</div>

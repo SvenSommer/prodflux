@@ -9,8 +9,7 @@ Content-Type: application/json
   "password": "meqban-seVny5-kofvyq"
 }
 
-@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2MTE1NzkwLCJpYXQiOjE3NDU1MTA5OTAsImp0aSI6IjM3YTZiYzQxZTU4MzRlMDhiOTAxMzNjNzI1NjBlN2I5IiwidXNlcl9pZCI6MX0.geKMPE0NFavrZ2oMLFBZD2jOvkseIYcXWAt7qVzaFBQ
-
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ4NDE2MjYzLCJpYXQiOjE3NDc4MTE0NjMsImp0aSI6IjljMzFhOGZmOWNiMjQ5MWNiZWM2NzY5ZDllYmU2NmM2IiwidXNlcl9pZCI6MX0.aceY0ig4s0zLVucpuHtLsqPTIg8jGrVRRX05tr0xeEY
 ### Token-Info
 GET http://localhost:8000/api/auth/me/
 Authorization: Bearer {{access_token}}

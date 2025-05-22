@@ -9,7 +9,7 @@ Content-Type: application/json
   "password": "meqban-seVny5-kofvyq"
 }
 
-@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ2MTE1NzkwLCJpYXQiOjE3NDU1MTA5OTAsImp0aSI6IjM3YTZiYzQxZTU4MzRlMDhiOTAxMzNjNzI1NjBlN2I5IiwidXNlcl9pZCI6MX0.geKMPE0NFavrZ2oMLFBZD2jOvkseIYcXWAt7qVzaFBQ
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ4MTcxODE1LCJpYXQiOjE3NDc1NjcwMTUsImp0aSI6IjBiNTRiNzljNzYwNjRiOWM5ODRhN2I4ZDFkMzRlNWU4IiwidXNlcl9pZCI6MX0.4QxT6lyd-Cd3G9A85WJJN3vZFKEZ_0xM8bN6cLHgR7E
 
 ### Token-Info
 GET http://localhost:8000/api/auth/me/
@@ -569,4 +569,12 @@ Authorization: Bearer {{access_token}}
 
 ### Bestellung löschen
 DELETE http://localhost:8000/api/orders/1/
+Authorization: Bearer {{access_token}}
+
+### Bestellungen abrufen
+GET http://localhost:8000/api/shopbridge/orders/
+Authorization: Bearer {{access_token}}
+
+### Einzelne Bestellung abrufen
+GET http://localhost:8000/api/shopbridge/orders/1529
 Authorization: Bearer {{access_token}}

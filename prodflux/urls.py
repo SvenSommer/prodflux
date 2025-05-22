@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/', include('core.urls')),
     path('api/', include('materials.urls')),
     path('api/', include('products.urls')),
+    path("api/shopbridge/", include("shopbridge.urls")),
 ]
 
 if settings.DEBUG:

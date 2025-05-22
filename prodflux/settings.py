@@ -1,8 +1,16 @@
+from dotenv import load_dotenv
 import os
 from pathlib import Path
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(dotenv_path=BASE_DIR / '.env')
+
+# Beispiel-Zugriff auf die Variablen
+WOOCOMMERCE_API_URL = os.getenv('WOOCOMMERCE_API_URL')
+WOOCOMMERCE_CONSUMER_KEY = os.getenv('WOOCOMMERCE_CONSUMER_KEY')
+WOOCOMMERCE_CONSUMER_SECRET = os.getenv('WOOCOMMERCE_CONSUMER_SECRET')
+
 
 # Environment Flags
 RENDER = os.environ.get("RENDER") is not None
@@ -34,6 +42,7 @@ INSTALLED_APPS = [
     'manufacturing',
     'rest_framework',
     'corsheaders',
+    'shopbridge',
 ]
 
 MIDDLEWARE = [

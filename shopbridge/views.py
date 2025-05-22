@@ -5,14 +5,35 @@ from woocommerce import API
 from dotenv import load_dotenv
 import os
 from collections import defaultdict
+from pathlib import Path
 
-load_dotenv()  # Falls nicht zentral geladen
+# Nur einmal versuchen, die .env zu laden, falls sie existiert
+_ENV_LOADED = False
+
+def get_env_var(name: str) -> str:
+    global _ENV_LOADED
+
+    # Direkt aus Umgebung lesen
+    value = os.environ.get(name)
+    if value:
+        return value
+
+    # .env nur einmal laden, wenn noch nicht geladen und vorhanden
+    if not _ENV_LOADED and Path(".env").exists():
+        load_dotenv()
+        _ENV_LOADED = True
+        value = os.environ.get(name)
+        if value:
+            return value
+
+    # Wenn weder gesetzt noch in .env
+    raise RuntimeError(f"Environment variable '{name}' is not set (not in system or .env file)")
 
 def get_wcapi():
     return API(
-        url=os.getenv("WOOCOMMERCE_API_URL"),
-        consumer_key=os.getenv("WOOCOMMERCE_CONSUMER_KEY"),
-        consumer_secret=os.getenv("WOOCOMMERCE_CONSUMER_SECRET"),
+        url=get_env_var("WOOCOMMERCE_API_URL"),
+        consumer_key=get_env_var("WOOCOMMERCE_CONSUMER_KEY"),
+        consumer_secret=get_env_var("WOOCOMMERCE_CONSUMER_SECRET"),
         version="wc/v3"
     )
 

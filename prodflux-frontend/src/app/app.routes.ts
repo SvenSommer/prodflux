@@ -17,7 +17,7 @@ export const routes: Routes = [
     component: DashboardComponent,
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', loadComponent: () => import('./features/dashboard/stats.component').then(m => m.StatsComponent) },
+      { path: 'dashboard', loadComponent: () => import('./features/dashboard/shopbridge-orders.component').then(m => m.ShopbridgeOrdersComponent) },
 
       // MATERIAL
       { path: 'materials', component: MaterialsListComponent },

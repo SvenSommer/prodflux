@@ -1,7 +1,8 @@
 // src/app/features/dashboard/shopbridge-orders.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ShopbridgeOrder, ShopbridgeOrdersService } from './shopbridgeOrder.service';
+import { ShopbridgeOrder, ShopbridgeOrdersService } from './shopbridgeorder.service';
+
 
 
 @Component({

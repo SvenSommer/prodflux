@@ -1,0 +1,46 @@
+<!-- src/app/features/dashboard/shopbridge-orders.component.html -->
+<section class="shopbridge-orders">
+  <h2>Bestellte Adapter über sdlink.de</h2>
+
+  <div *ngIf="data; else loading">
+    <table class="summary-table">
+      <tr>
+        <td>Anzahl Bestellungen:</td>
+        <td><strong>{{ data.order_count }}</strong></td>
+      </tr>
+      <tr>
+        <td>Gesamtzahl Adapter:</td>
+        <td><strong>{{ data.adapter_count.total }}</strong></td>
+      </tr>
+    </table>
+
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th>Produkt</th>
+          <th>Menge</th>
+          <th>Bestell-ID</th>
+          <th>Status</th>
+          <th>Anzahl</th>
+          <th>Gesamtpreis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let product of productEntries">
+          <tr *ngFor="let order of product.orders; let i = index">
+            <td *ngIf="i === 0" [attr.rowspan]="product.orders.length">{{ product.name }}</td>
+            <td *ngIf="i === 0" [attr.rowspan]="product.orders.length">{{ product.total_quantity }}</td>
+            <td>#{{ order.order_id }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.quantity }}</td>
+            <td>{{ order.total }} {{ order.currency }}</td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #loading>
+    <p>Lade Bestellungen…</p>
+  </ng-template>
+</section>

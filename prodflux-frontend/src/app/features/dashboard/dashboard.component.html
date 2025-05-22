@@ -1,1 +1,10 @@
-<p>dashboard works!</p>
+<!-- src/app/features/dashboard/dashboard.component.html -->
+<app-navbar></app-navbar>
+
+<main class="p-4 space-y-8">
+  <!-- Platz für geroutete Inhalte (z. B. /dashboard/stats) -->
+  <router-outlet></router-outlet>
+
+  <!-- Feste Anzeige der Shopbridge-Bestellungen -->
+  <app-shopbridge-orders></app-shopbridge-orders>
+</main>

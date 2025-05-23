@@ -1,0 +1,78 @@
+<mat-expansion-panel [expanded]="true">
+  <mat-expansion-panel-header>
+    <mat-panel-title>Produktübersicht</mat-panel-title>
+  </mat-expansion-panel-header>
+
+  <button
+    mat-raised-button
+    color="primary"
+    class="mb-2"
+    (click)="planMultiOrder.emit()"
+  >
+    <mat-icon>playlist_add</mat-icon>
+    Materialbedarf planen
+  </button>
+
+  <table mat-table [dataSource]="products" class="mat-elevation-z1 full-width-table mt-2">
+    <ng-container matColumnDef="nr">
+      <th mat-header-cell *matHeaderCellDef>#</th>
+      <td mat-cell *matCellDef="let element; let i = index">{{ i + 1 }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="product">
+      <th mat-header-cell *matHeaderCellDef>Produkt</th>
+      <td mat-cell *matCellDef="let element">{{ element.product }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="with_ordered_material">
+      <th mat-header-cell *matHeaderCellDef>Fertigbar (inkl. bestelltem Material)</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.bestellungen_moeglich }}
+        <i
+          class="fa fa-plus plus-icon"
+          matTooltip="Materialbedarf für Produkt bestellen"
+          (click)="openOrder.emit(element)"
+        ></i>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="with_stock_material">
+      <th mat-header-cell *matHeaderCellDef>Fertigbar (aus Lagerbestand)</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.lager_fertigung_moeglich }}
+        <i
+          class="fa fa-plus plus-icon"
+          matTooltip="Lieferung anlegen"
+          [routerLink]="['/deliveries/new']"
+        ></i>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="produced">
+      <th mat-header-cell *matHeaderCellDef>Bereits gefertigt</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.bestand_fertig }}
+        <i
+          class="fa fa-plus plus-icon"
+          matTooltip="gefertigtes Produkt hinzufügen"
+          (click)="openManufactureMenu.emit(element)"
+        ></i>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="sold">
+      <th mat-header-cell *matHeaderCellDef>Verkauft</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.verkauft || 0 }}
+        <i
+          class="fa fa-plus plus-icon"
+          matTooltip="Verkauf anlegen"
+          (click)="openSell.emit(element)"
+        ></i>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="['nr', 'product', 'with_ordered_material', 'with_stock_material', 'produced', 'sold']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['nr', 'product', 'with_ordered_material', 'with_stock_material', 'produced', 'sold']"></tr>
+  </table>
+</mat-expansion-panel>

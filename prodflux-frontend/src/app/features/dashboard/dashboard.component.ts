@@ -11,8 +11,7 @@ import { CommonModule } from '@angular/common';
   imports: [
     CommonModule,
     NavbarComponent,
-    RouterOutlet,
-    ShopbridgeOrdersComponent
+    RouterOutlet
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

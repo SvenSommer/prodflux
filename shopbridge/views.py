@@ -9,16 +9,25 @@ from pathlib import Path
 
 # Nur einmal versuchen, die .env zu laden, falls sie existiert
 _ENV_LOADED = False
+_SECRET_ENV_PATH = Path("/etc/secrets/woocommerce_secrets.env")
 
 def get_env_var(name: str) -> str:
     global _ENV_LOADED
 
-    # Direkt aus Umgebung lesen
+    # 1. Direkt aus Systemumgebung
     value = os.environ.get(name)
     if value:
         return value
 
-    # .env nur einmal laden, wenn noch nicht geladen und vorhanden
+    # 2. Falls noch nicht geladen: Secrets-Datei in /etc/secrets/
+    if not _ENV_LOADED and _SECRET_ENV_PATH.exists():
+        load_dotenv(dotenv_path=_SECRET_ENV_PATH)
+        _ENV_LOADED = True
+        value = os.environ.get(name)
+        if value:
+            return value
+
+    # 3. Lokal .env laden (nur für Entwicklung)
     if not _ENV_LOADED and Path(".env").exists():
         load_dotenv()
         _ENV_LOADED = True
@@ -26,8 +35,8 @@ def get_env_var(name: str) -> str:
         if value:
             return value
 
-    # Wenn weder gesetzt noch in .env
-    raise RuntimeError(f"Environment variable '{name}' is not set (not in system or .env file)")
+    # 4. Wenn alles fehlschlägt
+    raise RuntimeError(f"Environment variable '{name}' is not set (env, /etc/secrets/woocommerce_secrets.env or local .env)")
 
 def get_wcapi():
     return API(

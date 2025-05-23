@@ -23,7 +23,7 @@ class MaterialSerializer(serializers.ModelSerializer):
             'bild', 'bild_url',
             'category', 'category_id',
             'alternatives',
-            'current_stock'   # ✅ NEU: aktueller Bestand
+            'current_stock' 
         ]
 
     def get_bild_url(self, obj):

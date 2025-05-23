@@ -1,19 +1,17 @@
+// workshop-detail.component.ts
 import { Component, inject, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { MatMenu, MatMenuModule } from '@angular/material/menu';
-import { MatIcon } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTableModule } from '@angular/material/table';
+import { WorkshopService, Workshop, ProductLifecycleEntry, MaterialRequirement, MaterialStockGroup } from './workshop.service';
+import { ProductsService } from '../products/products.service';
+import { ProductOverviewComponent } from './product-overview/product-overview.component';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { WorkshopService, Workshop, ProductLifecycleEntry, MaterialRequirement, MaterialStockGroup } from './workshop.service';
-import { ProductsService } from '../products/products.service';
-
-
 
 @Component({
   selector: 'app-workshop-detail',
@@ -22,17 +20,15 @@ import { ProductsService } from '../products/products.service';
   styleUrls: ['./workshop-detail.component.scss'],
   imports: [
     CommonModule,
-    MatCardModule,
     RouterLink,
-    MatTableModule,
-    MatMenu,
-    MatIcon,
+    MatCardModule,
     MatExpansionModule,
+    MatDialogModule,
+    MatTableModule,
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatMenuModule,
-    MatDialogModule,
+    ProductOverviewComponent,
   ],
 })
 export class WorkshopDetailComponent {
@@ -43,18 +39,15 @@ export class WorkshopDetailComponent {
 
   workshopId = 0;
   workshop: Workshop | null = null;
-
-
   stock: MaterialStockGroup[] = [];
-  displayedColumns = ['nr', 'bild', 'bezeichnung', 'bestand'];
-
   productLifecycle: ProductLifecycleEntry[] = [];
 
   selectedProduct: ProductLifecycleEntry | null = null;
   manufactureQty = 1;
   orderQty = 1;
-
   materialRequirements: MaterialRequirement[] = [];
+  filteredMissingRequirements: MaterialRequirement[] = [];
+  filteredCoveredRequirements: MaterialRequirement[] = [];
   multiOrderProducts: { product_id: number; product: string; quantity: number }[] = [];
 
   @ViewChild('orderDialog') orderDialog!: TemplateRef<any>;
@@ -65,6 +58,17 @@ export class WorkshopDetailComponent {
       this.workshopId = Number(params.get('id'));
       this.loadWorkshop();
       this.loadStock();
+      this.loadLifecycleOverview();
+    });
+  }
+
+  manufactureProductFromChild(event: { product: ProductLifecycleEntry, quantity: number }) {
+    const payload = {
+      product_id: event.product.product_id,
+      workshop_id: this.workshopId,
+      quantity: event.quantity,
+    };
+    this.workshopService.manufactureProduct(payload).subscribe(() => {
       this.loadLifecycleOverview();
     });
   }
@@ -87,56 +91,46 @@ export class WorkshopDetailComponent {
     });
   }
 
-  manufactureProduct() {
-    if (!this.selectedProduct || this.manufactureQty < 1) return;
-
-    const payload = {
-      product_id: this.selectedProduct.product_id,
-      workshop_id: this.workshopId,
-      quantity: this.manufactureQty,
-    };
-
-    this.workshopService.manufactureProduct(payload).subscribe(() => {
-      this.loadLifecycleOverview();
-      this.manufactureQty = 1;
-    });
-  }
-
   openOrderModal(product: ProductLifecycleEntry) {
     this.selectedProduct = product;
     this.orderQty = 1;
-    this.materialRequirements = [];
+    this.filteredMissingRequirements = [];
+    this.filteredCoveredRequirements = [];
     this.dialog.open(this.orderDialog);
-    this.loadOrderRequirements()
+    this.loadOrderRequirements();
   }
 
   loadOrderRequirements() {
     if (!this.selectedProduct?.product_id || this.orderQty < 0) {
-      this.materialRequirements = [];
+      this.filteredMissingRequirements = [];
+      this.filteredCoveredRequirements = [];
       return;
     }
 
     this.productService
-    .getMaterialRequirements(this.selectedProduct.product_id, this.orderQty, this.workshopId)
-    .subscribe((data) => {
-      const flattenedMaterials = data.flatMap(group =>
-        group.materials.map((material) => ({
-          material_id: material.id,
-          bezeichnung: material.bezeichnung,
-          required_quantity: material.required_quantity,
-          ordered_quantity: material.ordered_quantity,
-          available_quantity: material.available_quantity,
-          missing_quantity: material.missing_quantity,
-        }))
-      );
+      .getMaterialRequirements(this.selectedProduct.product_id, this.orderQty, this.workshopId)
+      .subscribe((data) => {
+        const flattenedMaterials = data.flatMap((group) =>
+          group.materials.map((material) => ({
+            material_id: material.id,
+            bezeichnung: material.bezeichnung,
+            required_quantity: material.required_quantity,
+            ordered_quantity: material.ordered_quantity,
+            available_quantity: material.available_quantity,
+            missing_quantity: material.missing_quantity,
+            bild_url: material.bild_url ?? undefined
+          }))
+        );
 
-      this.materialRequirements = flattenedMaterials;
-    });
+        this.materialRequirements = flattenedMaterials;
+        this.filteredMissingRequirements = flattenedMaterials.filter(m => m.missing_quantity > 0);
+        this.filteredCoveredRequirements = flattenedMaterials.filter(m => m.missing_quantity <= 0);
+      });
   }
 
   confirmOrder(dialogRef: any) {
     console.log('✅ Bestellung ausgelöst für', this.orderQty, 'x', this.selectedProduct?.product);
-    console.table(this.materialRequirements);
+    console.table(this.filteredMissingRequirements);
     dialogRef.close();
   }
 
@@ -145,13 +139,25 @@ export class WorkshopDetailComponent {
   }
 
   openMultiOrderModal() {
+    console.log('TemplateRef:', this.multiOrderDialog);
+    if (!this.multiOrderDialog) {
+      console.error('❌ multiOrderDialog not available!');
+      return;
+    }
+
     this.multiOrderProducts = this.productLifecycle.map((p) => ({
       product_id: p.product_id,
       product: p.product,
       quantity: 0,
     }));
-    this.materialRequirements = [];
-    this.dialog.open(this.multiOrderDialog);
+    this.filteredMissingRequirements = [];
+    this.filteredCoveredRequirements = [];
+    this.dialog.open(this.multiOrderDialog, {
+      width: '95vw',
+      maxWidth: 'none',
+      height: '95vh',
+      autoFocus: false
+    });
   }
 
   loadAggregatedRequirements() {
@@ -161,6 +167,8 @@ export class WorkshopDetailComponent {
 
     if (!products.length || !this.workshop) {
       this.materialRequirements = [];
+      this.filteredMissingRequirements = [];
+      this.filteredCoveredRequirements = [];
       return;
     }
 
@@ -168,13 +176,45 @@ export class WorkshopDetailComponent {
       .getAggregatedRequirements(this.workshop.id, products)
       .subscribe((data) => {
         this.materialRequirements = data;
+        this.filteredMissingRequirements = data.filter(m => m.missing_quantity > 0);
+        this.filteredCoveredRequirements = data.filter(m => m.missing_quantity <= 0);
       });
   }
 
   confirmAggregatedOrder(dialogRef: any) {
-    console.log('✅ Sammelbestellung auslösen für:');
-    console.table(this.multiOrderProducts.filter((p) => p.quantity > 0));
-    console.table(this.materialRequirements);
+    const werkstattName = this.workshop?.name ?? '[Unbekannte Werkstatt]';
+
+    const bestellteProdukte = this.multiOrderProducts
+      .filter(p => p.quantity > 0)
+      .map(p => `- ${p.product}: ${p.quantity} Stück`)
+      .join('\n');
+
+    const formatTableRow = (m: MaterialRequirement) => {
+      return `${m.bezeichnung.padEnd(75)} | ${String(m.required_quantity).padStart(8)} | ${String(m.ordered_quantity).padStart(8)} | ${String(m.available_quantity).padStart(9)} | ${String(m.missing_quantity).padStart(7)}`;
+    };
+
+    const fehlendeHeader = `Material                                                             | Benötigt | Bestellt | Vorhanden | Fehlend\n` +
+                           `---------------------------------------------------------------------|----------|----------|-----------|--------`;
+
+    const gedeckteHeader = `Material                                                            | Benötigt | Bestellt | Vorhanden | Fehlend\n` +
+                           `--------------------------------------------------------------------|----------|----------|-----------|--------`;
+
+    const fehlendeMaterialien = this.filteredMissingRequirements.map(formatTableRow).join('\n');
+    const gedeckteMaterialien = this.filteredCoveredRequirements.map(formatTableRow).join('\n');
+
+    const body = encodeURIComponent(
+      `Materialbedarf für folgende Produkte:\n\n` +
+      `${bestellteProdukte}\n\n` +
+      `In der Werkstatt "${werkstattName}" werden folgende Materialien benötigt:\n\n` +
+      `${fehlendeHeader}\n${fehlendeMaterialien || '(keine)'}\n\n` +
+      `Folgende Bestände sind bereits gedeckt:\n\n` +
+      `${gedeckteHeader}\n${gedeckteMaterialien || '(keine)'}\n`
+    );
+
+    const subject = encodeURIComponent(`Materialbedarf für Werkstatt ${werkstattName}`);
+    const mailto = `mailto:info@sdlink.de?subject=${subject}&body=${body}`;
+
+    window.location.href = mailto;
     dialogRef.close();
   }
 }

@@ -42,6 +42,7 @@ export interface MaterialRequirement {
   available_quantity: number;
   ordered_quantity: number;
   missing_quantity: number;
+  bild_url?: string;
 }
 
 export interface MaterialRequirementGroup {

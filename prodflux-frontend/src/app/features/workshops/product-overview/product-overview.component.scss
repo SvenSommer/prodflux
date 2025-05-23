@@ -1,0 +1,37 @@
+.full-width-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+
+  th, td {
+    padding: 0.75rem;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  th {
+    background-color: #eceff1;
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f7f9fc;
+  }
+
+  .fa-plus, .mat-icon-button {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    color: #1976d2;
+  }
+
+  .fa-plus:hover {
+    color: #0d47a1;
+  }
+}
+
+.menu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}

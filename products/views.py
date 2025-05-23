@@ -303,12 +303,22 @@ def material_requirements_view(request, product_id):
                 "materials": []
             }
 
+        # Bild-URL für Alternative holen
+        bild_url = None
+        if material.bild:
+            request_context = request if request else None
+            if request_context:
+                bild_url = request.build_absolute_uri(material.bild.url)
+            else:
+                bild_url = material.bild.url
+
         grouped[category.id]["materials"].append({
             "id": material.id,
             "bezeichnung": material.bezeichnung,
             "hersteller_bezeichnung": material.hersteller_bezeichnung,
             "bestell_nr": material.bestell_nr,
-            "bild_url": material.bild.url if material.bild else None,
+            "bild": material.bild.url if material.bild else None,
+            "bild_url": bild_url,
             "required_quantity": float(required_total),
             "ordered_quantity": float(ordered_quantity),
             "available_quantity": float(available_quantity),
@@ -386,9 +396,20 @@ def aggregated_material_requirements_view(request):
         # Fehlmenge
         missing_quantity = max(Decimal(0), required_total - (available_quantity + ordered_quantity))
 
+        # Bild-URL für Alternative holen
+        bild_url = None
+        if material.bild:
+            request_context = request if request else None
+            if request_context:
+                bild_url = request.build_absolute_uri(material.bild.url)
+            else:
+                bild_url = material.bild.url
+
         response_data.append({
             "material_id": material.id,
             "bezeichnung": material.bezeichnung,
+            "bild": material.bild.url if material.bild else None,
+            "bild_url": bild_url,
             "required_quantity": float(required_total),
             "ordered_quantity": float(ordered_quantity),
             "available_quantity": float(available_quantity),

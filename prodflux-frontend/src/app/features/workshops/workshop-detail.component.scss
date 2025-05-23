@@ -135,7 +135,7 @@ mat-dialog-content {
 }
 
 .text-center {
-  text-align: center;
+  text-align: left;
 }
 
 .action-btn {
@@ -165,5 +165,27 @@ mat-dialog-content {
     &:hover {
       background-color: #bbdefb;
     }
+  }
+}
+
+mat-dialog-content.multi-dialog-content {
+  max-height: calc(95vh - 130px); // Platz für Header + Actions
+  overflow-y: auto;
+
+  .full-width-table {
+    th, td {
+      vertical-align: middle;
+    }
+
+    .table-image.small {
+      max-height: 32px;
+      max-width: 48px;
+      border-radius: 0.25rem;
+      box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .mt-6 {
+    margin-top: 3rem;
   }
 }

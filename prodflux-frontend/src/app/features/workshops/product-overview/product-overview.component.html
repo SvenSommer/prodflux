@@ -10,7 +10,7 @@
     (click)="planMultiOrder.emit()"
   >
     <mat-icon>playlist_add</mat-icon>
-    Materialbedarf planen
+    Materialbedarf planen und bestellen
   </button>
 
   <table mat-table [dataSource]="products" class="mat-elevation-z1 full-width-table mt-2">
@@ -31,7 +31,7 @@
         <i
           class="fa fa-plus plus-icon"
           matTooltip="Materialbedarf für Produkt bestellen"
-          (click)="openOrder.emit(element)"
+          (click)="planMultiOrder.emit()"
         ></i>
       </td>
     </ng-container>
@@ -53,10 +53,11 @@
       <td mat-cell *matCellDef="let element">
         {{ element.bestand_fertig }}
         <i
-          class="fa fa-plus plus-icon"
-          matTooltip="gefertigtes Produkt hinzufügen"
-          (click)="openManufactureMenu.emit(element)"
-        ></i>
+        class="fa fa-plus plus-icon"
+        matTooltip="gefertigtes Produkt hinzufügen"
+        [matMenuTriggerFor]="manufactureMenu"
+        (click)="selectedProduct = element"
+      ></i>
       </td>
     </ng-container>
 
@@ -76,3 +77,28 @@
     <tr mat-row *matRowDef="let row; columns: ['nr', 'product', 'with_ordered_material', 'with_stock_material', 'produced', 'sold']"></tr>
   </table>
 </mat-expansion-panel>
+
+<mat-menu #manufactureMenu="matMenu">
+  <div
+    class="menu-form px-4 py-2 w-64"
+    (click)="$event.stopPropagation()"
+  >
+    <p class="mb-1">Anzahl gefertigter {{ selectedProduct?.product }}:</p>
+    <mat-form-field appearance="outline" class="w-full">
+      <input
+        matInput
+        type="number"
+        min="1"
+        [(ngModel)]="manufactureQty"
+        (click)="$event.stopPropagation()"
+      />
+    </mat-form-field>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="confirmManufacture(); $event.stopPropagation()"
+    >
+      Bestätigen
+    </button>
+  </div>
+</mat-menu>

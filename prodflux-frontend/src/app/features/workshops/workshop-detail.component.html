@@ -7,123 +7,15 @@
     <mat-card class="workshop-header">
       <mat-card-title>{{ workshop.name }}</mat-card-title>
 
-      <mat-expansion-panel [expanded]="true">
-        <mat-expansion-panel-header>
-          <mat-panel-title>Produktübersicht</mat-panel-title>
-        </mat-expansion-panel-header>
 
-        <button
-          mat-raised-button
-          color="primary"
-          class="mb-2"
-          (click)="openMultiOrderModal()"
-        >
-          <mat-icon>playlist_add</mat-icon> Materialbedarf planen
-        </button>
 
-        <table
-          mat-table
-          [dataSource]="productLifecycle"
-          class="mat-elevation-z1 full-width-table mt-2"
-        >
-          <!-- Nr -->
-          <ng-container matColumnDef="nr">
-            <th mat-header-cell *matHeaderCellDef>#</th>
-            <td mat-cell *matCellDef="let element; let i = index">
-              {{ i + 1 }}
-            </td>
-          </ng-container>
-
-          <!-- Produkt -->
-          <ng-container matColumnDef="product">
-            <th mat-header-cell *matHeaderCellDef>Produkt</th>
-            <td mat-cell *matCellDef="let element">{{ element.product }}</td>
-          </ng-container>
-
-          <!-- Fertigbar (mit Bestellung) -->
-          <ng-container matColumnDef="with_ordered_material">
-            <th mat-header-cell *matHeaderCellDef>
-              Fertigbar (inkl. bestelltem Material)
-            </th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.bestellungen_moeglich }}
-              <i
-                class="fa fa-plus plus-icon"
-                matTooltip="Materialbedarf für Produkt bestellen"
-                (click)="openOrderModal(element)"
-              ></i>
-            </td>
-          </ng-container>
-
-          <!-- Fertigbar (aus Lager) -->
-          <ng-container matColumnDef="with_stock_material">
-            <th mat-header-cell *matHeaderCellDef>
-              Fertigbar (aus Lagerbestand)
-            </th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.lager_fertigung_moeglich }}
-              <i
-                class="fa fa-plus plus-icon"
-                matTooltip="Lieferung anlegen"
-                [routerLink]="['/deliveries/new']"
-              ></i>
-            </td>
-          </ng-container>
-
-          <!-- Bereits gefertigt -->
-          <ng-container matColumnDef="produced">
-            <th mat-header-cell *matHeaderCellDef>Bereits gefertigt</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.bestand_fertig }}
-              <i
-                class="fa fa-plus plus-icon"
-                matTooltip="gefertigtes Produkt hinzufügen"
-                [matMenuTriggerFor]="manufactureMenu"
-                (click)="selectedProduct = element"
-              ></i>
-            </td>
-          </ng-container>
-
-          <!-- Verkauft -->
-          <ng-container matColumnDef="sold">
-            <th mat-header-cell *matHeaderCellDef>Verkauft</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.verkauft || 0 }}
-              <i
-                class="fa fa-plus plus-icon"
-                matTooltip="Verkauf anlegen"
-                (click)="openSellDialog(element)"
-              ></i>
-            </td>
-          </ng-container>
-
-          <tr
-            mat-header-row
-            *matHeaderRowDef="[
-              'nr',
-              'product',
-              'with_ordered_material',
-              'with_stock_material',
-              'produced',
-              'sold'
-            ]"
-          ></tr>
-          <tr
-            mat-row
-            *matRowDef="
-              let row;
-              columns: [
-                'nr',
-                'product',
-                'with_ordered_material',
-                'with_stock_material',
-                'produced',
-                'sold'
-              ]
-            "
-          ></tr>
-        </table>
-      </mat-expansion-panel>
+      <app-product-overview
+      [products]="productLifecycle"
+      (planMultiOrder)="openMultiOrderModal()"
+      (openOrder)="openOrderModal($event)"
+      (openSell)="openSellDialog($event)"
+      (manufacture)="manufactureProductFromChild($event)"
+    ></app-product-overview>
 
       <mat-expansion-panel>
         <mat-expansion-panel-header>
@@ -191,62 +83,13 @@
       </mat-expansion-panel>
     </mat-card>
 
-    <!-- Modal für Material Bestellung eines Produktes-->
-    <ng-template #orderDialog let-dialog>
-      <h2 mat-dialog-title>
-        Material für {{ selectedProduct?.product }} nachbestellen
-      </h2>
-      <mat-dialog-content>
-        <p>Wie viele Einheiten sollen abgedeckt werden?</p>
-        <mat-form-field>
-          <input
-            matInput
-            type="number"
-            [(ngModel)]="orderQty"
-            (input)="loadOrderRequirements()"
-          />
-        </mat-form-field>
-        <table
-          *ngIf="materialRequirements.length"
-          class="full-width-table mt-2"
-        >
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Benötigt</th>
-              <th>Bestellt</th>
-              <th>Vorhanden</th>
-              <th>Fehlend</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let req of materialRequirements">
-              <td>{{ req.bezeichnung }}</td>
-              <td>{{ req.required_quantity }}</td>
-              <td>{{ req.ordered_quantity }}</td>
-              <td>{{ req.available_quantity }}</td>
-              <td>{{ req.missing_quantity }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </mat-dialog-content>
-      <mat-dialog-actions align="end">
-        <button mat-button mat-dialog-close>Abbrechen</button>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="confirmOrder(dialog)"
-        >
-          Bestellen
-        </button>
-      </mat-dialog-actions>
-    </ng-template>
-
     <!-- Modal für Material Bestellung mehrerer Produkte-->
 
     <ng-template #multiOrderDialog let-dialog>
-      <h2 mat-dialog-title>Materialbedarf für mehrere Produkte</h2>
-      <mat-dialog-content>
+      <h2 mat-dialog-title>Materialbedarf planen und bestellen</h2>
+      <mat-dialog-content class="multi-dialog-content">
+
+        <!-- Produktmenge pro Produkt -->
         <table class="full-width-table">
           <thead>
             <tr>
@@ -264,7 +107,7 @@
                     type="number"
                     min="0"
                     [(ngModel)]="entry.quantity"
-                    (change)="loadAggregatedRequirements()"
+                    (ngModelChange)="loadAggregatedRequirements()"
                   />
                 </mat-form-field>
               </td>
@@ -272,12 +115,12 @@
           </tbody>
         </table>
 
-        <table
-          *ngIf="materialRequirements.length"
-          class="full-width-table mt-4"
-        >
+        <!-- Fehlende Materialien -->
+        <h3 class="mt-4">Fehlende Materialien</h3>
+        <table class="full-width-table mt-2">
           <thead>
             <tr>
+              <th>Bild</th>
               <th>Material</th>
               <th>Benötigt</th>
               <th>Bestellt</th>
@@ -286,7 +129,20 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let req of materialRequirements">
+            <tr *ngIf="!filteredMissingRequirements.length">
+              <td colspan="6" class="text-center text-gray-500 py-2">
+                Keine fehlenden Materialien.
+              </td>
+            </tr>
+            <tr *ngFor="let req of filteredMissingRequirements">
+              <td>
+                <img
+                  *ngIf="req.bild_url"
+                  [src]="req.bild_url"
+                  alt="{{ req.bezeichnung }}"
+                  class="table-image small"
+                />
+              </td>
               <td>{{ req.bezeichnung }}</td>
               <td>{{ req.required_quantity }}</td>
               <td>{{ req.ordered_quantity }}</td>
@@ -295,35 +151,57 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- Bereits gedeckte Materialien -->
+        <h3 class="mt-6">Bereits gedeckte Materialien</h3>
+        <table class="full-width-table mt-2">
+          <thead>
+            <tr>
+              <th>Bild</th>
+              <th>Material</th>
+              <th>Benötigt</th>
+              <th>Bestellt</th>
+              <th>Vorhanden</th>
+              <th>Fehlend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="!filteredCoveredRequirements.length">
+              <td colspan="6" class="text-center text-gray-500 py-2">
+                Keine vollständig gedeckten Materialien.
+              </td>
+            </tr>
+            <tr *ngFor="let req of filteredCoveredRequirements">
+              <td>
+                <img
+                  *ngIf="req.bild_url"
+                  [src]="req.bild_url"
+                  alt="{{ req.bezeichnung }}"
+                  class="table-image small"
+                />
+              </td>
+              <td>{{ req.bezeichnung }}</td>
+              <td>{{ req.required_quantity }}</td>
+              <td>{{ req.ordered_quantity }}</td>
+              <td>{{ req.available_quantity }}</td>
+              <td>{{ req.missing_quantity }}</td>
+            </tr>
+          </tbody>
+        </table>
+
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button mat-dialog-close>Schließen</button>
         <button
           mat-raised-button
           color="primary"
-          [disabled]="!materialRequirements.length"
+          [disabled]="!filteredMissingRequirements.length"
           (click)="confirmAggregatedOrder(dialog)"
         >
           Bestellen
         </button>
       </mat-dialog-actions>
     </ng-template>
-
-    <mat-menu #manufactureMenu="matMenu">
-      <div class="menu-form">
-        <p class="mb-1">Stückzahl für {{ selectedProduct?.product }}:</p>
-        <mat-form-field appearance="outline">
-          <input matInput type="number" min="1" [(ngModel)]="manufactureQty" />
-        </mat-form-field>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="manufactureProduct()"
-        >
-          Bestätigen
-        </button>
-      </div>
-    </mat-menu>
   </div>
 
   <div *ngIf="!workshop">

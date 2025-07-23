@@ -29,7 +29,7 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        material_id = self.kwargs['pk']
+        material_id = self.kwargs['material_id']
         workshop_id = self.request.query_params.get('workshop_id')
 
         queryset = MaterialMovement.objects.filter(material_id=material_id)

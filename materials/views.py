@@ -6,7 +6,7 @@ from .serializers import DeliverySerializer, MaterialCategorySerializer, Materia
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from collections import defaultdict
-from rest_framework import status
+from rest_framework.exceptions import ValidationError  
 from .utils import group_materials_by_category
 
 
@@ -38,10 +38,15 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(workshop_id=workshop_id)
 
         return queryset
-
+    
     def perform_create(self, serializer):
-        material_id = self.kwargs['pk']
-        serializer.save(material_id=material_id)
+        try:
+            material = Material.objects.get(pk=self.kwargs['material_id'])  # ✅
+        except Material.DoesNotExist:
+            raise ValidationError("Material nicht gefunden.")
+        serializer.save(material=material)
+
+
 class MaterialMovementDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MaterialMovement.objects.all()
     serializer_class = MaterialMovementSerializer

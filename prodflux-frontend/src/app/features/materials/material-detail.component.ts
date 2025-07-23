@@ -3,7 +3,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { MaterialsService, Material, MaterialMovement } from './materials.service';
+import { MaterialsService, Material, MaterialMovement, MaterialStock } from './materials.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -39,6 +39,7 @@ export class MaterialDetailComponent {
   movements: MaterialMovement[] = [];
   workshops: Workshop[] = [];
   selectedWorkshopId: number | null = null;
+  stockInfo: MaterialStock | null = null;
 
   editMovementId: number | null = null;
   editedMovement: Partial<MaterialMovement> = {};
@@ -52,6 +53,7 @@ export class MaterialDetailComponent {
       if (ws.length > 0) {
         this.selectedWorkshopId = ws[0].id;
         this.loadMovements();
+        this.loadStock();
       }
     });
   }
@@ -63,8 +65,16 @@ export class MaterialDetailComponent {
     });
   }
 
+  loadStock() {
+    if (!this.selectedWorkshopId) return;
+    this.materialsService.getMaterialStock(this.materialId, this.selectedWorkshopId).subscribe(stock => {
+      this.stockInfo = stock;
+    });
+  }
+
   onWorkshopChange() {
     this.loadMovements();
+    this.loadStock();
   }
 
   startEdit(m: MaterialMovement) {
@@ -87,8 +97,6 @@ export class MaterialDetailComponent {
     }
   }
 
-
-
   cancelEdit() {
     this.editMovementId = null;
     this.editedMovement = {};
@@ -100,7 +108,7 @@ export class MaterialDetailComponent {
       next: () => {
         Object.assign(m, this.editedMovement);
         this.cancelEdit();
-        this.errorMessage = null; // Fehler zurücksetzen
+        this.errorMessage = null;
       },
       error: (err) => {
         if (err.status === 400 && err.error?.detail) {
@@ -111,6 +119,7 @@ export class MaterialDetailComponent {
       }
     });
   }
+
   deleteMovement(id: number) {
     if (confirm('Wirklich löschen?')) {
       this.materialsService.deleteMaterialMovement(id).subscribe({
@@ -127,5 +136,52 @@ export class MaterialDetailComponent {
         }
       });
     }
+  }
+
+  getWorkshopNameById(id: number | null): string {
+    const workshop = this.workshops.find(w => w.id === id);
+    return workshop?.name || '[Unbekannt]';
+  }
+
+
+  newMovement: Partial<MaterialMovement> = {
+    change_type: 'lieferung',
+    quantity: 1,
+    note: ''
+  };
+
+
+  createMovement() {
+    if (!this.selectedWorkshopId || !this.materialId) return;
+
+    if (!this.newMovement.change_type || this.newMovement.quantity == null) {
+      this.errorMessage = 'Bitte Typ und Menge angeben.';
+      return;
+    }
+
+    const payload = {
+      material: this.materialId,
+      workshop_id: this.selectedWorkshopId,
+      change_type: this.newMovement.change_type,
+      quantity: this.newMovement.quantity,
+      note: this.newMovement.note
+    };
+
+    this.materialsService.createMovement(payload).subscribe({
+      next: () => {
+        this.loadMovements();
+        this.loadStock();
+        this.newMovement = { change_type: 'lieferung', quantity: 1, note: '' };
+      },
+      error: (err) => {
+        if (err.status === 400 && err.error?.detail) {
+          this.errorMessage = err.error.detail;
+        } else if (err.status === 400 && err.error) {
+          this.errorMessage = JSON.stringify(err.error);  // zeigt Validierungsfehler
+        } else {
+          this.errorMessage = 'Neuer Vorgang konnte nicht gespeichert werden.';
+        }
+      }
+    });
   }
 }

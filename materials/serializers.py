@@ -41,7 +41,7 @@ class MaterialMovementSerializer(serializers.ModelSerializer):
     class Meta:
         model = MaterialMovement
         fields = '__all__'
-        read_only_fields = []
+        read_only_fields = ['material']
 
     def update(self, instance, validated_data):
         # Prüfen: Gehört diese Bewegung zu einem Transfer oder einer Lieferung?

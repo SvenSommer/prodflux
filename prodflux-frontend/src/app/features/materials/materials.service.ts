@@ -4,7 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-
 export interface Material {
   id: number;
   bezeichnung: string;
@@ -19,7 +18,6 @@ export interface Material {
   alternatives: number[];
   required_quantity_per_unit?: number;
 }
-
 
 export interface MaterialCategoryGroup {
   category_id: number | null;
@@ -36,11 +34,35 @@ export interface MaterialMovement {
   delivery_id?: number;
 }
 
+export interface MaterialStock {
+  material_id: number;
+  bezeichnung: string;
+  bestell_nr?: string;
+  hersteller_bezeichnung: string;
+  category?: string;
+  current_stock: number;
+  workshop_id: number;
+  material_details: Material;
+  alternatives: {
+    id: number;
+    bezeichnung: string;
+    hersteller_bezeichnung: string;
+    bestell_nr?: string;
+    category?: {
+      id: number;
+      name: string;
+      order: number;
+    } | null;
+    bild?: string;
+    bild_url?: string;
+    current_stock: number;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class MaterialsService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/api/materials/`;
-
 
   getMaterialsGrouped(): Observable<MaterialCategoryGroup[]> {
     return this.http.get<MaterialCategoryGroup[]>(this.baseUrl);
@@ -80,6 +102,20 @@ export class MaterialsService {
     return this.http.post<Material>(this.baseUrl, data);
   }
 
+  createMovement(data: {
+    material: number;
+    workshop_id: number;
+    change_type: string;
+    quantity: number;
+    note?: string;
+  }): Observable<MaterialMovement> {
+    const { material, ...body } = data;
+    return this.http.post<MaterialMovement>(
+      `${this.baseUrl}${material}/movements`,
+      body
+    );
+  }
+
   updateMaterialFormData(id: number, data: FormData) {
     return this.http.put<Material>(`${this.baseUrl}${id}/`, data);
   }
@@ -94,5 +130,9 @@ export class MaterialsService {
 
   deleteMaterialMovement(id: number) {
     return this.http.delete(`${this.baseUrl}movements/${id}/`);
+  }
+
+  getMaterialStock(materialId: number, workshopId: number): Observable<MaterialStock> {
+    return this.http.get<MaterialStock>(`${this.baseUrl}${materialId}/stock?workshop_id=${workshopId}`);
   }
 }

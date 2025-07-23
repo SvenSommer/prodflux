@@ -211,6 +211,18 @@ Authorization: Bearer {{access_token}}
 GET http://localhost:8000/api/materials/30/stock?workshop_id=1
 Authorization: Bearer {{access_token}}
 
+### Neue Materialbewegung anlegen
+POST http://localhost:8000/api/materials/1/movements
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "workshop": 1,
+  "change_type": "lieferung",
+  "quantity": 3,
+  "note": "Testeingabe"
+}
+
 ### Materialbewegungen (in Werkstatt)
 GET http://localhost:8000/api/materials/1/movements?workshop_id=1
 Authorization: Bearer {{access_token}}

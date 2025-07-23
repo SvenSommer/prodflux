@@ -35,6 +35,7 @@ class MaterialMovement(models.Model):
         ('verlust', 'Verlust'),
         ('korrektur', 'Korrektur'),
         ('transfer', 'Transfer'),
+        ('inventur', 'Inventur'),
     ]
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE)
     material = models.ForeignKey(Material, on_delete=models.CASCADE)

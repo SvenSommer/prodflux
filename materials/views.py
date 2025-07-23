@@ -28,6 +28,11 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
     serializer_class = MaterialMovementSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["material"] = Material.objects.get(pk=self.kwargs["material_id"])
+        return context
+
     def get_queryset(self):
         material_id = self.kwargs['material_id']
         workshop_id = self.request.query_params.get('workshop_id')

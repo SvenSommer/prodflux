@@ -1,10 +1,12 @@
 # serializers.py (in materials)
 
+from decimal import Decimal
 from rest_framework import serializers
 
 from core.models import Workshop
 from .models import Material, MaterialCategory, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Sum
 
 class MaterialCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,6 +52,35 @@ class MaterialMovementSerializer(serializers.ModelSerializer):
         model = MaterialMovement
         fields = ['workshop_id', 'change_type', 'quantity', 'note', 'created_at', 'content_type', 'object_id']
         read_only_fields = ['created_at', 'content_type', 'object_id']
+
+    def create(self, validated_data):
+        change_type = validated_data.get("change_type")
+
+        if change_type == "inventur":
+            workshop = validated_data["workshop"]
+            material = self.context["material"]  # vom View übergeben (s. unten)
+
+            # Aktuellen Bestand berechnen
+            bestand = MaterialMovement.objects.filter(workshop=workshop, material=material).aggregate(
+                total=Sum("quantity"))["total"] or Decimal("0.00")
+
+            zielwert = validated_data["quantity"]
+            differenz = zielwert - bestand
+            note = "Inventur-Korrektur: Sollwert {} - Istwert {} = Differenz {}".format(
+                zielwert, bestand, differenz
+            )
+
+            validated_data["note"] = note
+
+            # Wenn keine Änderung nötig → nichts speichern
+            if differenz == 0:
+                raise serializers.ValidationError("Der Bestand ist bereits korrekt.")
+
+            validated_data["quantity"] = differenz
+            validated_data["change_type"] = "korrektur"
+            validated_data["material"] = material
+
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         # Prüfen: Gehört diese Bewegung zu einem Transfer oder einer Lieferung?

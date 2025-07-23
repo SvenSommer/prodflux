@@ -1,6 +1,8 @@
 # serializers.py (in materials)
 
 from rest_framework import serializers
+
+from core.models import Workshop
 from .models import Material, MaterialCategory, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem
 from django.contrib.contenttypes.models import ContentType
 
@@ -38,10 +40,16 @@ class MaterialSerializer(serializers.ModelSerializer):
         return getattr(obj, 'current_stock', None)
 
 class MaterialMovementSerializer(serializers.ModelSerializer):
+    workshop_id = serializers.PrimaryKeyRelatedField(
+        queryset=Workshop.objects.all(),
+        source='workshop',
+        write_only=True
+    )
+
     class Meta:
         model = MaterialMovement
-        fields = '__all__'
-        read_only_fields = ['material']
+        fields = ['workshop_id', 'change_type', 'quantity', 'note', 'created_at', 'content_type', 'object_id']
+        read_only_fields = ['created_at', 'content_type', 'object_id']
 
     def update(self, instance, validated_data):
         # Prüfen: Gehört diese Bewegung zu einem Transfer oder einer Lieferung?

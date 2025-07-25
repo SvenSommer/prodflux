@@ -1,7 +1,7 @@
 from django.db import migrations
 
 def remove_duplicate_productmaterials(apps, schema_editor):
-    ProductMaterial = apps.get_model('yourapp', 'ProductMaterial')
+    ProductMaterial = apps.get_model('products', 'ProductMaterial')
     from django.db.models import Count, Min
 
     # Aggregiere doppelte Kombinationen

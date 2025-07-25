@@ -22,7 +22,7 @@ def remove_duplicate_productmaterials(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-
+        ('core', '0001_initial'),
     ]
 
     operations = [

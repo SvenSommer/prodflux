@@ -17,6 +17,7 @@ export interface Material {
   };
   alternatives: number[];
   required_quantity_per_unit?: number;
+  product_material_id?: number; // Added to store product material ID
 }
 
 export interface MaterialCategoryGroup {

@@ -72,6 +72,7 @@ class ProductMaterialListView(generics.ListAPIView):
 
             material_data = MaterialSerializer(material, context={'request': request}).data
             material_data["required_quantity_per_unit"] = float(pm.quantity_per_unit)
+            material_data["product_material_id"] = pm.id
 
             grouped_materials[category_name].append(material_data)
 

@@ -55,33 +55,31 @@ export class ProductDetailComponent {
       const allMaterials = materialGroups.flatMap(g => g.materials);
       this.materialsList = allMaterials;
 
-      // ZUERST alle materialAssignments auf 0 setzen
       this.materialAssignments = {};
       for (const mat of allMaterials) {
         this.materialAssignments[mat.id] = 0;
       }
 
-      // DANN Produktmaterialien laden
       this.productsService.getProductMaterials(this.productId).subscribe(productMaterialGroups => {
-        const allProductMaterials: { materialId: number; quantity: number }[] = [];
+        const allProductMaterials: { materialId: number; quantity: number; pmId?: number }[] = [];
 
         productMaterialGroups.forEach(group => {
           group.materials.forEach(mat => {
             allProductMaterials.push({
               materialId: mat.id,
-              quantity: mat.required_quantity_per_unit ?? 1
+              quantity: mat.required_quantity_per_unit ?? 1,
+              pmId: mat.product_material_id ?? undefined
             });
           });
         });
 
-        // materials array für Anzeige bauen
         this.materials = allProductMaterials.map(pm => ({
+          id: pm.pmId,                       // << wichtig: Zuordnungs-ID merken
           product: this.productId,
           material: pm.materialId,
           quantity_per_unit: pm.quantity
         }));
 
-        // 🛠 Direkt vorhandene Mengen vorbelegen
         for (const pm of allProductMaterials) {
           this.materialAssignments[pm.materialId] = pm.quantity;
         }
@@ -116,28 +114,39 @@ export class ProductDetailComponent {
       const existing = this.materials.find(m => m.material === materialId);
 
       if (qty > 0 && !existing) {
-        requests.push(this.productsService.addProductMaterial({
-          product: this.productId,
-          material: materialId,
-          quantity_per_unit: qty
-        }).toPromise());
-      } else if (qty === 0 && existing) {
-        requests.push(this.productsService.deleteProductMaterial(existing.id!).toPromise());
-      } else if (qty > 0 && existing && existing.quantity_per_unit !== qty) {
-        requests.push(this.productsService.deleteProductMaterial(existing.id!).toPromise().then(() =>
+        requests.push(
           this.productsService.addProductMaterial({
             product: this.productId,
             material: materialId,
             quantity_per_unit: qty
           }).toPromise()
-        ));
+        );
+
+      } else if (qty === 0 && existing && existing.id) {
+        requests.push(this.productsService.deleteProductMaterial(existing.id).toPromise());
+
+      } else if (qty > 0 && existing && existing.quantity_per_unit !== qty) {
+        const chain = existing.id
+          ? this.productsService.deleteProductMaterial(existing.id).toPromise().then(() =>
+              this.productsService.addProductMaterial({
+                product: this.productId,
+                material: materialId,
+                quantity_per_unit: qty
+              }).toPromise()
+            )
+          : this.productsService.addProductMaterial({
+              product: this.productId,
+              material: materialId,
+              quantity_per_unit: qty
+            }).toPromise();
+
+        requests.push(chain);
       }
     }
 
-    Promise.all(requests).then(() => {
-      this.ngOnInit(); // Daten neu laden
-    });
+    Promise.all(requests).then(() => this.ngOnInit());
   }
+
 
   getMaterialBezeichnung(materialId: number): string {
     const mat = this.materialsList.find(m => m.id === materialId);

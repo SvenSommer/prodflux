@@ -348,9 +348,82 @@ export class WorkshopDetailComponent {
 
   // Alle Korrekturen speichern
   onSaveAllInventoryCorrections(): void {
-    // Diese Funktion könnte in Zukunft implementiert werden
-    // Für jetzt verwenden wir die Navigation für einzelne Speicherungen
-    alert('Bitte verwenden Sie die Inventur-Navigation, um Materialien einzeln zu speichern.');
+    const currentState = this.inventoryService.currentState;
+    const inventoryCounts = currentState.inventoryCounts;
+
+    // Nur Materialien mit tatsächlichen Korrekturen sammeln
+    const correctionItems: Array<{materialId: number, materialName: string, inventoryCount: number, currentStock: number}> = [];
+
+    Object.keys(inventoryCounts).forEach(materialIdStr => {
+      const materialId = parseInt(materialIdStr, 10);
+      const inventoryCount = inventoryCounts[materialId];
+
+      // Nur Materialien mit gültigen Inventurmengen verarbeiten
+      if (inventoryCount !== undefined && inventoryCount !== null && inventoryCount >= 0) {
+        // Material und aktuellen Bestand finden
+        const material = this.allMaterials.find(m => m.id === materialId);
+        if (material) {
+          const currentStock = material.bestand || 0;
+
+          // Nur hinzufügen, wenn sich der Bestand tatsächlich ändert
+          if (inventoryCount !== currentStock) {
+            correctionItems.push({
+              materialId,
+              materialName: material.bezeichnung,
+              inventoryCount,
+              currentStock
+            });
+          }
+        }
+      }
+    });
+
+    if (correctionItems.length === 0) {
+      alert('Keine Inventurkorrekturen vorhanden - alle Bestände sind bereits korrekt.');
+      return;
+    }
+
+    // Bestätigung vom Benutzer mit Bestandsvergleich
+    const confirmMessage = `${correctionItems.length} Inventurkorrekturen speichern?\n\n` +
+      correctionItems.map(item => `• ${item.materialName}: ${item.currentStock} → ${item.inventoryCount}`).join('\n');
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    // Alle Korrekturen parallel speichern
+    let savedCount = 0;
+    let errorCount = 0;
+    const totalCount = correctionItems.length;
+
+    correctionItems.forEach(async (item) => {
+      try {
+        await this.saveInventoryCorrection(item.materialId, item.materialName);
+        savedCount++;
+
+        if (savedCount + errorCount === totalCount) {
+          this.finishBulkSave(savedCount, errorCount);
+        }
+      } catch (error) {
+        console.error(`Fehler beim Speichern von ${item.materialName}:`, error);
+        errorCount++;
+
+        if (savedCount + errorCount === totalCount) {
+          this.finishBulkSave(savedCount, errorCount);
+        }
+      }
+    });
+  }
+
+  private finishBulkSave(savedCount: number, errorCount: number): void {
+    if (errorCount > 0) {
+      alert(`Inventur abgeschlossen.\n${savedCount} Korrekturen gespeichert\n${errorCount} Fehler aufgetreten.`);
+    } else {
+      alert(`Inventur erfolgreich abgeschlossen.\n${savedCount} Korrekturen gespeichert.`);
+    }
+
+    // Bestandsdaten nach dem Bulk-Save neu laden
+    this.loadWorkshop();
   }
 
   // Hilfsmethoden und Getter für Template-Bindungen

@@ -1,3 +1,27 @@
 media/
 .env
 db.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+ENV/
+
+# Angular build files
+prodflux-frontend/dist/
+prodflux-frontend/node_modules/
+prodflux-frontend/.angular/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

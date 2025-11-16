@@ -108,6 +108,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Frontend statische Dateien
+FRONTEND_ROOT = BASE_DIR / 'prodflux-frontend' / 'dist' / 'prodflux-frontend' / 'browser'
+
+# Zusätzliche Verzeichnisse für statische Dateien
+STATICFILES_DIRS = [
+    FRONTEND_ROOT,
+] if FRONTEND_ROOT.exists() else []
+
 MEDIA_URL = '/media/'
 if RENDER:
     MEDIA_ROOT = '/media'  # Pfad zur Persistent Disk bei Render

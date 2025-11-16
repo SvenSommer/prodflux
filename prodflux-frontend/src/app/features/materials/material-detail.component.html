@@ -61,6 +61,11 @@
       </div>
     </div>
 
+    <!-- Verwendet in Sektion -->
+    <div class="mt-4" *ngIf="material">
+      <app-material-usage [materialId]="material.id"></app-material-usage>
+    </div>
+
     <!-- Tabelle -->
     <table mat-table [dataSource]="movements" class="mat-elevation-z1 full-width-table mt-4">
       <ng-container matColumnDef="type">

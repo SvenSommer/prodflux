@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MaterialUsageComponent } from '../../../shared/components/material-usage/material-usage.component';
 import { InventoryService, InventoryProgress } from './inventory.service';
 import { MaterialStockMaterial } from '../workshop.service';
 import { ProductsService, Product } from '../../products/products.service';
@@ -37,7 +38,8 @@ export interface SaveAndNextEvent {
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    MaterialUsageComponent
   ],
   template: `
     <mat-card class="inventory-navigator" *ngIf="isVisible">
@@ -102,40 +104,7 @@ export interface SaveAndNextEvent {
           <!-- Rechte Seite: Produktinformationen -->
           <div class="material-right-section">
             <div class="product-usage-section">
-              <div class="section-title">Verwendet in</div>
-              <div class="product-images-container" *ngIf="relatedProducts.length > 0; else noProductsTemplate">
-                <div class="product-images-grid">
-                  <div
-                    *ngFor="let product of relatedProducts; trackBy: trackByProductId"
-                    class="product-item"
-                    [matTooltip]="getProductTooltip(product)"
-                    matTooltipPosition="above"
-                    matTooltipClass="product-tooltip"
-                  >
-                    <div class="product-image-container">
-                      <img
-                        *ngIf="product.bild"
-                        [src]="product.bild"
-                        [alt]="product.bezeichnung"
-                        class="product-image"
-                        (error)="onProductImageError($event)"
-                      />
-                      <div *ngIf="!product.bild" class="product-placeholder">
-                        <mat-icon>inventory_2</mat-icon>
-                      </div>
-                      <div class="usage-badge" *ngIf="getProductUsage(product.id)">
-                        {{ formatUsage(getProductUsage(product.id)!) }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <ng-template #noProductsTemplate>
-                <div class="no-products-info">
-                  <mat-icon>info</mat-icon>
-                  <span>Wird in keinem Produkt verwendet</span>
-                </div>
-              </ng-template>
+              <app-material-usage [materialId]="currentMaterial ? currentMaterial.id : null"></app-material-usage>
             </div>
           </div>
         </div>
@@ -338,11 +307,15 @@ export interface SaveAndNextEvent {
       .material-right-section {
         flex: 1;
         min-width: 0;
+        /* Wichtig: overflow visible damit Badge nicht abgeschnitten wird */
+        overflow: visible;
 
         .product-usage-section {
           height: 100%;
           display: flex;
           flex-direction: column;
+          /* Wichtig: overflow visible damit Badge nicht abgeschnitten wird */
+          overflow: visible;
 
           .section-title {
             font-size: 0.875rem;

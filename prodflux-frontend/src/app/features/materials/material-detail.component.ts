@@ -11,6 +11,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { Workshop, WorkshopsService } from '../settings/workshop.services';
 import { MatIconModule } from '@angular/material/icon';
+import { MaterialUsageComponent } from '../../shared/components/material-usage/material-usage.component';
 
 @Component({
   selector: 'app-material-detail',
@@ -26,7 +27,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatIconModule,
     MatSelectModule,
     MatTableModule,
-    MatInputModule
+    MatInputModule,
+    MaterialUsageComponent
   ]
 })
 export class MaterialDetailComponent {

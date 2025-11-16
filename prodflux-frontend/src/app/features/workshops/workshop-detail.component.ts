@@ -24,6 +24,8 @@ import { InventoryControlsComponent } from './inventory/inventory-controls.compo
 import { MaterialInventoryTableComponent, InventoryCountChangeEvent, SaveCorrectionEvent } from './inventory/material-inventory-table.component';
 import { InventoryNavigatorComponent, NavigationEvent, SaveAndNextEvent } from './inventory/inventory-navigator.component';
 import { InventoryCompletionDialogComponent, InventoryCompletionData } from './inventory/inventory-completion-dialog.component';
+import { InventoryCorrectionsDialogComponent, InventoryCorrectionsDialogData } from './inventory/inventory-corrections-dialog.component';
+import { BulkSaveResultDialogComponent, BulkSaveResultData } from './inventory/bulk-save-result-dialog.component';
 
 @Component({
   selector: 'app-workshop-detail',
@@ -48,6 +50,8 @@ import { InventoryCompletionDialogComponent, InventoryCompletionData } from './i
     InventoryControlsComponent,
     MaterialInventoryTableComponent,
     InventoryNavigatorComponent,
+    InventoryCorrectionsDialogComponent,
+    BulkSaveResultDialogComponent,
   ],
 })
 export class WorkshopDetailComponent {
@@ -347,7 +351,7 @@ export class WorkshopDetailComponent {
   }
 
   // Alle Korrekturen speichern
-  onSaveAllInventoryCorrections(): void {
+  async onSaveAllInventoryCorrections(): Promise<void> {
     const currentState = this.inventoryService.currentState;
     const inventoryCounts = currentState.inventoryCounts;
 
@@ -383,11 +387,15 @@ export class WorkshopDetailComponent {
       return;
     }
 
-    // Bestätigung vom Benutzer mit Bestandsvergleich
-    const confirmMessage = `${correctionItems.length} Inventurkorrekturen speichern?\n\n` +
-      correctionItems.map(item => `• ${item.materialName}: ${item.currentStock} → ${item.inventoryCount}`).join('\n');
+    // Dialog zur Bestätigung öffnen
+    const dialogRef = this.dialog.open(InventoryCorrectionsDialogComponent, {
+      width: '600px',
+      data: { corrections: correctionItems }
+    });
 
-    if (!confirm(confirmMessage)) {
+    // Warten auf Benutzerentscheidung
+    const confirmed = await dialogRef.afterClosed().toPromise();
+    if (!confirmed) {
       return;
     }
 
@@ -416,14 +424,21 @@ export class WorkshopDetailComponent {
   }
 
   private finishBulkSave(savedCount: number, errorCount: number): void {
-    if (errorCount > 0) {
-      alert(`Inventur abgeschlossen.\n${savedCount} Korrekturen gespeichert\n${errorCount} Fehler aufgetreten.`);
-    } else {
-      alert(`Inventur erfolgreich abgeschlossen.\n${savedCount} Korrekturen gespeichert.`);
-    }
+    const totalCount = savedCount + errorCount;
+
+    // Ergebnis-Dialog anzeigen
+    this.dialog.open(BulkSaveResultDialogComponent, {
+      width: '400px',
+      data: {
+        savedCount,
+        errorCount,
+        totalCount
+      }
+    });
 
     // Bestandsdaten nach dem Bulk-Save neu laden
     this.loadWorkshop();
+    this.loadStock();
   }
 
   // Hilfsmethoden und Getter für Template-Bindungen

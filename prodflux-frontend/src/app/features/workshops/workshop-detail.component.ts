@@ -12,6 +12,11 @@ import { ProductOverviewComponent } from './product-overview/product-overview.co
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MaterialsService } from '../materials/materials.service';
 
 @Component({
   selector: 'app-workshop-detail',
@@ -28,6 +33,10 @@ import { MatInputModule } from '@angular/material/input';
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSlideToggleModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
     ProductOverviewComponent,
   ],
 })
@@ -36,11 +45,23 @@ export class WorkshopDetailComponent {
   private workshopService = inject(WorkshopService);
   private productService = inject(ProductsService);
   private dialog = inject(MatDialog);
+  private materialsService = inject(MaterialsService);
 
   workshopId = 0;
   workshop: Workshop | null = null;
   stock: MaterialStockGroup[] = [];
   productLifecycle: ProductLifecycleEntry[] = [];
+
+  // Inventurmodus
+  inventoryMode = false;
+  inventoryCounts: { [materialId: number]: number } = {};
+
+  // Navigation durch Materialien
+  currentMaterialIndex = 0;
+  allMaterials: any[] = [];
+  inventoryNavigationMode = false;
+  processedMaterialIds: Set<number> = new Set();
+  savedMaterialIds: Set<number> = new Set();
 
   selectedProduct: ProductLifecycleEntry | null = null;
   manufactureQty = 1;
@@ -52,6 +73,9 @@ export class WorkshopDetailComponent {
 
   @ViewChild('orderDialog') orderDialog!: TemplateRef<any>;
   @ViewChild('multiOrderDialog') multiOrderDialog!: TemplateRef<any>;
+  @ViewChild('inventoryCompletionDialog') inventoryCompletionDialog!: TemplateRef<any>;
+
+  inventoryDialogData = { processedCount: 0, savedCount: 0, totalCount: 0 };
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
@@ -216,5 +240,318 @@ export class WorkshopDetailComponent {
 
     window.location.href = mailto;
     dialogRef.close();
+  }
+
+  // Inventurmodus-Methoden
+  toggleInventoryMode() {
+    this.inventoryMode = !this.inventoryMode;
+    if (this.inventoryMode) {
+      // Aktuelle Bestände als Standardwerte setzen
+      this.initializeInventoryCounts();
+      this.initializeMaterialNavigation();
+    } else {
+      // Inventar-Zählungen zurücksetzen
+      this.inventoryCounts = {};
+      this.inventoryNavigationMode = false;
+      this.currentMaterialIndex = 0;
+      this.allMaterials = [];
+      this.processedMaterialIds.clear();
+      this.savedMaterialIds.clear();
+    }
+  }
+
+  initializeInventoryCounts() {
+    this.inventoryCounts = {};
+    this.stock.forEach(group => {
+      group.materials.forEach(material => {
+        this.inventoryCounts[material.id] = material.bestand || 0;
+      });
+    });
+  }
+
+  saveInventoryCorrection(materialId: number, materialName: string) {
+    const inventoryCount = this.inventoryCounts[materialId];
+    if (inventoryCount === undefined || inventoryCount < 0) {
+      alert('Bitte geben Sie eine gültige Inventurmenge ein.');
+      return;
+    }
+
+    const correctionData = {
+      workshop_id: this.workshopId,
+      inventory_count: inventoryCount,
+      note: `Inventurkorrektur für ${materialName}`
+    };
+
+    this.materialsService.createInventoryCorrection(materialId, correctionData).subscribe({
+      next: (response) => {
+        console.log('Inventurkorrektur erfolgreich erstellt:', response);
+        this.savedMaterialIds.add(materialId);
+        // Bestände neu laden
+        this.loadStock();
+      },
+      error: (error) => {
+        console.error('Fehler beim Erstellen der Inventurkorrektur:', error);
+        alert('Fehler beim Speichern der Inventurkorrektur. Bitte versuchen Sie es erneut.');
+      }
+    });
+  }
+
+  saveAllInventoryCorrections() {
+    const corrections = Object.keys(this.inventoryCounts).length;
+    if (corrections === 0) {
+      alert('Keine Inventurzählungen zum Speichern vorhanden.');
+      return;
+    }
+
+    let savedCount = 0;
+    let errorCount = 0;
+
+    // Material-Namen für bessere Benachrichtigungen sammeln
+    const materialNames: { [id: number]: string } = {};
+    this.stock.forEach(group => {
+      group.materials.forEach(material => {
+        materialNames[material.id] = material.bezeichnung;
+      });
+    });
+
+    // Alle Korrekturen sequenziell abarbeiten
+    const materialIds = Object.keys(this.inventoryCounts).map(id => parseInt(id));
+
+    materialIds.forEach((materialId, index) => {
+      const inventoryCount = this.inventoryCounts[materialId];
+      const materialName = materialNames[materialId] || `Material ${materialId}`;
+
+      if (inventoryCount >= 0) {
+        const correctionData = {
+          workshop_id: this.workshopId,
+          inventory_count: inventoryCount,
+          note: `Inventurkorrektur für ${materialName}`
+        };
+
+        this.materialsService.createInventoryCorrection(materialId, correctionData).subscribe({
+          next: (response) => {
+            savedCount++;
+            if (savedCount + errorCount === materialIds.length) {
+              this.finishInventoryCorrections(savedCount, errorCount);
+            }
+          },
+          error: (error) => {
+            console.error(`Fehler bei Inventurkorrektur für ${materialName}:`, error);
+            errorCount++;
+            if (savedCount + errorCount === materialIds.length) {
+              this.finishInventoryCorrections(savedCount, errorCount);
+            }
+          }
+        });
+      } else {
+        errorCount++;
+        if (savedCount + errorCount === materialIds.length) {
+          this.finishInventoryCorrections(savedCount, errorCount);
+        }
+      }
+    });
+  }
+
+  private finishInventoryCorrections(savedCount: number, errorCount: number) {
+    if (errorCount > 0) {
+      alert(`Inventur abgeschlossen. ${savedCount} Korrekturen gespeichert, ${errorCount} Fehler aufgetreten.`);
+    } else {
+      alert(`Inventur erfolgreich abgeschlossen. ${savedCount} Korrekturen gespeichert.`);
+    }
+
+    // Inventurmodus beenden und Bestände neu laden
+    this.inventoryMode = false;
+    this.inventoryCounts = {};
+    this.loadStock();
+  }
+
+  getInventoryCountsLength(): number {
+    return Object.keys(this.inventoryCounts).length;
+  }
+
+  getDisplayedColumns(): string[] {
+    if (this.inventoryMode) {
+      return ['nr', 'bild', 'bezeichnung', 'bestand', 'inventurmenge', 'inventur-aktionen'];
+    } else {
+      return ['nr', 'bild', 'bezeichnung', 'bestand'];
+    }
+  }
+
+  // Material-Navigation
+  initializeMaterialNavigation() {
+    // Alle Materialien aus allen Gruppen sammeln
+    this.allMaterials = [];
+    this.stock.forEach(group => {
+      group.materials.forEach(material => {
+        this.allMaterials.push({
+          ...material,
+          categoryName: group.category_name
+        });
+      });
+    });
+    this.currentMaterialIndex = 0;
+  }
+
+  startInventoryNavigation() {
+    if (this.allMaterials.length === 0) {
+      alert('Keine Materialien zum Inventarisieren gefunden.');
+      return;
+    }
+    this.inventoryNavigationMode = true;
+    this.currentMaterialIndex = 0;
+    this.processedMaterialIds.clear();
+    this.savedMaterialIds.clear();
+
+    // Aktuelles Material als bearbeitet markieren
+    const currentMaterial = this.getCurrentMaterial();
+    if (currentMaterial) {
+      this.processedMaterialIds.add(currentMaterial.id);
+    }
+
+    // Fokus auf das Eingabefeld setzen
+    setTimeout(() => {
+      const input = document.querySelector('.inventory-navigation input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 100);
+  }
+
+  getCurrentMaterial() {
+    return this.allMaterials[this.currentMaterialIndex];
+  }
+
+  goToNextMaterial() {
+    if (this.currentMaterialIndex < this.allMaterials.length - 1) {
+      this.currentMaterialIndex++;
+      const currentMaterial = this.getCurrentMaterial();
+      if (currentMaterial) {
+        this.processedMaterialIds.add(currentMaterial.id);
+      }
+      this.focusCurrentInput();
+    }
+  }
+
+  goToPreviousMaterial() {
+    if (this.currentMaterialIndex > 0) {
+      this.currentMaterialIndex--;
+      const currentMaterial = this.getCurrentMaterial();
+      if (currentMaterial) {
+        this.processedMaterialIds.add(currentMaterial.id);
+      }
+      this.focusCurrentInput();
+    }
+  }
+
+  private focusCurrentInput() {
+    setTimeout(() => {
+      const input = document.querySelector('.inventory-navigation input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 50);
+  }
+
+  saveCurrentAndNext() {
+    const currentMaterial = this.getCurrentMaterial();
+    if (currentMaterial && this.inventoryCounts[currentMaterial.id] !== undefined) {
+      const inventoryCount = this.inventoryCounts[currentMaterial.id];
+
+      if (inventoryCount === undefined || inventoryCount < 0) {
+        alert('Bitte geben Sie eine gültige Inventurmenge ein.');
+        return;
+      }
+
+      const correctionData = {
+        workshop_id: this.workshopId,
+        inventory_count: inventoryCount,
+        note: `Inventurkorrektur für ${currentMaterial.bezeichnung}`
+      };
+
+      // Material als gespeichert markieren (für UI-Feedback)
+      this.savedMaterialIds.add(currentMaterial.id);
+
+      this.materialsService.createInventoryCorrection(currentMaterial.id, correctionData).subscribe({
+        next: (response) => {
+          console.log('Inventurkorrektur erfolgreich erstellt:', response);
+
+          // Bestände neu laden
+          this.loadStock();
+
+          // Nach erfolgreichem Speichern zum nächsten Material
+          if (this.currentMaterialIndex < this.allMaterials.length - 1) {
+            this.goToNextMaterial();
+          } else {
+            // Alle Materialien durchgegangen
+            this.finishInventoryNavigation();
+          }
+        },
+        error: (error) => {
+          console.error('Fehler beim Erstellen der Inventurkorrektur:', error);
+          alert('Fehler beim Speichern der Inventurkorrektur. Bitte versuchen Sie es erneut.');
+          // Material als nicht gespeichert markieren bei Fehler
+          this.savedMaterialIds.delete(currentMaterial.id);
+        }
+      });
+    }
+  }  finishInventoryNavigation() {
+    this.inventoryNavigationMode = false;
+
+    const processedCount = this.processedMaterialIds.size;
+    const savedCount = this.savedMaterialIds.size;
+
+    // Dialog öffnen
+    this.openInventoryCompletionDialog(processedCount, savedCount);
+  }
+
+  onInventoryKeyPress(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      this.saveCurrentAndNext();
+    } else if (event.key === 'ArrowRight' || event.key === 'Tab') {
+      event.preventDefault();
+      this.goToNextMaterial();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.goToPreviousMaterial();
+    }
+  }
+
+  getInventoryProgress(): string {
+    if (this.allMaterials.length === 0) return '0/0';
+    return `${this.currentMaterialIndex + 1}/${this.allMaterials.length}`;
+  }
+
+  onImageError(event: Event) {
+    // Bild konnte nicht geladen werden, verstecke es
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+    }
+  }
+
+  openInventoryCompletionDialog(processedCount: number, savedCount: number) {
+    const dialogRef = this.dialog.open(this.inventoryCompletionDialog, {
+      width: '450px',
+      data: {
+        processedCount,
+        savedCount,
+        totalCount: this.allMaterials.length
+      }
+    });
+
+    // Daten für den Dialog setzen
+    this.inventoryDialogData = {
+      processedCount,
+      savedCount,
+      totalCount: this.allMaterials.length
+    };
+
+    dialogRef.afterClosed().subscribe(() => {
+      // Dialog wurde geschlossen, Sets zurücksetzen
+      this.processedMaterialIds.clear();
+      this.savedMaterialIds.clear();
+    });
   }
 }

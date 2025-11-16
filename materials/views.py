@@ -248,3 +248,76 @@ def all_materials_stock_by_workshop(request, workshop_id):
         materials_with_stock.append(material)
 
     return Response(group_materials_by_category(materials_with_stock, request))
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def material_inventory_correction_view(request, material_id):
+    """
+    Erstellt eine Inventur-Korrektur für ein Material in einer bestimmten Werkstatt.
+    
+    Expected POST data:
+    {
+        "workshop_id": int,
+        "inventory_count": decimal,
+        "note": string (optional)
+    }
+    """
+    try:
+        material = Material.objects.get(pk=material_id)
+    except Material.DoesNotExist:
+        return Response({'detail': 'Material nicht gefunden.'}, status=404)
+    
+    workshop_id = request.data.get('workshop_id')
+    inventory_count = request.data.get('inventory_count')
+    note = request.data.get('note', 'Inventur-Korrektur')
+    
+    if not workshop_id or inventory_count is None:
+        return Response({'detail': 'workshop_id und inventory_count sind erforderlich.'}, status=400)
+    
+    try:
+        inventory_count = Decimal(str(inventory_count))
+    except (ValueError, TypeError):
+        return Response({'detail': 'Ungültiger inventory_count Wert.'}, status=400)
+    
+    # Aktuellen Bestand berechnen
+    movements = MaterialMovement.objects.filter(
+        material=material,
+        workshop_id=workshop_id
+    )
+    
+    current_stock = Decimal(0)
+    for movement in movements:
+        if movement.change_type in ['lieferung', 'korrektur', 'transfer']:
+            current_stock += movement.quantity
+        elif movement.change_type in ['verbrauch', 'verlust']:
+            current_stock -= movement.quantity
+    
+    # Korrektur-Menge berechnen
+    correction_quantity = inventory_count - current_stock
+    
+    if correction_quantity != 0:
+        # MaterialMovement für Korrektur erstellen
+        correction_movement = MaterialMovement.objects.create(
+            workshop_id=workshop_id,
+            material=material,
+            change_type='korrektur',
+            quantity=correction_quantity,
+            note=f"{note} (Soll: {inventory_count}, Ist: {current_stock})"
+        )
+        
+        return Response({
+            'success': True,
+            'correction_applied': True,
+            'correction_quantity': float(correction_quantity),
+            'old_stock': float(current_stock),
+            'new_stock': float(inventory_count),
+            'movement_id': correction_movement.id
+        })
+    else:
+        return Response({
+            'success': True,
+            'correction_applied': False,
+            'message': 'Inventurwert entspricht aktuellem Bestand - keine Korrektur erforderlich',
+            'current_stock': float(current_stock)
+        })

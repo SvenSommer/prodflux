@@ -136,4 +136,12 @@ export class MaterialsService {
   getMaterialStock(materialId: number, workshopId: number): Observable<MaterialStock> {
     return this.http.get<MaterialStock>(`${this.baseUrl}${materialId}/stock?workshop_id=${workshopId}`);
   }
+
+  createInventoryCorrection(materialId: number, data: {
+    workshop_id: number;
+    inventory_count: number;
+    note?: string;
+  }): Observable<any> {
+    return this.http.post(`${this.baseUrl}${materialId}/inventory-correction/`, data);
+  }
 }

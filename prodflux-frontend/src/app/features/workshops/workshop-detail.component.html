@@ -7,8 +7,6 @@
     <mat-card class="workshop-header">
       <mat-card-title>{{ workshop.name }}</mat-card-title>
 
-
-
       <app-product-overview
       [products]="productLifecycle"
       (planMultiOrder)="openMultiOrderModal()"
@@ -21,6 +19,30 @@
         <mat-expansion-panel-header>
           <mat-panel-title>Aktueller Materialbestand</mat-panel-title>
         </mat-expansion-panel-header>
+
+        <!-- Inventurmodus Toggle -->
+        <div class="inventory-toggle-section">
+          <mat-slide-toggle
+            [checked]="inventoryMode"
+            (change)="toggleInventoryMode()"
+            color="primary">
+            Inventurmodus
+          </mat-slide-toggle>
+          <span class="inventory-help-text" *ngIf="inventoryMode">
+            <mat-icon>info</mat-icon>
+            Geben Sie die tatsächlich gezählten Mengen ein. Korrekturen werden automatisch berechnet.
+          </span>
+          <button
+            *ngIf="inventoryMode && !inventoryNavigationMode"
+            mat-raised-button
+            color="accent"
+            (click)="startInventoryNavigation()"
+            [disabled]="allMaterials.length === 0"
+          >
+            <mat-icon>navigate_next</mat-icon>
+            Inventur starten (alle Materialien)
+          </button>
+        </div>
 
         <ng-container *ngFor="let group of stock">
           <h4 class="category-title">{{ group.category_name }}</h4>
@@ -67,19 +89,59 @@
               <td mat-cell *matCellDef="let element">{{ element.bestand }}</td>
             </ng-container>
 
-            <tr
-              mat-header-row
-              *matHeaderRowDef="['nr', 'bild', 'bezeichnung', 'bestand']"
-            ></tr>
-            <tr
-              mat-row
-              *matRowDef="
-                let row;
-                columns: ['nr', 'bild', 'bezeichnung', 'bestand']
-              "
-            ></tr>
+            <!-- Inventurmenge (nur im Inventurmodus) -->
+            <ng-container matColumnDef="inventurmenge" *ngIf="inventoryMode">
+              <th mat-header-cell *matHeaderCellDef>Gezählt</th>
+              <td mat-cell *matCellDef="let element">
+                <mat-form-field appearance="outline" class="inventory-input">
+                  <input
+                    matInput
+                    type="number"
+                    min="0"
+                    [(ngModel)]="inventoryCounts[element.id]"
+                    placeholder="Gezählte Menge"
+                  />
+                </mat-form-field>
+              </td>
+            </ng-container>
+
+            <!-- Inventur-Aktionen (nur im Inventurmodus) -->
+            <ng-container matColumnDef="inventur-aktionen" *ngIf="inventoryMode">
+              <th mat-header-cell *matHeaderCellDef>Aktion</th>
+              <td mat-cell *matCellDef="let element">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="saveInventoryCorrection(element.id, element.bezeichnung)"
+                  matTooltip="Inventurkorrektur speichern"
+                >
+                  <mat-icon>save</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <!-- Header und Row-Definitionen -->
+            <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
+            <tr mat-row *matRowDef="let row; columns: getDisplayedColumns();"></tr>
           </table>
         </ng-container>
+
+        <!-- Inventur-Aktionsleiste -->
+        <div class="inventory-actions" *ngIf="inventoryMode">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="saveAllInventoryCorrections()"
+            [disabled]="getInventoryCountsLength() === 0"
+          >
+            <mat-icon>inventory</mat-icon>
+            Alle Inventurkorrekturen speichern
+          </button>
+          <span class="inventory-info">
+            {{ getInventoryCountsLength() }} Materialien erfasst
+          </span>
+        </div>
+
       </mat-expansion-panel>
     </mat-card>
 
@@ -207,4 +269,109 @@
   <div *ngIf="!workshop">
     <p class="text-center">Werkstatt nicht gefunden.</p>
   </div>
+
+  <!-- Inventur-Navigation Widget -->
+  <div class="inventory-navigation" *ngIf="inventoryNavigationMode && getCurrentMaterial()">
+    <div class="nav-header">
+      <h4>Inventur</h4>
+      <span class="nav-progress">{{ getInventoryProgress() }}</span>
+    </div>
+
+    <div class="current-material">
+      <!-- Material Bild -->
+      <div class="material-image-container" *ngIf="getCurrentMaterial().bild_url">
+        <img
+          [src]="getCurrentMaterial().bild_url"
+          [alt]="getCurrentMaterial().bezeichnung"
+          class="material-image"
+          (error)="onImageError($event)"
+        />
+      </div>
+      <div class="material-placeholder" *ngIf="!getCurrentMaterial().bild_url">
+        <mat-icon>image_not_supported</mat-icon>
+      </div>
+
+      <div class="material-info">
+        <div class="material-name">{{ getCurrentMaterial().bezeichnung }}</div>
+        <div class="current-stock">
+          Kategorie: {{ getCurrentMaterial().categoryName }}<br>
+          Aktueller Bestand: {{ getCurrentMaterial().bestand }}
+        </div>
+      </div>
+
+      <mat-form-field appearance="outline" class="inventory-input-large">
+        <mat-label>Gezählte Menge</mat-label>
+        <input
+          matInput
+          type="number"
+          min="0"
+          [(ngModel)]="inventoryCounts[getCurrentMaterial().id]"
+          (keydown)="onInventoryKeyPress($event)"
+          placeholder="Eingeben..."
+        />
+      </mat-form-field>
+    </div>
+
+    <div class="nav-actions">
+      <button
+        mat-button
+        (click)="goToPreviousMaterial()"
+        [disabled]="currentMaterialIndex === 0"
+      >
+        <mat-icon>chevron_left</mat-icon>
+        Zurück
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="saveCurrentAndNext()"
+        [disabled]="inventoryCounts[getCurrentMaterial().id] === undefined"
+      >
+        <mat-icon>save</mat-icon>
+        Speichern & Weiter
+      </button>
+
+      <button
+        mat-button
+        (click)="goToNextMaterial()"
+        [disabled]="currentMaterialIndex >= allMaterials.length - 1"
+      >
+        Weiter
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+
+    <button
+      mat-stroked-button
+      color="accent"
+      class="finish-inventory"
+      (click)="finishInventoryNavigation()"
+    >
+      <mat-icon>done</mat-icon>
+      Inventur beenden
+    </button>
+  </div>
+
+  <!-- Inventur Abschluss Dialog -->
+  <ng-template #inventoryCompletionDialog>
+    <h2 mat-dialog-title>
+      <mat-icon>inventory</mat-icon>
+      Inventur abgeschlossen
+    </h2>
+    <mat-dialog-content>
+      <p>Die Inventur wurde erfolgreich abgeschlossen.</p>
+      <div class="inventory-summary">
+        <p><strong>{{ inventoryDialogData.processedCount }}</strong> Materialien wurden bearbeitet</p>
+        <p><strong>{{ inventoryDialogData.savedCount }}</strong> Inventurkorrekturen wurden gespeichert</p>
+        <p class="total-count">von insgesamt {{ inventoryDialogData.totalCount }} Materialien</p>
+      </div>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-raised-button color="primary" mat-dialog-close>
+        <mat-icon>check</mat-icon>
+        OK
+      </button>
+    </mat-dialog-actions>
+  </ng-template>
 </div>

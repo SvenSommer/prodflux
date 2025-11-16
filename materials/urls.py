@@ -15,6 +15,7 @@ from .views import (
     OrderListCreateView,
     all_materials_stock_by_workshop,
     material_stock_view,
+    material_inventory_correction_view,
 )
 
 urlpatterns = [
@@ -33,6 +34,10 @@ urlpatterns = [
     path("orders/", OrderListCreateView.as_view(), name="order-list-create"),
     path("orders/<int:pk>/", OrderDetailView.as_view(), name="order-detail"),
     path("materials/<int:material_id>/stock", material_stock_view, name="material-stock"),
-    path("workshops/<int:workshop_id>/material-stock/", all_materials_stock_by_workshop, name="workshop-material-stock",
-    ),
+    path("workshops/<int:workshop_id>/material-stock/", 
+         all_materials_stock_by_workshop, 
+         name="workshop-material-stock"),
+    path("materials/<int:material_id>/inventory-correction/",
+         material_inventory_correction_view,
+         name="material-inventory-correction"),
 ]

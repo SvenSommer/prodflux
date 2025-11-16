@@ -3,71 +3,113 @@
     {{ errorMessage }}
   </div>
 
-  <mat-card class="material-detail-card">
-    <mat-card-title>
-      {{ material?.bezeichnung }}
-      <small *ngIf="material?.hersteller_bezeichnung">
-        ({{ material?.hersteller_bezeichnung }})
-      </small>
-      <a [routerLink]="['/materials', material?.id, 'edit']">
-        <button mat-icon-button class="edit-button" matTooltip="Bearbeiten">
-          <mat-icon>edit</mat-icon>
-        </button>
-      </a>
-    </mat-card-title>
+  <!-- Zweispaltiges Hauptlayout: Materialinfos links, Verwendet in rechts -->
+  <div class="main-layout">
+    <!-- Linke Spalte: Materialstammdaten -->
+    <mat-card class="main-info-card">
+      <mat-card-content>
+        <div class="material-header">
+          <h1 class="material-title">{{ material?.bezeichnung }}</h1>
+          <a [routerLink]="['/materials', material?.id, 'edit']">
+            <button mat-icon-button class="edit-button" matTooltip="Bearbeiten">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </a>
+        </div>
 
-    <!-- Bildvorschau -->
-    <div class="image-preview" *ngIf="material?.bild_url">
-      <img *ngIf="material?.bild_url" [src]="material?.bild_url!" alt="Materialbild" class="preview-image" />
+        <div class="material-content">
+          <div class="material-image-section">
+            <div class="image-container" *ngIf="material?.bild_url; else noImagePlaceholder">
+              <img [src]="material?.bild_url!" [alt]="material?.bezeichnung || 'Material'" class="material-image" />
+            </div>
+            <ng-template #noImagePlaceholder>
+              <div class="image-placeholder">
+                <mat-icon>inventory_2</mat-icon>
+                <span>Kein Bild</span>
+              </div>
+            </ng-template>
+          </div>
+
+          <div class="material-details-section">
+            <div class="material-info" *ngIf="material">
+              <div class="info-row" *ngIf="material.hersteller_bezeichnung">
+                <span class="label">Hersteller:</span>
+                <span class="value">{{ material.hersteller_bezeichnung }}</span>
+              </div>
+              <!-- Hier können weitere Stammdaten hinzugefügt werden -->
+            </div>
+
+            <!-- Lagerbestand in Stammdaten integriert -->
+            <div class="stock-section">
+              <h3>Lagerbestand</h3>
+              <mat-form-field appearance="outline" class="workshop-select">
+                <mat-label>Werkstatt wählen</mat-label>
+                <mat-select [(ngModel)]="selectedWorkshopId" (selectionChange)="onWorkshopChange()">
+                  <mat-option *ngFor="let w of workshops" [value]="w.id">{{ w.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div *ngIf="stockInfo" class="stock-info">
+                <div class="current-stock">
+                  <span class="stock-label">Aktuell in {{ getWorkshopNameById(selectedWorkshopId) }} vorhanden:</span>
+                  <span class="stock-value">{{ stockInfo.current_stock }} Stück</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Rechte Spalte: Verwendet in und Alternative Materialien -->
+    <div class="right-column">
+      <!-- Verwendet in Card -->
+      <mat-card class="usage-info-card" *ngIf="material">
+        <mat-card-content>
+          <h2 class="usage-title">Verwendet in</h2>
+          <app-material-usage [materialId]="material.id"></app-material-usage>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Alternative Materialien Card -->
+      <mat-card class="alternatives-section" *ngIf="stockInfo?.alternatives?.length">
+        <mat-card-content>
+          <h2 class="alternatives-title">Alternative Materialien</h2>
+          <div class="alternatives-grid">
+            <div *ngFor="let alt of stockInfo?.alternatives" class="alternative-card"
+                 [routerLink]="['/materials', alt.id]"
+                 matTooltip="Zum Material wechseln">
+              <div class="alternative-image-container">
+                <img *ngIf="alt.bild_url" [src]="alt.bild_url" [alt]="alt.bezeichnung" class="alternative-image" />
+                <div *ngIf="!alt.bild_url" class="alternative-placeholder">
+                  <mat-icon>inventory_2</mat-icon>
+                </div>
+              </div>
+              <div class="alternative-info">
+                <div class="alternative-name">{{ alt.bezeichnung }}</div>
+                <div class="alternative-manufacturer" *ngIf="alt.hersteller_bezeichnung">
+                  {{ alt.hersteller_bezeichnung }}
+                </div>
+                <div class="alternative-stock">Bestand: {{ alt.current_stock }} Stück</div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
     </div>
+  </div>
 
-    <!-- Werkstatt-Auswahl -->
-    <mat-form-field appearance="fill" class="workshop-select">
-      <mat-label>Werkstatt wählen</mat-label>
-      <mat-select [(ngModel)]="selectedWorkshopId" (selectionChange)="onWorkshopChange()">
-        <mat-option *ngFor="let w of workshops" [value]="w.id">{{ w.name }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <!-- Lagerinformation -->
-    <div *ngIf="stockInfo" class="mt-4">
-      <h3>Aktueller Bestand</h3>
-      <p>
-        <strong>Aktuell in {{ getWorkshopNameById(selectedWorkshopId) }} vorhanden:</strong>
-        {{ stockInfo.current_stock }} Stück
-      </p>
-      <div *ngIf="stockInfo.alternatives.length">
-        <h4>Alternativen:</h4>
-        <table class="mat-elevation-z1 full-width-table">
-          <thead>
-            <tr>
-              <th>Bild</th>
-              <th>Bezeichnung</th>
-              <th>Hersteller</th>
-              <th>Bestand</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let alt of stockInfo.alternatives">
-              <td>
-                <img *ngIf="alt.bild_url" [src]="alt.bild_url" alt="Bild" class="table-image" />
-              </td>
-              <td>{{ alt.bezeichnung }}</td>
-              <td>{{ alt.hersteller_bezeichnung }}</td>
-              <td>{{ alt.current_stock }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Verwendet in Sektion -->
-    <div class="mt-4" *ngIf="material">
-      <app-material-usage [materialId]="material.id"></app-material-usage>
-    </div>
-
-    <!-- Tabelle -->
-    <table mat-table [dataSource]="movements" class="mat-elevation-z1 full-width-table mt-4">
+  <!-- Bewegungshistorie Sektion -->
+  <mat-card class="section-card">
+    <mat-card-header>
+      <mat-card-title class="section-title">
+        <mat-icon>history</mat-icon>
+        Bewegungshistorie
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Tabelle -->
+      <table mat-table [dataSource]="movements" class="mat-elevation-z1 full-width-table">
       <ng-container matColumnDef="type">
         <th mat-header-cell *matHeaderCellDef>Typ</th>
         <td mat-cell *matCellDef="let m">
@@ -136,40 +178,42 @@
         </td>
       </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="['type', 'quantity', 'note', 'created', 'actions']"></tr>
-      <tr mat-row *matRowDef="let row; columns: ['type', 'quantity', 'note', 'created', 'actions']"></tr>
-    </table>
-    <div class="mt-6">
-      <h3>Neuen Vorgang hinzufügen</h3>
-      <form class="movement-form" (ngSubmit)="createMovement()" #movementForm="ngForm">
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Typ</mat-label>
-            <mat-select required [(ngModel)]="newMovement.change_type" name="change_type">
-              <mat-option value="lieferung">Lieferung</mat-option>
-              <mat-option value="verbrauch">Verbrauch</mat-option>
-              <mat-option value="korrektur">Korrektur</mat-option>
-              <mat-option value="verlust">Verlust</mat-option>
-              <mat-option value="transfer">Transfer</mat-option>
-              <mat-option value="inventur">Inventur</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <tr mat-header-row *matHeaderRowDef="['type', 'quantity', 'note', 'created', 'actions']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['type', 'quantity', 'note', 'created', 'actions']"></tr>
+      </table>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Menge</mat-label>
-            <input matInput type="number" required [(ngModel)]="newMovement.quantity" name="quantity" />
-          </mat-form-field>
+      <div class="movement-form-section">
+        <h3>Neuen Vorgang hinzufügen</h3>
+        <form class="movement-form" (ngSubmit)="createMovement()" #movementForm="ngForm">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Typ</mat-label>
+              <mat-select required [(ngModel)]="newMovement.change_type" name="change_type">
+                <mat-option value="lieferung">Lieferung</mat-option>
+                <mat-option value="verbrauch">Verbrauch</mat-option>
+                <mat-option value="korrektur">Korrektur</mat-option>
+                <mat-option value="verlust">Verlust</mat-option>
+                <mat-option value="transfer">Transfer</mat-option>
+                <mat-option value="inventur">Inventur</mat-option>
+              </mat-select>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Notiz</mat-label>
-            <input matInput [(ngModel)]="newMovement.note" name="note" />
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Menge</mat-label>
+              <input matInput type="number" required [(ngModel)]="newMovement.quantity" name="quantity" />
+            </mat-form-field>
 
-          <button mat-raised-button color="primary" type="submit" [disabled]="!movementForm.form.valid">
-            Speichern
-          </button>
-        </div>
-      </form>
-    </div>
+            <mat-form-field appearance="outline">
+              <mat-label>Notiz</mat-label>
+              <input matInput [(ngModel)]="newMovement.note" name="note" />
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" type="submit" [disabled]="!movementForm.form.valid">
+              Speichern
+            </button>
+          </div>
+        </form>
+      </div>
+    </mat-card-content>
   </mat-card>
 </div>

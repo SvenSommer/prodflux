@@ -1,72 +1,362 @@
 .material-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 2rem;
 
-  .material-detail-card {
-    padding: 1.5rem;
-    border-radius: 1rem;
+  // Zweispaltiges Hauptlayout
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    align-items: start;
+  }
 
-    mat-card-title {
-      font-size: 1.4rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
+  // Basis-Styles für alle Cards
+  .main-info-card, .usage-info-card, .alternatives-section {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-      small {
-        font-weight: normal;
-        font-size: 1rem;
-        margin-left: 0.5rem;
-        color: #666;
-      }
+    mat-card-content {
+      padding: 2rem !important;
     }
+  }
 
-    .image-preview {
+  // Linke Spalte: Materialstammdaten
+  .main-info-card {
+    .material-header {
       display: flex;
-      justify-content: center;
-      margin-bottom: 1.5rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
 
-      .preview-image {
-        max-height: 160px;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      }
-    }
-
-    .workshop-select {
-      width: 100%;
-      max-width: 300px;
-      margin-bottom: 1.5rem;
-    }
-
-    .full-width-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-
-      th, td {
-        padding: 0.75rem;
-        text-align: left;
-        vertical-align: middle;
-      }
-
-      th {
-        background-color: #eceff1;
+      .material-title {
+        font-size: 2rem;
         font-weight: 600;
-      }
-
-      tr:nth-child(even) {
-        background-color: #f7f9fc;
-      }
-
-      .quantity-input {
-        width: 80px;
-      }
-
-      mat-form-field.full-width {
-        width: 100%;
+        color: #333;
         margin: 0;
       }
 
-      button {
-        margin-right: 0.25rem;
+      .edit-button {
+        color: #666;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #2196F3;
+        }
+      }
+    }
+
+    .material-content {
+      display: flex;
+      gap: 2rem;
+
+      .material-image-section {
+        flex: 0 0 150px;
+
+        .image-container {
+          width: 150px;
+          height: 150px;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+          .material-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            max-width: 150px;
+            max-height: 150px;
+          }
+        }
+
+        .image-placeholder {
+          width: 150px;
+          height: 150px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: #f5f5f5;
+          border-radius: 12px;
+          border: 2px dashed #ccc;
+          color: #999;
+
+          mat-icon {
+            font-size: 36px;
+            width: 36px;
+            height: 36px;
+            margin-bottom: 8px;
+          }
+
+          span {
+            font-size: 0.875rem;
+            font-weight: 500;
+          }
+        }
+      }
+
+      .material-details-section {
+        flex: 1;
+
+        .material-info {
+          margin-bottom: 2rem;
+
+          .info-row {
+            display: flex;
+            margin-bottom: 1rem;
+
+            .label {
+              font-weight: 600;
+              color: #666;
+              min-width: 120px;
+            }
+
+            .value {
+              color: #333;
+            }
+          }
+        }
+
+        .stock-section {
+          h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 1rem 0;
+          }
+
+          .workshop-select {
+            width: 100%;
+            margin-bottom: 1rem;
+          }
+
+          .stock-info {
+            .current-stock {
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              padding: 1rem;
+              background: #f8f9fa;
+              border-radius: 8px;
+
+              .stock-label {
+                color: #666;
+                font-weight: 500;
+                font-size: 0.875rem;
+              }
+
+              .stock-value {
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #2196F3;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Rechte Spalte: Container für Verwendet in und Alternative Materialien
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  // Verwendet in Card
+  .usage-info-card {
+    .usage-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 1.5rem 0;
+    }
+  }
+
+  // Alternative Materialien - In der rechten Spalte
+  .alternatives-section {
+    .alternatives-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 1.5rem 0;
+    }
+
+    .alternatives-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+
+      .alternative-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+
+        &:hover {
+          border-color: #2196F3;
+          box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+          transform: translateY(-1px);
+        }
+
+        .alternative-image-container {
+          flex: 0 0 80px;
+          width: 80px;
+          height: 80px;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #f5f5f5;
+
+          .alternative-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            max-width: 80px;
+            max-height: 80px;
+          }
+
+          .alternative-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+
+            mat-icon {
+              font-size: 24px;
+              width: 24px;
+              height: 24px;
+            }
+          }
+        }
+
+        .alternative-info {
+          flex: 1;
+
+          .alternative-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+          }
+
+          .alternative-manufacturer {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+          }
+
+          .alternative-stock {
+            color: #2196F3;
+            font-weight: 500;
+            font-size: 0.875rem;
+          }
+        }
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 1024px) {
+    .main-layout {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+
+      .right-column {
+        order: -1; // Rechte Spalte auf mobile nach oben
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .main-info-card .material-content {
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .material-image-section {
+        flex: none;
+        align-self: center;
+      }
+    }
+
+    .right-column {
+      gap: 1rem; // Kleinerer Gap auf mobile
+    }
+  }  // Bestehende Tabellen-Styles für Movement-Tabelle
+  .full-width-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background-color: #eceff1;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f7f9fc;
+    }
+
+    .quantity-input {
+      width: 80px;
+    }
+
+    mat-form-field.full-width {
+      width: 100%;
+      margin: 0;
+    }
+
+    button {
+      margin-right: 0.25rem;
+    }
+  }
+
+  // Bewegungsformular
+  .movement-form-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+
+    h3 {
+      margin: 0 0 1.5rem 0;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .movement-form {
+      .form-row {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+        flex-wrap: wrap;
+
+        mat-form-field {
+          min-width: 150px;
+          flex: 1;
+        }
+
+        button {
+          height: 56px;
+          padding: 0 2rem;
+        }
       }
     }
   }

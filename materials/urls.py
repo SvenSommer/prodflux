@@ -20,8 +20,8 @@ from .views import (
 urlpatterns = [
     path("materials/", MaterialListCreateView.as_view()),
     path("materials/<int:pk>/", MaterialDetailView.as_view(), name="material-detail"),
+    path("materials/<int:material_id>/movements/", MaterialMovementListCreateView.as_view()),
     path("materials/<int:material_id>/movements/<int:pk>/", MaterialMovementDetailView.as_view()),
-    path("materials/<int:material_id>/movements", MaterialMovementListCreateView.as_view()),
     path("material-categories/", MaterialCategoryListCreateView.as_view(), name="material-category-list-create"),
     path("material-categories/<int:pk>/", MaterialCategoryDetailView.as_view(), name="material-category-detail"),
     path("materials/<int:pk>/alternatives/", MaterialAlternativesView.as_view(), name="material-alternatives"),

@@ -46,7 +46,7 @@ class MaterialMovementListCreateView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         try:
-            material = Material.objects.get(pk=self.kwargs['material_id'])  # ✅
+            material = Material.objects.get(pk=self.kwargs['material_id'])  
         except Material.DoesNotExist:
             raise ValidationError("Material nicht gefunden.")
         serializer.save(material=material)

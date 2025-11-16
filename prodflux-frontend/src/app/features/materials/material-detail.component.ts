@@ -60,9 +60,10 @@ export class MaterialDetailComponent {
 
   loadMovements() {
     if (!this.selectedWorkshopId) return;
-    this.materialsService.getMaterialMovements(this.materialId, this.selectedWorkshopId).subscribe(movs => {
-      this.movements = movs;
-    });
+    this.materialsService.getMaterialMovements(this.materialId, this.selectedWorkshopId)
+      .subscribe(movs => {
+        this.movements = movs.map(m => ({ ...m, quantity: Number(m.quantity) }));
+      });
   }
 
   loadStock() {

@@ -442,12 +442,11 @@ export class WorkshopDetailComponent {
 
     if (count !== undefined && count !== null) {
       try {
-        await this.materialsService.createMovement({
+        await this.materialsService.addMaterialMovement({
           material: materialId,
           change_type: 'Inventurkorrektur',
           quantity: count,
-          note: `Inventurkorrektur für ${materialName}`,
-          workshop_id: this.workshop?.id || 0
+          note: `Inventurkorrektur für ${materialName}`
         }).toPromise();
 
         this.inventoryService.markMaterialAsSaved(materialId);

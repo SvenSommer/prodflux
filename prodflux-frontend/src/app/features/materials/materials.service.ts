@@ -103,16 +103,15 @@ export class MaterialsService {
     return this.http.post<Material>(this.baseUrl, data);
   }
 
-  createMovement(data: {
+  addMaterialMovement(data: {
     material: number;
-    workshop_id: number;
     change_type: string;
     quantity: number;
     note?: string;
   }): Observable<MaterialMovement> {
     const { material, ...body } = data;
     return this.http.post<MaterialMovement>(
-      `${this.baseUrl}${material}/movements`,
+      `${this.baseUrl}${material}/movements/`,
       body
     );
   }
@@ -122,7 +121,7 @@ export class MaterialsService {
   }
 
   getMaterialMovements(materialId: number, workshopId: number): Observable<MaterialMovement[]> {
-    return this.http.get<MaterialMovement[]>(`${this.baseUrl}${materialId}/movements?workshop_id=${workshopId}`);
+    return this.http.get<MaterialMovement[]>(`${this.baseUrl}${materialId}/movements/?workshop_id=${workshopId}`);
   }
 
   updateMaterialMovement(id: number, data: Partial<MaterialMovement>) {
@@ -134,7 +133,7 @@ export class MaterialsService {
   }
 
   getMaterialStock(materialId: number, workshopId: number): Observable<MaterialStock> {
-    return this.http.get<MaterialStock>(`${this.baseUrl}${materialId}/stock?workshop_id=${workshopId}`);
+    return this.http.get<MaterialStock>(`${this.baseUrl}${materialId}/stock/?workshop_id=${workshopId}`);
   }
 
   createInventoryCorrection(materialId: number, data: {

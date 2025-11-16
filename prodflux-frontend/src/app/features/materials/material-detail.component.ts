@@ -170,13 +170,13 @@ export class MaterialDetailComponent {
       note: this.newMovement.note
     };
 
-    this.materialsService.createMovement(payload).subscribe({
+    this.materialsService.addMaterialMovement(payload).subscribe({
       next: () => {
         this.loadMovements();
         this.loadStock();
         this.newMovement = { change_type: 'lieferung', quantity: 1, note: '' };
       },
-      error: (err) => {
+      error: (err: any) => {
         if (err.status === 400 && err.error?.detail) {
           this.errorMessage = err.error.detail;
         } else if (err.status === 400 && err.error) {

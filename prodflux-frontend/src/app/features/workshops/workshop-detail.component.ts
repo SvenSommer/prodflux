@@ -316,7 +316,6 @@ export class WorkshopDetailComponent {
       if (this.canGoToNextMaterial()) {
         this.inventoryService.goToNext();
       } else {
-        // Inventur abgeschlossen
         this.onFinishInventory();
       }
     }).catch((error) => {
@@ -438,21 +437,31 @@ export class WorkshopDetailComponent {
 
   private async saveInventoryCorrection(materialId: number, materialName: string): Promise<void> {
     const currentState = this.inventoryService.currentState;
-    const count = currentState.inventoryCounts[materialId];
+    const inventoryCount = currentState.inventoryCounts[materialId];
 
-    if (count !== undefined && count !== null) {
+    if (inventoryCount !== undefined && inventoryCount !== null) {
+      const correctionData = {
+        workshop_id: this.workshopId,
+        inventory_count: inventoryCount,
+        note: `Inventurkorrektur für ${materialName}`
+      };
+
       try {
-        await this.materialsService.addMaterialMovement({
-          material: materialId,
-          change_type: 'Inventurkorrektur',
-          quantity: count,
-          note: `Inventurkorrektur für ${materialName}`
-        }).toPromise();
-
+        const result = await this.materialsService.createInventoryCorrection(materialId, correctionData).toPromise();
         this.inventoryService.markMaterialAsSaved(materialId);
-        await this.loadWorkshop(); // Bestand neu laden
-      } catch (error) {
-        console.error('Fehler beim Speichern der Inventurkorrektur:', error);
+        await this.loadWorkshop();
+      } catch (error: any) {
+        // Spezielle Behandlung für "Bestand ist bereits korrekt"
+        const errorMessages = error?.error;
+        if (error?.status === 400 &&
+            ((Array.isArray(errorMessages) && errorMessages.includes('Der Bestand ist bereits korrekt.')) ||
+             (errorMessages?.non_field_errors?.includes?.('Der Bestand ist bereits korrekt.')))) {
+          // Bestand ist bereits korrekt - behandle als erfolgreich
+          this.inventoryService.markMaterialAsSaved(materialId);
+          await this.loadWorkshop();
+          return;
+        }
+        throw error;
       }
     }
   }

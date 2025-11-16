@@ -37,8 +37,8 @@
           [inventoryModeActive]="(inventoryService.state$ | async)?.isActive || false"
           [inventoryCounts]="(inventoryService.state$ | async)?.inventoryCounts || {}"
           [savedMaterialIds]="(inventoryService.state$ | async)?.savedMaterialIds || emptySavedMaterialIds"
-          (inventoryCountChange)="onInventoryCountChange($event)"
-          (saveCorrection)="onSaveCorrection($event)"
+          (inventoryCountChanged)="onInventoryCountChange($event)"
+          (saveCorrectionRequested)="onSaveCorrection($event)"
         ></app-material-inventory-table>
 
       </mat-expansion-panel>

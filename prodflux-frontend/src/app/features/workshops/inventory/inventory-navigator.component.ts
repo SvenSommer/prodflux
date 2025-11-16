@@ -756,11 +756,13 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
 
   onSaveAndNext(): void {
     if (this.currentMaterial && this.inventoryCount !== undefined && this.inventoryCount >= 0) {
-      this.saveAndNext.emit({
+      const saveEvent = {
         materialId: this.currentMaterial.id,
         materialName: this.currentMaterial.bezeichnung,
         inventoryCount: this.inventoryCount
-      });
+      };
+
+      this.saveAndNext.emit(saveEvent);
     }
   }
 
@@ -792,12 +794,10 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
   }
 
   onInputKeyPress(event: KeyboardEvent): void {
-    // Input-spezifische Keyboard-Handler
     if (event.key === 'Enter') {
       event.preventDefault();
       this.onSaveAndNext();
     }
-    // Pfeiltasten werden vom globalen Handler behandelt
   }
 
   onInventoryCountChange(count: number): void {

@@ -1,7 +1,7 @@
 // src/app/features/materials/materials.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap, catchError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Material {
@@ -108,12 +108,12 @@ export class MaterialsService {
     change_type: string;
     quantity: number;
     note?: string;
+    workshop_id?: number;
   }): Observable<MaterialMovement> {
     const { material, ...body } = data;
-    return this.http.post<MaterialMovement>(
-      `${this.baseUrl}${material}/movements/`,
-      body
-    );
+    const url = `${this.baseUrl}${material}/movements/`;
+
+    return this.http.post<MaterialMovement>(url, body);
   }
 
   updateMaterialFormData(id: number, data: FormData) {

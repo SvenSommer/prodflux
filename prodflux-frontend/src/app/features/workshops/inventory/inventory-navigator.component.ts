@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -29,6 +30,7 @@ export interface SaveAndNextEvent {
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -58,21 +60,37 @@ export interface SaveAndNextEvent {
           <!-- Linke Seite: Material-Details -->
           <div class="material-left-section">
             <div class="material-header">
-              <h4 class="material-name">{{ currentMaterial.bezeichnung }}</h4>
+              <a
+                [routerLink]="['/materials', currentMaterial.id]"
+                class="material-link"
+              >
+                <h4 class="material-name">{{ currentMaterial.bezeichnung }}</h4>
+              </a>
             </div>
 
             <!-- Material Bild -->
             <div class="material-image-container">
-              <img
+              <a
                 *ngIf="currentMaterial.bild_url"
-                [src]="currentMaterial.bild_url"
-                [alt]="currentMaterial.bezeichnung"
-                class="material-image"
-                (error)="onImageError($event)"
-              />
-              <div *ngIf="!currentMaterial.bild_url" class="no-image-placeholder">
-                <mat-icon>image_not_supported</mat-icon>
-              </div>
+                [routerLink]="['/materials', currentMaterial.id]"
+                class="material-image-link"
+              >
+                <img
+                  [src]="currentMaterial.bild_url"
+                  [alt]="currentMaterial.bezeichnung"
+                  class="material-image"
+                  (error)="onImageError($event)"
+                />
+              </a>
+              <a
+                *ngIf="!currentMaterial.bild_url"
+                [routerLink]="['/materials', currentMaterial.id]"
+                class="material-image-link"
+              >
+                <div class="no-image-placeholder">
+                  <mat-icon>image_not_supported</mat-icon>
+                </div>
+              </a>
             </div>
 
             <!-- Bestandsinfo -->
@@ -106,7 +124,7 @@ export interface SaveAndNextEvent {
                         <mat-icon>inventory_2</mat-icon>
                       </div>
                       <div class="usage-badge" *ngIf="getProductUsage(product.id)">
-                        {{ getProductUsage(product.id) }}x
+                        {{ formatUsage(getProductUsage(product.id)!) }}
                       </div>
                     </div>
                   </div>
@@ -620,6 +638,27 @@ export interface SaveAndNextEvent {
       white-space: normal;
       text-align: center;
     }
+
+    /* Material Links */
+    .material-link {
+      color: #2196F3;
+      text-decoration: none;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #1976D2;
+        text-decoration: underline;
+      }
+    }
+
+    .material-image-link {
+      display: block;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.02);
+      }
+    }
   `]
 })
 export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges {
@@ -672,19 +711,23 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
 
   private loadRelatedProducts(): void {
     if (!this.currentMaterial) {
+      console.log('❌ Kein currentMaterial vorhanden');
       this.relatedProducts = [];
       this.productMaterialUsage = {};
       return;
     }
 
+    console.log('🔄 Lade Produkte für Material:', this.currentMaterial.id, this.currentMaterial.bezeichnung);
+
     this.subscription.add(
       this.productsService.getProductsUsingMaterial(this.currentMaterial.id).subscribe({
         next: (products) => {
+          console.log('📦 Produkte erhalten:', products);
           this.relatedProducts = products;
           this.loadProductMaterialUsage();
         },
         error: (error) => {
-          console.error('Fehler beim Laden der Produktinformationen:', error);
+          console.error('❌ Fehler beim Laden der Produktinformationen:', error);
           this.relatedProducts = [];
           this.productMaterialUsage = {};
         }
@@ -695,19 +738,36 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
   private loadProductMaterialUsage(): void {
     if (!this.currentMaterial) return;
 
-    // Lade alle ProductMaterial-Einträge für das aktuelle Material
+    console.log('🔍 Lade Verbrauchsdaten für Material:', this.currentMaterial.id, this.currentMaterial.bezeichnung);
+    console.log('📋 Relevante Produkte:', this.relatedProducts.map(p => ({ id: p.id, name: p.bezeichnung })));
+
+    // Hauptstrategie: Lade alle ProductMaterials und filtere sie clientseitig
+    console.log('🔄 Lade alle ProductMaterials...');
     this.subscription.add(
-      this.productsService.getProductMaterialsForMaterial(this.currentMaterial.id).subscribe({
-        next: (productMaterials) => {
-          // Erstelle eine Map der Verbrauchsmengen pro Produkt
-          this.productMaterialUsage = {};
-          productMaterials.forEach(pm => {
+      this.productsService.getAllProductMaterials().subscribe({
+        next: (allProductMaterials: any[]) => {
+          console.log('📊 Alle ProductMaterials erhalten:', allProductMaterials);
+
+          // Filtere nach aktuellem Material
+          const relevantMaterials = allProductMaterials.filter((pm: any) => pm.material === this.currentMaterial!.id);
+          console.log('🎯 Relevante ProductMaterials für Material', this.currentMaterial!.id, ':', relevantMaterials);
+
+          // Erstelle Mapping
+          this.productMaterialUsage = {}; // Reset
+          relevantMaterials.forEach((pm: any) => {
+            console.log('🔗 Mapping:', `Product ${pm.product} → ${pm.quantity_per_unit}x`);
             this.productMaterialUsage[pm.product] = pm.quantity_per_unit;
           });
+
+          console.log('💾 Finale productMaterialUsage Map:', this.productMaterialUsage);
         },
-        error: (error) => {
-          console.error('Fehler beim Laden der Materialverbrauchsinformationen:', error);
-          this.productMaterialUsage = {};
+        error: (error: any) => {
+          console.error('❌ Fehler beim Laden aller ProductMaterials:', error);
+          // Fallback auf Standard-Werte
+          this.relatedProducts.forEach(product => {
+            this.productMaterialUsage[product.id] = 1; // Standard: 1 Stück pro Produkt
+          });
+          console.log('⚠️ Fallback: Verwende 1x für alle Produkte');
         }
       })
     );
@@ -770,7 +830,28 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
 
   getProductUsage(productId: number): number | null {
     const usage = this.productMaterialUsage[productId];
-    return (usage !== undefined && usage > 0) ? usage : null;
+    console.log('🏷️ getProductUsage für Produkt', productId, '→ Verbrauch:', usage, 'Map:', this.productMaterialUsage);
+
+    // Sicherstellen, dass wir eine Zahl haben
+    const numericUsage = usage !== undefined ? Number(usage) : null;
+    return (numericUsage !== null && numericUsage > 0) ? numericUsage : null;
+  }
+
+  formatUsage(value: number): string {
+    // Prüfe, ob die Zahl eine Ganzzahl ist
+    if (Number.isInteger(value)) {
+      return `${Math.round(value)}x`;
+    }
+
+    // Für Dezimalzahlen: maximal 2 Nachkommastellen
+    const formatted = Number(value.toFixed(2));
+
+    // Wenn nach dem Runden wieder eine Ganzzahl entsteht
+    if (Number.isInteger(formatted)) {
+      return `${formatted}x`;
+    }
+
+    return `${formatted}x`;
   }
 
   onImageError(event: Event): void {

@@ -56,6 +56,11 @@ class ProductMaterialDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductMaterialSerializer
     permission_classes = [IsAuthenticated]
 
+class ProductMaterialGlobalListView(generics.ListAPIView):
+    queryset = ProductMaterial.objects.all()
+    serializer_class = ProductMaterialSerializer
+    permission_classes = [IsAuthenticated]
+
 class ProductMaterialListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 

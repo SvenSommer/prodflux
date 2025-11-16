@@ -114,4 +114,8 @@ export class ProductsService {
   getProductMaterialsForMaterial(materialId: number): Observable<ProductMaterial[]> {
     return this.http.get<ProductMaterial[]>(`${this.baseUrl}/product-materials/?material=${materialId}`);
   }
+
+  getAllProductMaterials(): Observable<ProductMaterial[]> {
+    return this.http.get<ProductMaterial[]>(`${this.baseUrl}/product-materials/`);
+  }
 }

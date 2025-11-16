@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -120,7 +120,7 @@ export interface SaveAndNextEvent {
               min="0"
               [(ngModel)]="inventoryCount"
               (ngModelChange)="onInventoryCountChange($event)"
-              (keydown)="onKeyPress($event)"
+              (keydown)="onInputKeyPress($event)"
               placeholder="Eingeben..."
             />
             <mat-hint>Enter = Speichern & Weiter</mat-hint>
@@ -768,17 +768,36 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
     this.finishInventory.emit();
   }
 
-  onKeyPress(event: KeyboardEvent): void {
+  @HostListener('keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    // Nur aktiv wenn der Dialog sichtbar ist
+    if (!this.isVisible) {
+      return;
+    }
+
+    // Pfeiltasten-Navigation (immer aktiv im Dialog)
+    if (event.key === 'ArrowRight') {
+      // Nur navigieren wenn wir nicht am Ende sind
+      if (this.canGoToNext) {
+        event.preventDefault();
+        this.onNavigate('next');
+      }
+    } else if (event.key === 'ArrowLeft') {
+      // Nur navigieren wenn wir nicht am Anfang sind
+      if (this.canGoToPrevious) {
+        event.preventDefault();
+        this.onNavigate('previous');
+      }
+    }
+  }
+
+  onInputKeyPress(event: KeyboardEvent): void {
+    // Input-spezifische Keyboard-Handler
     if (event.key === 'Enter') {
       event.preventDefault();
       this.onSaveAndNext();
-    } else if (event.key === 'ArrowRight' || event.key === 'Tab') {
-      event.preventDefault();
-      this.onNavigate('next');
-    } else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.onNavigate('previous');
     }
+    // Pfeiltasten werden vom globalen Handler behandelt
   }
 
   onInventoryCountChange(count: number): void {

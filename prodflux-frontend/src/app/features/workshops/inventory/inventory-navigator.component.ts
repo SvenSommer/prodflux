@@ -40,7 +40,7 @@ export interface SaveAndNextEvent {
   template: `
     <mat-card class="inventory-navigator" *ngIf="isVisible">
       <mat-card-content>
-        <!-- Fortschrittsanzeige -->
+        <!-- Header mit Fortschrittsanzeige -->
         <div class="progress-section">
           <div class="progress-text">
             Material {{ progress.currentIndex + 1 }} von {{ progress.totalCount }}
@@ -53,56 +53,77 @@ export interface SaveAndNextEvent {
           </mat-progress-bar>
         </div>
 
-        <!-- Aktuelles Material -->
-        <div class="material-section" *ngIf="currentMaterial">
-          <div class="material-header">
-            <h4 class="material-name">{{ currentMaterial.bezeichnung }}</h4>
-          </div>
-
-          <!-- Material Bild -->
-          <div class="material-image-container">
-            <img
-              *ngIf="currentMaterial.bild_url"
-              [src]="currentMaterial.bild_url"
-              [alt]="currentMaterial.bezeichnung"
-              class="material-image"
-              (error)="onImageError($event)"
-            />
-            <div *ngIf="!currentMaterial.bild_url" class="no-image-placeholder">
-              <mat-icon>image_not_supported</mat-icon>
+        <!-- Material-Info-Container -->
+        <div class="material-info-container" *ngIf="currentMaterial">
+          <!-- Linke Seite: Material-Details -->
+          <div class="material-left-section">
+            <div class="material-header">
+              <h4 class="material-name">{{ currentMaterial.bezeichnung }}</h4>
             </div>
-          </div>
 
-          <!-- Bestandsinfo -->
-          <div class="stock-info">
-            <span>Aktueller Bestand: <strong>{{ currentMaterial.bestand }}</strong></span>
-          </div>
-
-          <!-- Produktinformationen -->
-          <div class="product-usage-section" *ngIf="relatedProducts.length > 0">
-            <div class="section-title">Verwendet in:</div>
-            <div class="product-images-grid">
-              <div
-                *ngFor="let product of relatedProducts"
-                class="product-item"
-                [matTooltip]="product.bezeichnung"
-                matTooltipPosition="above"
-              >
-                <img
-                  *ngIf="product.bild"
-                  [src]="product.bild"
-                  [alt]="product.bezeichnung"
-                  class="product-image"
-                  (error)="onProductImageError($event)"
-                />
-                <div *ngIf="!product.bild" class="product-placeholder">
-                  <mat-icon>inventory_2</mat-icon>
-                </div>
+            <!-- Material Bild -->
+            <div class="material-image-container">
+              <img
+                *ngIf="currentMaterial.bild_url"
+                [src]="currentMaterial.bild_url"
+                [alt]="currentMaterial.bezeichnung"
+                class="material-image"
+                (error)="onImageError($event)"
+              />
+              <div *ngIf="!currentMaterial.bild_url" class="no-image-placeholder">
+                <mat-icon>image_not_supported</mat-icon>
               </div>
             </div>
+
+            <!-- Bestandsinfo -->
+            <div class="stock-info">
+              <span>Aktueller Bestand: <strong>{{ currentMaterial.bestand }}</strong></span>
+            </div>
           </div>
 
-          <!-- Inventur Eingabe -->
+          <!-- Rechte Seite: Produktinformationen -->
+          <div class="material-right-section">
+            <div class="product-usage-section">
+              <div class="section-title">Verwendet in</div>
+              <div class="product-images-container" *ngIf="relatedProducts.length > 0; else noProductsTemplate">
+                <div class="product-images-grid">
+                  <div
+                    *ngFor="let product of relatedProducts; trackBy: trackByProductId"
+                    class="product-item"
+                    [matTooltip]="getProductTooltip(product)"
+                    matTooltipPosition="above"
+                    matTooltipClass="product-tooltip"
+                  >
+                    <div class="product-image-container">
+                      <img
+                        *ngIf="product.bild"
+                        [src]="product.bild"
+                        [alt]="product.bezeichnung"
+                        class="product-image"
+                        (error)="onProductImageError($event)"
+                      />
+                      <div *ngIf="!product.bild" class="product-placeholder">
+                        <mat-icon>inventory_2</mat-icon>
+                      </div>
+                      <div class="usage-badge" *ngIf="getProductUsage(product.id)">
+                        {{ getProductUsage(product.id) }}x
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <ng-template #noProductsTemplate>
+                <div class="no-products-info">
+                  <mat-icon>info</mat-icon>
+                  <span>Wird in keinem Produkt verwendet</span>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventur Eingabe -->
+        <div class="inventory-input-section" *ngIf="currentMaterial">
           <mat-form-field appearance="outline" class="inventory-input-field">
             <mat-label>Gezählte Menge</mat-label>
             <input
@@ -111,9 +132,11 @@ export interface SaveAndNextEvent {
               type="number"
               min="0"
               [(ngModel)]="inventoryCount"
+              (ngModelChange)="onInventoryCountChange($event)"
               (keydown)="onKeyPress($event)"
               placeholder="Eingeben..."
             />
+            <mat-hint>Enter = Speichern & Weiter</mat-hint>
           </mat-form-field>
         </div>
 
@@ -135,6 +158,7 @@ export interface SaveAndNextEvent {
             (click)="onSaveAndNext()"
             [disabled]="inventoryCount === undefined || inventoryCount < 0"
             matTooltip="Material speichern und zum nächsten (Enter)"
+            class="save-button"
           >
             <mat-icon>save</mat-icon>
             Speichern & Weiter
@@ -169,42 +193,67 @@ export interface SaveAndNextEvent {
   styles: [`
     .inventory-navigator {
       position: fixed;
-      top: 100px;
+      bottom: 20px;
       right: 20px;
-      width: 350px;
-      max-width: calc(100vw - 40px);
+      width: 40vw;
+      min-width: 450px;
+      max-width: 600px;
+      height: 50vh;
+      min-height: 400px;
+      max-height: 700px;
       z-index: 1000;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
       background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
       border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+
+      mat-card-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+      }
 
       .progress-section {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        flex-shrink: 0;
 
         .progress-text {
           font-size: 0.875rem;
           color: #666;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
           text-align: center;
+          font-weight: 500;
         }
 
         .progress-bar {
-          height: 6px;
-          border-radius: 3px;
+          height: 8px;
+          border-radius: 4px;
         }
       }
 
-      .material-section {
-        text-align: center;
+      .material-info-container {
+        display: flex;
+        gap: 1.5rem;
         margin-bottom: 1.5rem;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .material-left-section {
+        flex: 1;
+        min-width: 0;
 
         .material-header {
           margin-bottom: 1rem;
 
           .material-name {
-            margin: 0 0 0.25rem 0;
-            font-size: 1rem;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
             font-weight: 600;
             color: #1976d2;
             word-wrap: break-word;
@@ -217,6 +266,10 @@ export interface SaveAndNextEvent {
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            background: #f5f5f5;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
           }
         }
 
@@ -224,136 +277,253 @@ export interface SaveAndNextEvent {
           margin-bottom: 1rem;
 
           .material-image {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 12px;
             border: 2px solid #e0e0e0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           }
 
           .no-image-placeholder {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #f5f5f5;
-            border-radius: 8px;
+            border-radius: 12px;
             border: 2px solid #e0e0e0;
-            margin: 0 auto;
 
             mat-icon {
-              font-size: 40px;
+              font-size: 48px;
               color: #999;
             }
           }
         }
 
         .stock-info {
-          margin-bottom: 1rem;
-          font-size: 0.875rem;
+          font-size: 0.9rem;
           color: #666;
+          padding: 0.75rem;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border-left: 4px solid #1976d2;
 
           strong {
             color: #333;
+            font-weight: 600;
           }
         }
+      }
 
-        .inventory-input-field {
-          width: 100%;
-          max-width: 200px;
-        }
+      .material-right-section {
+        flex: 1;
+        min-width: 0;
 
         .product-usage-section {
-          margin-top: 1rem;
-          padding-top: 1rem;
-          border-top: 1px solid #e0e0e0;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
 
           .section-title {
-            font-size: 0.75rem;
+            font-size: 0.875rem;
             color: #666;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
-            text-align: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0e0e0;
           }
 
-          .product-images-grid {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+          .product-images-container {
+            flex: 1;
 
-            .product-item {
-              position: relative;
+            .product-images-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+              gap: 0.75rem;
+              align-content: start;
 
-              .product-image {
-                width: 32px;
-                height: 32px;
-                object-fit: cover;
-                border-radius: 4px;
-                border: 1px solid #e0e0e0;
-                cursor: help;
-                transition: transform 0.2s ease;
+              .product-item {
+                position: relative;
 
-                &:hover {
-                  transform: scale(1.1);
-                  border-color: #1976d2;
+                .product-image-container {
+                  position: relative;
+                  display: inline-block;
                 }
-              }
 
-              .product-placeholder {
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background-color: #f5f5f5;
-                border-radius: 4px;
-                border: 1px solid #e0e0e0;
-                cursor: help;
+                .product-image {
+                  width: 48px;
+                  height: 48px;
+                  object-fit: cover;
+                  border-radius: 8px;
+                  border: 2px solid #e0e0e0;
+                  cursor: help;
+                  transition: all 0.2s ease;
+                  display: block;
 
-                mat-icon {
-                  font-size: 16px;
-                  color: #999;
+                  &:hover {
+                    transform: scale(1.05);
+                    border-color: #1976d2;
+                    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+                  }
+                }
+
+                .product-placeholder {
+                  width: 48px;
+                  height: 48px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background-color: #f5f5f5;
+                  border-radius: 8px;
+                  border: 2px solid #e0e0e0;
+                  cursor: help;
+                  transition: all 0.2s ease;
+
+                  &:hover {
+                    background-color: #eeeeee;
+                    border-color: #1976d2;
+                  }
+
+                  mat-icon {
+                    font-size: 24px;
+                    color: #999;
+                  }
+                }
+
+                .usage-badge {
+                  position: absolute;
+                  top: -6px;
+                  right: -6px;
+                  background: #ff5722;
+                  color: white;
+                  font-size: 0.65rem;
+                  font-weight: 600;
+                  padding: 2px 4px;
+                  border-radius: 8px;
+                  min-width: 16px;
+                  text-align: center;
+                  line-height: 1;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                  z-index: 1;
                 }
               }
             }
+          }
+
+          .no-products-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 2rem;
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+
+            mat-icon {
+              color: #999;
+            }
+          }
+        }
+      }
+
+      .inventory-input-section {
+        margin-bottom: 1.5rem;
+        flex-shrink: 0;
+
+        .inventory-input-field {
+          width: 100%;
+          max-width: 300px;
+
+          .mat-mdc-form-field-input-control input {
+            font-size: 1.1rem;
+            font-weight: 500;
           }
         }
       }
 
       .navigation-section {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.75rem;
         margin-bottom: 1rem;
+        flex-shrink: 0;
 
         button {
           flex: 1;
           min-width: 0;
+          height: 48px;
 
           &:first-child,
           &:last-child {
             flex: 0.8;
           }
 
+          &.save-button {
+            flex: 1.4;
+          }
+
           mat-icon {
-            font-size: 18px;
-            margin: 0 2px;
+            font-size: 20px;
+            margin: 0 4px;
           }
         }
       }
 
       .finish-section {
         text-align: center;
+        flex-shrink: 0;
 
         button {
           width: 100%;
+          height: 44px;
 
           mat-icon {
             margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+
+    /* Tablet Anpassungen */
+    @media (max-width: 1024px) {
+      .inventory-navigator {
+        width: 50vw;
+        min-width: 400px;
+
+        .material-info-container {
+          .material-left-section .material-image-container {
+            .material-image,
+            .no-image-placeholder {
+              width: 100px;
+              height: 100px;
+            }
+          }
+
+          .material-right-section .product-usage-section .product-images-container .product-images-grid {
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+
+            .product-item {
+              .product-image-container {
+                .product-image,
+                .product-placeholder {
+                  width: 40px;
+                  height: 40px;
+                }
+
+                .usage-badge {
+                  font-size: 0.6rem;
+                  padding: 1px 3px;
+                  top: -5px;
+                  right: -5px;
+                }
+              }
+            }
           }
         }
       }
@@ -363,16 +533,43 @@ export interface SaveAndNextEvent {
     @media (max-width: 768px) {
       .inventory-navigator {
         position: relative;
-        top: auto;
+        bottom: auto;
         right: auto;
         width: 100%;
+        height: auto;
+        min-height: auto;
+        max-height: none;
         margin: 1rem 0;
+        border-radius: 8px;
+
+        .material-info-container {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .material-left-section {
+          text-align: center;
+
+          .material-image-container {
+            .material-image,
+            .no-image-placeholder {
+              width: 100px;
+              height: 100px;
+            }
+          }
+        }
+
+        .material-right-section .product-usage-section .product-images-container .product-images-grid {
+          justify-items: center;
+        }
 
         .navigation-section {
           flex-direction: column;
+          gap: 0.5rem;
 
           button {
             width: 100%;
+            flex: none;
           }
         }
       }
@@ -380,16 +577,48 @@ export interface SaveAndNextEvent {
 
     @media (max-width: 480px) {
       .inventory-navigator {
-        .material-section {
-          .material-image-container {
-            .material-image,
-            .no-image-placeholder {
-              width: 80px;
-              height: 80px;
+        mat-card-content {
+          padding: 1rem;
+        }
+
+        .material-left-section .material-image-container {
+          .material-image,
+          .no-image-placeholder {
+            width: 80px;
+            height: 80px;
+          }
+        }
+
+        .material-right-section .product-usage-section .product-images-container .product-images-grid {
+          grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+
+          .product-item {
+            .product-image-container {
+              .product-image,
+              .product-placeholder {
+                width: 36px;
+                height: 36px;
+              }
+
+              .usage-badge {
+                font-size: 0.55rem;
+                padding: 1px 2px;
+                top: -4px;
+                right: -4px;
+                min-width: 14px;
+              }
             }
           }
         }
       }
+    }
+
+    /* Custom Tooltip Styles */
+    :global(.product-tooltip) {
+      font-size: 0.875rem;
+      max-width: 200px;
+      white-space: normal;
+      text-align: center;
     }
   `]
 })
@@ -414,6 +643,7 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
   };
 
   relatedProducts: Product[] = [];
+  productMaterialUsage: { [productId: number]: number } = {};
   shouldFocus = false;
   private subscription: Subscription = new Subscription();
 
@@ -443,6 +673,7 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
   private loadRelatedProducts(): void {
     if (!this.currentMaterial) {
       this.relatedProducts = [];
+      this.productMaterialUsage = {};
       return;
     }
 
@@ -450,10 +681,33 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
       this.productsService.getProductsUsingMaterial(this.currentMaterial.id).subscribe({
         next: (products) => {
           this.relatedProducts = products;
+          this.loadProductMaterialUsage();
         },
         error: (error) => {
           console.error('Fehler beim Laden der Produktinformationen:', error);
           this.relatedProducts = [];
+          this.productMaterialUsage = {};
+        }
+      })
+    );
+  }
+
+  private loadProductMaterialUsage(): void {
+    if (!this.currentMaterial) return;
+
+    // Lade alle ProductMaterial-Einträge für das aktuelle Material
+    this.subscription.add(
+      this.productsService.getProductMaterialsForMaterial(this.currentMaterial.id).subscribe({
+        next: (productMaterials) => {
+          // Erstelle eine Map der Verbrauchsmengen pro Produkt
+          this.productMaterialUsage = {};
+          productMaterials.forEach(pm => {
+            this.productMaterialUsage[pm.product] = pm.quantity_per_unit;
+          });
+        },
+        error: (error) => {
+          console.error('Fehler beim Laden der Materialverbrauchsinformationen:', error);
+          this.productMaterialUsage = {};
         }
       })
     );
@@ -492,6 +746,31 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
       event.preventDefault();
       this.onNavigate('previous');
     }
+  }
+
+  onInventoryCountChange(count: number): void {
+    this.inventoryCountChanged.emit(count);
+  }
+
+  trackByProductId(index: number, product: Product): number {
+    return product.id;
+  }
+
+  getProductTooltip(product: Product): string {
+    const productName = product.bezeichnung || 'Unbekanntes Produkt';
+    const usage = this.productMaterialUsage[product.id];
+
+    if (usage !== undefined && usage > 0) {
+      const usageText = usage === 1 ? '1 Stück' : `${usage} Stück`;
+      return `${productName}\nVerbrauch: ${usageText} pro Produkt`;
+    }
+
+    return productName;
+  }
+
+  getProductUsage(productId: number): number | null {
+    const usage = this.productMaterialUsage[productId];
+    return (usage !== undefined && usage > 0) ? usage : null;
   }
 
   onImageError(event: Event): void {

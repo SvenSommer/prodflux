@@ -309,7 +309,7 @@ export class WorkshopDetailComponent {
   onSaveAndNext(event: SaveAndNextEvent): void {
     // Inventurmenge im Service aktualisieren
     this.inventoryService.setInventoryCount(event.materialId, event.inventoryCount);
-    
+
     // Korrektur speichern
     this.saveInventoryCorrection(event.materialId, event.materialName).then(() => {
       // Zum nächsten Material wechseln

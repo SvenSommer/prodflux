@@ -321,3 +321,35 @@ def material_inventory_correction_view(request, material_id):
             'message': 'Inventurwert entspricht aktuellem Bestand - keine Korrektur erforderlich',
             'current_stock': float(current_stock)
         })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def material_products_view(request, material_id):
+    """
+    Gibt alle Produkte zurück, in denen das angegebene Material verwendet wird.
+    """
+    try:
+        from products.models import ProductMaterial
+        from products.serializers import ProductSerializer
+        
+        # Finde alle ProductMaterial-Einträge für das Material
+        product_materials = ProductMaterial.objects.select_related(
+            'product'
+        ).filter(material_id=material_id)
+        
+        # Extrahiere die eindeutigen Produkte
+        products = [pm.product for pm in product_materials]
+        
+        # Serialisiere die Produkte
+        serializer = ProductSerializer(
+            products,
+            many=True,
+            context={'request': request}
+        )
+        
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({
+            'detail': f'Fehler beim Laden der Produkte: {str(e)}'
+        }, status=500)

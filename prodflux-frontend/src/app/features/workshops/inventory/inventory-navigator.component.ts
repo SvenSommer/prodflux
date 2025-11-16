@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { InventoryService, InventoryProgress } from './inventory.service';
 import { MaterialStockMaterial } from '../workshop.service';
+import { ProductsService, Product } from '../../products/products.service';
 import { Subscription } from 'rxjs';
 
 export interface NavigationEvent {
@@ -60,9 +61,9 @@ export interface SaveAndNextEvent {
 
           <!-- Material Bild -->
           <div class="material-image-container">
-            <img 
+            <img
               *ngIf="currentMaterial.bild_url"
-              [src]="currentMaterial.bild_url" 
+              [src]="currentMaterial.bild_url"
               [alt]="currentMaterial.bezeichnung"
               class="material-image"
               (error)="onImageError($event)"
@@ -75,6 +76,30 @@ export interface SaveAndNextEvent {
           <!-- Bestandsinfo -->
           <div class="stock-info">
             <span>Aktueller Bestand: <strong>{{ currentMaterial.bestand }}</strong></span>
+          </div>
+
+          <!-- Produktinformationen -->
+          <div class="product-usage-section" *ngIf="relatedProducts.length > 0">
+            <div class="section-title">Verwendet in:</div>
+            <div class="product-images-grid">
+              <div
+                *ngFor="let product of relatedProducts"
+                class="product-item"
+                [matTooltip]="product.bezeichnung"
+                matTooltipPosition="above"
+              >
+                <img
+                  *ngIf="product.bild"
+                  [src]="product.bild"
+                  [alt]="product.bezeichnung"
+                  class="product-image"
+                  (error)="onProductImageError($event)"
+                />
+                <div *ngIf="!product.bild" class="product-placeholder">
+                  <mat-icon>inventory_2</mat-icon>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Inventur Eingabe -->
@@ -239,6 +264,65 @@ export interface SaveAndNextEvent {
           width: 100%;
           max-width: 200px;
         }
+
+        .product-usage-section {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid #e0e0e0;
+
+          .section-title {
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            text-align: center;
+          }
+
+          .product-images-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+
+            .product-item {
+              position: relative;
+
+              .product-image {
+                width: 32px;
+                height: 32px;
+                object-fit: cover;
+                border-radius: 4px;
+                border: 1px solid #e0e0e0;
+                cursor: help;
+                transition: transform 0.2s ease;
+
+                &:hover {
+                  transform: scale(1.1);
+                  border-color: #1976d2;
+                }
+              }
+
+              .product-placeholder {
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #f5f5f5;
+                border-radius: 4px;
+                border: 1px solid #e0e0e0;
+                cursor: help;
+
+                mat-icon {
+                  font-size: 16px;
+                  color: #999;
+                }
+              }
+            }
+          }
+        }
       }
 
       .navigation-section {
@@ -309,7 +393,7 @@ export interface SaveAndNextEvent {
     }
   `]
 })
-export class InventoryNavigatorComponent implements OnInit, OnDestroy {
+export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges {
   @Input() isVisible = false;
   @Input() currentMaterial: MaterialStockMaterial | null = null;
   @Input() inventoryCount: number | undefined = undefined;
@@ -329,10 +413,14 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy {
     progressPercentage: 0
   };
 
+  relatedProducts: Product[] = [];
   shouldFocus = false;
   private subscription: Subscription = new Subscription();
 
-  constructor(private inventoryService: InventoryService) {}
+  constructor(
+    private inventoryService: InventoryService,
+    private productsService: ProductsService
+  ) {}
 
   ngOnInit(): void {
     // Subscribe to inventory state changes for progress tracking
@@ -340,6 +428,33 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy {
       this.inventoryService.state$.subscribe(() => {
         this.progress = this.inventoryService.getProgress();
         this.shouldFocus = this.isVisible;
+        this.loadRelatedProducts();
+      })
+    );
+  }
+
+  ngOnChanges(): void {
+    // Reload products when current material changes
+    if (this.currentMaterial) {
+      this.loadRelatedProducts();
+    }
+  }
+
+  private loadRelatedProducts(): void {
+    if (!this.currentMaterial) {
+      this.relatedProducts = [];
+      return;
+    }
+
+    this.subscription.add(
+      this.productsService.getProductsUsingMaterial(this.currentMaterial.id).subscribe({
+        next: (products) => {
+          this.relatedProducts = products;
+        },
+        error: (error) => {
+          console.error('Fehler beim Laden der Produktinformationen:', error);
+          this.relatedProducts = [];
+        }
       })
     );
   }
@@ -380,6 +495,13 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy {
   }
 
   onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+    }
+  }
+
+  onProductImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     if (img) {
       img.style.display = 'none';

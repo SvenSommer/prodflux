@@ -106,4 +106,8 @@ export class ProductsService {
   getMaterialRequirements(productId: number, quantity: number, workshopId: number) {
     return this.http.get<MaterialRequirementGroup[]>(`${this.baseUrl}/products/${productId}/requirements/?quantity=${quantity}&workshop_id=${workshopId}`);
   }
+
+  getProductsUsingMaterial(materialId: number): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.baseUrl}/materials/${materialId}/products/`);
+  }
 }

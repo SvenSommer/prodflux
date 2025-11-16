@@ -240,11 +240,11 @@ export class WorkshopDetailComponent {
   }
 
   // Neue service-basierte Inventur-Methoden
-  
+
   // Inventurmodus umschalten
   onInventoryModeToggle(): void {
     const currentState = this.inventoryService.currentState;
-    
+
     if (currentState.isActive) {
       this.inventoryService.resetInventory();
     } else {
@@ -279,7 +279,7 @@ export class WorkshopDetailComponent {
     const typedEvent = event as SaveCorrectionEvent;
     const currentState = this.inventoryService.currentState;
     const inventoryCount = currentState.inventoryCounts[typedEvent.materialId];
-    
+
     if (inventoryCount === undefined || inventoryCount < 0) {
       alert('Bitte geben Sie eine gültige Inventurmenge ein.');
       return;
@@ -296,7 +296,7 @@ export class WorkshopDetailComponent {
     this.saveInventoryCorrection(typedEvent.materialId, typedEvent.materialName);
   }
 
-  // Navigation zwischen Materialien
+    // Navigation zwischen Materialien
   onNavigation(event: NavigationEvent): void {
     if (event.direction === 'next') {
       this.inventoryService.goToNext();
@@ -305,38 +305,30 @@ export class WorkshopDetailComponent {
     }
   }
 
-  // Speichern und Weiter
+  // Speichern und weiter
   onSaveAndNext(event: SaveAndNextEvent): void {
-    const correctionData = {
-      workshop_id: this.workshopId,
-      inventory_count: event.inventoryCount,
-      note: `Inventurkorrektur für ${event.materialName}`
-    };
-
-    this.inventoryService.markMaterialAsSaved(event.materialId);
-
-    this.materialsService.createInventoryCorrection(event.materialId, correctionData).subscribe({
-      next: (response) => {
-        console.log('Inventurkorrektur erfolgreich erstellt:', response);
-        this.loadStock();
-        
-        // Nach erfolgreichem Speichern zum nächsten Material oder Inventur beenden
-        if (!this.inventoryService.goToNext()) {
-          this.onFinishInventory();
-        }
-      },
-      error: (error) => {
-        console.error('Fehler beim Erstellen der Inventurkorrektur:', error);
-        alert('Fehler beim Speichern der Inventurkorrektur. Bitte versuchen Sie es erneut.');
-        this.inventoryService.unmarkMaterialAsSaved(event.materialId);
+    // Inventurmenge im Service aktualisieren
+    this.inventoryService.setInventoryCount(event.materialId, event.inventoryCount);
+    
+    // Korrektur speichern
+    this.saveInventoryCorrection(event.materialId, event.materialName).then(() => {
+      // Zum nächsten Material wechseln
+      if (this.canGoToNextMaterial()) {
+        this.inventoryService.goToNext();
+      } else {
+        // Inventur abgeschlossen
+        this.onFinishInventory();
       }
+    }).catch((error) => {
+      console.error('Fehler beim Speichern der Inventurkorrektur:', error);
+      alert('Fehler beim Speichern der Inventurkorrektur. Bitte versuchen Sie es erneut.');
     });
   }
 
   // Inventur beenden
   onFinishInventory(): void {
     const progress = this.inventoryService.getProgress();
-    
+
     const dialogData: InventoryCompletionData = {
       processedCount: progress.processedCount,
       savedCount: progress.savedCount,
@@ -363,7 +355,7 @@ export class WorkshopDetailComponent {
   }
 
   // Hilfsmethoden und Getter für Template-Bindungen
-  
+
   get allMaterials() {
     return this.stock.flatMap(group => group.materials);
   }
@@ -381,11 +373,63 @@ export class WorkshopDetailComponent {
     return Object.keys(currentState.inventoryCounts).length - currentState.savedMaterialIds.size;
   }
 
+  // Navigation-spezifische Hilfsmethoden
+  getCurrentMaterial(): any | null {
+    const currentState = this.inventoryService.currentState;
+    if (!currentState.isNavigationMode || currentState.allMaterials.length === 0) {
+      return null;
+    }
+    return currentState.allMaterials[currentState.currentMaterialIndex] || null;
+  }
+
+  getCurrentInventoryCount(): number | undefined {
+    const currentMaterial = this.getCurrentMaterial();
+    if (!currentMaterial) return undefined;
+
+    const currentState = this.inventoryService.currentState;
+    return currentState.inventoryCounts[currentMaterial.id];
+  }
+
+  canGoToNextMaterial(): boolean {
+    const currentState = this.inventoryService.currentState;
+    return currentState.currentMaterialIndex < currentState.allMaterials.length - 1;
+  }
+
+  canGoToPreviousMaterial(): boolean {
+    const currentState = this.inventoryService.currentState;
+    return currentState.currentMaterialIndex > 0;
+  }
+
+  onInventoryCountChanged(count: number): void {
+    const currentMaterial = this.getCurrentMaterial();
+    if (currentMaterial) {
+      this.inventoryService.setInventoryCount(currentMaterial.id, count);
+    }
+  }
+
   // Event-Handler für die neuen Komponenten
 
   onStartInventoryNavigation(): void {
-    // Die Materialien werden bereits im InventoryNavigatorComponent verwaltet
-    this.inventoryService.startNavigation();
+    try {
+      // Erst prüfen, ob Materialien im Service vorhanden sind
+      const currentState = this.inventoryService.currentState;
+      if (currentState.allMaterials.length === 0) {
+        // Falls nicht, Materialien initialisieren
+        const allMaterials: any[] = [];
+        this.stock.forEach(group => {
+          group.materials.forEach(material => {
+            allMaterials.push(material);
+          });
+        });
+        this.inventoryService.initializeInventory(allMaterials);
+      }
+
+      // Dann Navigation starten
+      this.inventoryService.startNavigation();
+    } catch (error) {
+      console.error('Fehler beim Starten der Inventur-Navigation:', error);
+      alert('Keine Materialien zum Inventarisieren gefunden.');
+    }
   }
 
 
@@ -395,7 +439,7 @@ export class WorkshopDetailComponent {
   private async saveInventoryCorrection(materialId: number, materialName: string): Promise<void> {
     const currentState = this.inventoryService.currentState;
     const count = currentState.inventoryCounts[materialId];
-    
+
     if (count !== undefined && count !== null) {
       try {
         await this.materialsService.createMovement({

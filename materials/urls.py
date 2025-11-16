@@ -16,6 +16,7 @@ from .views import (
     all_materials_stock_by_workshop,
     material_stock_view,
     material_inventory_correction_view,
+    material_products_view,
 )
 
 urlpatterns = [
@@ -40,4 +41,7 @@ urlpatterns = [
     path("materials/<int:material_id>/inventory-correction/",
          material_inventory_correction_view,
          name="material-inventory-correction"),
+    path("materials/<int:material_id>/products/",
+         material_products_view,
+         name="material-products"),
 ]

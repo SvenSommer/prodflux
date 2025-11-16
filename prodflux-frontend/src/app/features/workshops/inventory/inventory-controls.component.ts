@@ -23,7 +23,7 @@ import { MatIconModule } from '@angular/material/icon';
           color="primary">
           Inventurmodus
         </mat-slide-toggle>
-        
+
         <span class="help-text" *ngIf="inventoryModeActive">
           <mat-icon>info</mat-icon>
           Geben Sie die tatsächlich gezählten Mengen ein. Korrekturen werden automatisch berechnet.

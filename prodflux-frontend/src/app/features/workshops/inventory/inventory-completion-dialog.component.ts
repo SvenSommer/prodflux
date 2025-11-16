@@ -24,11 +24,11 @@ export interface InventoryCompletionData {
       <mat-icon class="title-icon">inventory</mat-icon>
       Inventur abgeschlossen
     </h2>
-    
+
     <mat-dialog-content class="dialog-content">
       <div class="completion-message">
         <p class="main-message">Die Inventur wurde erfolgreich abgeschlossen.</p>
-        
+
         <div class="statistics">
           <div class="stat-item processed">
             <div class="stat-icon">
@@ -66,8 +66,8 @@ export interface InventoryCompletionData {
             Bearbeitungsgrad: {{ getCompletionPercentage() }}%
           </div>
           <div class="rate-bar">
-            <div 
-              class="rate-fill" 
+            <div
+              class="rate-fill"
               [style.width.%]="getCompletionPercentage()">
             </div>
           </div>
@@ -79,11 +79,11 @@ export interface InventoryCompletionData {
         </div>
       </div>
     </mat-dialog-content>
-    
+
     <mat-dialog-actions align="end" class="dialog-actions">
-      <button 
-        mat-raised-button 
-        color="primary" 
+      <button
+        mat-raised-button
+        color="primary"
         (click)="closeDialog()"
         cdkFocusInitial>
         <mat-icon>check</mat-icon>
@@ -134,7 +134,7 @@ export interface InventoryCompletionData {
 
             &.processed {
               border-left-color: #2196f3;
-              
+
               .stat-icon mat-icon {
                 color: #2196f3;
               }
@@ -142,7 +142,7 @@ export interface InventoryCompletionData {
 
             &.saved {
               border-left-color: #4caf50;
-              
+
               .stat-icon mat-icon {
                 color: #4caf50;
               }
@@ -150,7 +150,7 @@ export interface InventoryCompletionData {
 
             &.total {
               border-left-color: #ff9800;
-              
+
               .stat-icon mat-icon {
                 color: #ff9800;
               }

@@ -38,7 +38,7 @@ export class InventoryService {
 
   // Public observables
   state$ = this.stateSubject.asObservable();
-  
+
   get currentState(): InventoryState {
     return this.stateSubject.value;
   }
@@ -46,7 +46,7 @@ export class InventoryService {
   // Inventur initialisieren
   initializeInventory(materials: MaterialStockMaterial[]): void {
     const inventoryCounts: { [materialId: number]: number } = {};
-    
+
     // Aktuelle Bestände als Standardwerte setzen
     materials.forEach(material => {
       inventoryCounts[material.id] = material.bestand || 0;
@@ -174,7 +174,7 @@ export class InventoryService {
     const processedCount = currentState.processedMaterialIds.size;
     const savedCount = currentState.savedMaterialIds.size;
     const totalCount = currentState.allMaterials.length;
-    
+
     return {
       processedCount,
       savedCount,

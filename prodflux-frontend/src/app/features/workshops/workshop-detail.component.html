@@ -26,9 +26,9 @@
           [navigationModeActive]="(inventoryService.state$ | async)?.isNavigationMode || false"
           [materialCount]="allMaterials.length"
           [unsavedCount]="getUnsavedInventoryCount()"
-          (inventoryModeToggle)="onInventoryModeToggle()"
-          (navigationStart)="onStartInventoryNavigation()"
-          (saveAll)="onSaveAllInventoryCorrections()"
+          (inventoryModeToggled)="onInventoryModeToggle()"
+          (navigationStarted)="onStartInventoryNavigation()"
+          (saveAllRequested)="onSaveAllInventoryCorrections()"
         ></app-inventory-controls>
 
         <!-- Material Inventory Table -->
@@ -171,9 +171,15 @@
 
   <!-- Inventur-Navigator Widget -->
   <app-inventory-navigator
+    [isVisible]="(inventoryService.state$ | async)?.isNavigationMode || false"
+    [currentMaterial]="getCurrentMaterial()"
+    [inventoryCount]="getCurrentInventoryCount()"
+    [canGoToNext]="canGoToNextMaterial()"
+    [canGoToPrevious]="canGoToPreviousMaterial()"
     (navigation)="onNavigation($event)"
     (saveAndNext)="onSaveAndNext($event)"
     (finishInventory)="onFinishInventory()"
+    (inventoryCountChanged)="onInventoryCountChanged($event)"
   ></app-inventory-navigator>
 
 

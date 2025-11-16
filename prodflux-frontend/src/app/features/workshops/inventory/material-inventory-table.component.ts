@@ -122,8 +122,8 @@ export interface SaveCorrectionEvent {
 
           <!-- Header und Row-Definitionen -->
           <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
-          <tr 
-            mat-row 
+          <tr
+            mat-row
             *matRowDef="let row; columns: getDisplayedColumns();"
             [class.saved-row]="inventoryModeActive && isMaterialSaved(row.id)"
           ></tr>
@@ -199,7 +199,7 @@ export interface SaveCorrectionEvent {
 
         .saved-row {
           background-color: #e8f5e8 !important;
-          
+
           &:hover {
             background-color: #dcedc8 !important;
           }

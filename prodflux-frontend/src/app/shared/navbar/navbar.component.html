@@ -1,31 +1,69 @@
-<nav class="navbar">
-  <ul>
-    <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+<!-- Navigation -->
+<nav class="navbar" *ngIf="isLoggedIn$ | async">
+  <mat-toolbar color="primary">
+    <span class="toolbar-title">
+      ProdFlux
+    </span>
 
-    <li *ngFor="let w of workshops">
-      <a [routerLink]="['/workshops', w.id]" routerLinkActive="active">{{ w.name }}</a>
-    </li>
+    <div class="nav-links">
+      <button mat-button routerLink="/dashboard" routerLinkActive="active">
+        Dashboard
+      </button>
 
-    <!-- MATERIAL Dropdown -->
-    <li class="dropdown" [class.open]="isDropdownOpen('material')">
-      <a href="#" (click)="toggleDropdown('material', $event)" class="dropdown-toggle">Materialbewegungen ▾</a>
-      <ul class="dropdown-menu" *ngIf="isDropdownOpen('material')">
-        <li><a routerLink="/orders" routerLinkActive="active">Bestellungen</a></li>
-        <li><a routerLink="/deliveries" routerLinkActive="active">Lieferungen</a></li>
-        <li><a routerLink="/transfers" routerLinkActive="active">Transfers</a></li>
-      </ul>
-    </li>
+      <!-- Workshops -->
+      <ng-container *ngFor="let w of workshops">
+        <button mat-button [routerLink]="['/workshops', w.id]" routerLinkActive="active">
+          {{ w.name }}
+        </button>
+      </ng-container>
 
-    <!-- EINSTELLUNGEN Dropdown -->
-    <li class="dropdown" [class.open]="isDropdownOpen('settings')">
-      <a href="#" (click)="toggleDropdown('settings', $event)" class="dropdown-toggle">Einstellungen ▾</a>
-      <ul class="dropdown-menu" *ngIf="isDropdownOpen('settings')">
-        <li><a routerLink="/settings" routerLinkActive="active">Allgemeine</a></li>
-        <li><a routerLink="/materials" routerLinkActive="active">Materialien</a></li>
-        <li><a routerLink="/products" routerLinkActive="active">Produkte</a></li>
-      </ul>
-    </li>
+      <!-- Material-Dropdown -->
+      <button mat-button [matMenuTriggerFor]="materialMenu">
+        Materialbewegungen ▼
+      </button>
+      <mat-menu #materialMenu="matMenu">
+        <button mat-menu-item routerLink="/orders">
+          <span>Bestellungen</span>
+        </button>
+        <button mat-menu-item routerLink="/deliveries">
+          <span>Lieferungen</span>
+        </button>
+        <button mat-menu-item routerLink="/transfers">
+          <span>Transfers</span>
+        </button>
+      </mat-menu>
 
-    <li><a routerLink="/login" routerLinkActive="active">Login</a></li>
-  </ul>
+    </div>
+
+    <!-- User-Menu -->
+    <div class="user-menu">
+      <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
+        <span *ngIf="currentUser$ | async as user">{{ user.username }}</span> ▼
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <div class="user-info" *ngIf="currentUser$ | async as user">
+          <div class="user-name">{{ user.username }}</div>
+          <div class="user-email">{{ user.email }}</div>
+          <div class="user-workshop" *ngIf="user.workshop">{{ user.workshop.name }}</div>
+        </div>
+        <mat-divider></mat-divider>
+
+        <!-- Einstellungen im User-Menu -->
+        <button mat-menu-item routerLink="/settings">
+          <span>Allgemeine Einstellungen</span>
+        </button>
+        <button mat-menu-item routerLink="/materials">
+          <span>Materialien verwalten</span>
+        </button>
+        <button mat-menu-item routerLink="/products">
+          <span>Produkte verwalten</span>
+        </button>
+
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <span>Abmelden</span>
+        </button>
+      </mat-menu>
+    </div>
+  </mat-toolbar>
 </nav>

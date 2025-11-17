@@ -1,5 +1,5 @@
 // src/app/features/dashboard/dashboard.component.ts
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ShopbridgeOrdersComponent } from './shopbridge-orders.component';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
 import { RouterOutlet } from '@angular/router';
@@ -16,4 +16,8 @@ import { CommonModule } from '@angular/common';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent {}
+export class DashboardComponent implements OnInit {
+  constructor() {}
+
+  ngOnInit() {}
+}

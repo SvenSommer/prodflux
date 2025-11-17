@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -121,6 +121,7 @@ export interface SaveAndNextEvent {
               [(ngModel)]="inventoryCount"
               (ngModelChange)="onInventoryCountChange($event)"
               (keydown)="onInputKeyPress($event)"
+              (focus)="onInputFocus($event)"
               placeholder="Eingeben..."
             />
             <mat-hint>Enter = Speichern & Weiter</mat-hint>
@@ -186,8 +187,8 @@ export interface SaveAndNextEvent {
       min-width: 450px;
       max-width: 600px;
       height: 50vh;
-      min-height: 400px;
-      max-height: 700px;
+      min-height: 500px;
+      max-height: calc(100vh - 60px);
       z-index: 1000;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
       background: rgba(255, 255, 255, 0.98);
@@ -203,6 +204,7 @@ export interface SaveAndNextEvent {
         display: flex;
         flex-direction: column;
         padding: 1.5rem;
+        overflow-y: auto;
       }
 
       .progress-section {
@@ -266,7 +268,9 @@ export interface SaveAndNextEvent {
           .material-image {
             width: 120px;
             height: 120px;
-            object-fit: cover;
+            object-fit: contain;
+            background-color: #f5f5f5;
+            padding: 8px;
             border-radius: 12px;
             border: 2px solid #e0e0e0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -348,7 +352,9 @@ export interface SaveAndNextEvent {
                 .product-image {
                   width: 48px;
                   height: 48px;
-                  object-fit: cover;
+                  object-fit: contain;
+                  background-color: #f9f9f9;
+                  padding: 2px;
                   border-radius: 8px;
                   border: 2px solid #e0e0e0;
                   cursor: help;
@@ -427,14 +433,19 @@ export interface SaveAndNextEvent {
       .inventory-input-section {
         margin-bottom: 1.5rem;
         flex-shrink: 0;
+        display: flex;
+        justify-content: center;
 
         .inventory-input-field {
           width: 100%;
-          max-width: 300px;
+          max-width: none;
 
           .mat-mdc-form-field-input-control input {
-            font-size: 1.1rem;
-            font-weight: 500;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            background-color: #f8f9fa;
+            border-radius: 4px;
           }
         }
       }
@@ -494,6 +505,12 @@ export interface SaveAndNextEvent {
               width: 100px;
               height: 100px;
             }
+            
+            .material-image {
+              object-fit: contain;
+              background-color: #f5f5f5;
+              padding: 6px;
+            }
           }
 
           .material-right-section .product-usage-section .product-images-container .product-images-grid {
@@ -505,6 +522,12 @@ export interface SaveAndNextEvent {
                 .product-placeholder {
                   width: 40px;
                   height: 40px;
+                }
+                
+                .product-image {
+                  object-fit: contain;
+                  background-color: #f9f9f9;
+                  padding: 2px;
                 }
 
                 .usage-badge {
@@ -529,9 +552,13 @@ export interface SaveAndNextEvent {
         width: 100%;
         height: auto;
         min-height: auto;
-        max-height: none;
+        max-height: calc(100vh - 40px);
         margin: 1rem 0;
         border-radius: 8px;
+
+        mat-card-content {
+          overflow-y: auto;
+        }
 
         .material-info-container {
           flex-direction: column;
@@ -546,6 +573,12 @@ export interface SaveAndNextEvent {
             .no-image-placeholder {
               width: 100px;
               height: 100px;
+            }
+            
+            .material-image {
+              object-fit: contain;
+              background-color: #f5f5f5;
+              padding: 6px;
             }
           }
         }
@@ -578,6 +611,12 @@ export interface SaveAndNextEvent {
             width: 80px;
             height: 80px;
           }
+          
+          .material-image {
+            object-fit: contain;
+            background-color: #f5f5f5;
+            padding: 4px;
+          }
         }
 
         .material-right-section .product-usage-section .product-images-container .product-images-grid {
@@ -590,6 +629,12 @@ export interface SaveAndNextEvent {
                 width: 36px;
                 height: 36px;
               }
+              
+              .product-image {
+                object-fit: contain;
+                background-color: #f9f9f9;
+                padding: 1px;
+              }
 
               .usage-badge {
                 font-size: 0.55rem;
@@ -600,6 +645,102 @@ export interface SaveAndNextEvent {
               }
             }
           }
+        }
+      }
+    }
+
+    /* Niedrige Bildschirmhöhen - Kompakterer Dialog */
+    @media (max-height: 700px) {
+      .inventory-navigator {
+        height: calc(100vh - 40px);
+        max-height: calc(100vh - 40px);
+        min-height: 400px;
+        bottom: 20px;
+
+        mat-card-content {
+          padding: 1rem;
+        }
+
+        .progress-section {
+          margin-bottom: 1rem;
+        }
+
+        .material-info-container {
+          margin-bottom: 1rem;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .material-left-section .material-image-container {
+          .material-image,
+          .no-image-placeholder {
+            width: 80px;
+            height: 80px;
+          }
+          
+          .material-image {
+            padding: 4px;
+          }
+        }
+
+        .inventory-input-section {
+          margin-bottom: 1rem;
+        }
+
+        .navigation-section {
+          margin-bottom: 0.5rem;
+        }
+      }
+    }
+
+    @media (max-height: 600px) {
+      .inventory-navigator {
+        height: calc(100vh - 20px);
+        min-height: 350px;
+        bottom: 10px;
+
+        .material-info-container {
+          .material-left-section .material-image-container {
+            .material-image,
+            .no-image-placeholder {
+              width: 60px;
+              height: 60px;
+            }
+          }
+
+          .material-right-section .product-usage-section .product-images-container .product-images-grid {
+            grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+
+            .product-item .product-image-container {
+              .product-image,
+              .product-placeholder {
+                width: 32px;
+                height: 32px;
+              }
+            }
+          }
+        }
+
+        .navigation-section button {
+          height: 40px;
+          font-size: 0.875rem;
+        }
+
+        .finish-section button {
+          height: 36px;
+          font-size: 0.875rem;
+        }
+      }
+    }
+
+    @media (max-height: 500px) {
+      .inventory-navigator {
+        height: calc(100vh - 10px);
+        min-height: 300px;
+        bottom: 5px;
+
+        mat-card-content {
+          padding: 0.75rem;
         }
       }
     }
@@ -634,7 +775,8 @@ export interface SaveAndNextEvent {
     }
   `]
 })
-export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges {
+export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
+  @ViewChild('inventoryInput') inventoryInput!: ElementRef<HTMLInputElement>;
   @Input() isVisible = false;
   @Input() currentMaterial: MaterialStockMaterial | null = null;
   @Input() inventoryCount: number | undefined = undefined;
@@ -679,6 +821,8 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
     // Reload products when current material changes
     if (this.currentMaterial) {
       this.loadRelatedProducts();
+      // Fokussiert das Input-Feld bei Material-Wechsel
+      this.focusInventoryInput();
     }
   }
 
@@ -846,6 +990,24 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
     return `${formatted}x`;
   }
 
+  ngAfterViewInit(): void {
+    // Fokussiert das Input-Feld nach der View-Initialisierung
+    this.focusInventoryInput();
+  }
+
+  private focusInventoryInput(): void {
+    // Timeout wird benötigt, damit das DOM vollständig geladen ist
+    setTimeout(() => {
+      if (this.inventoryInput && this.isVisible) {
+        const inputElement = this.inventoryInput.nativeElement;
+        inputElement.focus();
+        if (inputElement.value) {
+          inputElement.select();
+        }
+      }
+    }, 100);
+  }
+
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     if (img) {
@@ -857,6 +1019,14 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
     const img = event.target as HTMLImageElement;
     if (img) {
       img.style.display = 'none';
+    }
+  }
+
+  onInputFocus(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      // Selektiert den gesamten Text im Input-Feld
+      input.select();
     }
   }
 }

@@ -153,9 +153,11 @@ export interface SaveCorrectionEvent {
         .material-image {
           width: 50px;
           height: 50px;
-          object-fit: cover;
+          object-fit: contain;
           border-radius: 4px;
           border: 1px solid #e0e0e0;
+          background-color: #f8f9fa;
+          padding: 2px;
         }
 
         .no-image {
@@ -220,6 +222,10 @@ export interface SaveCorrectionEvent {
           .no-image {
             width: 40px;
             height: 40px;
+          }
+
+          .material-image {
+            padding: 1px;
           }
 
           .inventory-input {

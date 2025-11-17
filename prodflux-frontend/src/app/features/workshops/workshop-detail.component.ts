@@ -16,6 +16,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MaterialsService } from '../materials/materials.service';
 
 // Neue Inventur-Komponenten
@@ -45,6 +46,7 @@ import { BulkSaveResultDialogComponent, BulkSaveResultData } from './inventory/b
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
     ProductOverviewComponent,
     // Inventur-Komponenten (Dialoge werden programmatisch geöffnet)
     InventoryControlsComponent,
@@ -62,6 +64,7 @@ export class WorkshopDetailComponent {
 
   workshopId = 0;
   workshop: Workshop | null = null;
+  isLoading = true;
   stock: MaterialStockGroup[] = [];
   productLifecycle: ProductLifecycleEntry[] = [];
 
@@ -97,8 +100,15 @@ export class WorkshopDetailComponent {
   }
 
   loadWorkshop() {
-    this.workshopService.getAll().subscribe((all) => {
-      this.workshop = all.find((w) => w.id === this.workshopId) || null;
+    this.isLoading = true;
+    this.workshopService.getAll().subscribe({
+      next: (all) => {
+        this.workshop = all.find((w) => w.id === this.workshopId) || null;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      }
     });
   }
 

@@ -3,7 +3,7 @@
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 />
 <div class="page-container">
-  <div class="workshop-container" *ngIf="workshop">
+  <div class="workshop-container" *ngIf="!isLoading && workshop">
     <mat-card class="workshop-header">
       <mat-card-title>{{ workshop.name }}</mat-card-title>
 
@@ -165,8 +165,15 @@
     </ng-template>
   </div>
 
-  <div *ngIf="!workshop">
-    <p class="text-center">Werkstatt nicht gefunden.</p>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p class="loading-text">Werkstatt wird geladen...</p>
+  </div>
+
+  <!-- Workshop not found State -->
+  <div *ngIf="!isLoading && !workshop" class="error-container">
+    <p class="error-text">Werkstatt nicht gefunden.</p>
   </div>
 
   <!-- Inventur-Navigator Widget -->

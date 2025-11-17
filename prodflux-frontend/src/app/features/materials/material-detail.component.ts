@@ -12,6 +12,8 @@ import { MatInputModule } from '@angular/material/input';
 import { Workshop, WorkshopsService } from '../settings/workshop.services';
 import { MatIconModule } from '@angular/material/icon';
 import { MaterialUsageComponent } from '../../shared/components/material-usage/material-usage.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-material-detail',
@@ -35,6 +37,7 @@ export class MaterialDetailComponent {
   private route = inject(ActivatedRoute);
   private materialsService = inject(MaterialsService);
   private workshopsService = inject(WorkshopsService);
+  private dialog = inject(MatDialog);
 
   materialId: number = Number(this.route.snapshot.paramMap.get('id'));
   material: Material | null = null;
@@ -124,21 +127,37 @@ export class MaterialDetailComponent {
   }
 
   deleteMovement(id: number) {
-    if (confirm('Wirklich löschen?')) {
-      this.materialsService.deleteMaterialMovement(this.materialId, id).subscribe({
-        next: () => {
-          this.movements = this.movements.filter(m => m.id !== id);
-          this.errorMessage = null;
-        },
-        error: (err) => {
-          if (err.status === 400 && err.error?.detail) {
-            this.errorMessage = err.error.detail;
-          } else {
-            this.errorMessage = 'Löschen fehlgeschlagen.';
+    const dialogData: ConfirmDialogData = {
+      title: 'Bewegung löschen',
+      message: 'Möchten Sie diese Materialbewegung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+      confirmText: 'Löschen',
+      cancelText: 'Abbrechen',
+      icon: 'delete',
+      color: 'warn'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.materialsService.deleteMaterialMovement(this.materialId, id).subscribe({
+          next: () => {
+            this.movements = this.movements.filter(m => m.id !== id);
+            this.errorMessage = null;
+          },
+          error: (err) => {
+            if (err.status === 400 && err.error?.detail) {
+              this.errorMessage = err.error.detail;
+            } else {
+              this.errorMessage = 'Löschen fehlgeschlagen.';
+            }
           }
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   getWorkshopNameById(id: number | null): string {

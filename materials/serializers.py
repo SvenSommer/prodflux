@@ -50,8 +50,11 @@ class MaterialMovementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MaterialMovement
-        fields = ['workshop_id', 'change_type', 'quantity', 'note', 'created_at', 'content_type', 'object_id']
-        read_only_fields = ['created_at', 'content_type', 'object_id']
+        fields = [
+            'id', 'workshop_id', 'change_type', 'quantity', 'note',
+            'created_at', 'content_type', 'object_id'
+        ]
+        read_only_fields = ['id', 'created_at', 'content_type', 'object_id']
 
     def create(self, validated_data):
         change_type = validated_data.get("change_type")

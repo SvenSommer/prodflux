@@ -107,7 +107,7 @@ export class MaterialDetailComponent {
 
   saveEdit(m: MaterialMovement) {
     if (!this.editedMovement) return;
-    this.materialsService.updateMaterialMovement(m.id, this.editedMovement).subscribe({
+    this.materialsService.updateMaterialMovement(this.materialId, m.id, this.editedMovement).subscribe({
       next: () => {
         Object.assign(m, this.editedMovement);
         this.cancelEdit();
@@ -125,7 +125,7 @@ export class MaterialDetailComponent {
 
   deleteMovement(id: number) {
     if (confirm('Wirklich löschen?')) {
-      this.materialsService.deleteMaterialMovement(id).subscribe({
+      this.materialsService.deleteMaterialMovement(this.materialId, id).subscribe({
         next: () => {
           this.movements = this.movements.filter(m => m.id !== id);
           this.errorMessage = null;

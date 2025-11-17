@@ -124,12 +124,12 @@ export class MaterialsService {
     return this.http.get<MaterialMovement[]>(`${this.baseUrl}${materialId}/movements/?workshop_id=${workshopId}`);
   }
 
-  updateMaterialMovement(id: number, data: Partial<MaterialMovement>) {
-    return this.http.patch<MaterialMovement>(`${this.baseUrl}movements/${id}/`, data);
+  updateMaterialMovement(materialId: number, id: number, data: Partial<MaterialMovement>) {
+    return this.http.patch<MaterialMovement>(`${this.baseUrl}${materialId}/movements/${id}/`, data);
   }
 
-  deleteMaterialMovement(id: number) {
-    return this.http.delete(`${this.baseUrl}movements/${id}/`);
+  deleteMaterialMovement(materialId: number, id: number) {
+    return this.http.delete(`${this.baseUrl}${materialId}/movements/${id}/`);
   }
 
   getMaterialStock(materialId: number, workshopId: number): Observable<MaterialStock> {

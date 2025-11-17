@@ -5,20 +5,11 @@ services:
     buildCommand: |
       # Install Python dependencies
       pip install -r requirements.txt
-      # Install Node.js and npm for Angular build
-      curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-      apt-get install -y nodejs
-      # Build Angular frontend
-      cd prodflux-frontend
-      npm install
-      ng build --configuration=production
-      cd ..
-      # Collect static files including built frontend
+      # Run database migrations
+      python manage.py migrate --noinput
+      # Collect static files (without frontend for now)
       python manage.py collectstatic --noinput
-      # Verify frontend files are collected
-      ls -la staticfiles/ || echo "staticfiles directory not found"
-      ls -la staticfiles/index.html || echo "index.html not found in static files"
-    startCommand: gunicorn prodflux.wsgi:application --bind=0.0.0.0:$PORT
+    startCommand: gunicorn prodflux.wsgi:application --bind=0.0.0.0:$PORT --log-level info
     envVars:
       - key: DEBUG
         value: "False"
@@ -28,3 +19,7 @@ services:
         value: "True"
       - key: RENDER_EXTERNAL_HOSTNAME
         value: "prodflux.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: prodflux-db
+          property: connectionString

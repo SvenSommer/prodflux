@@ -79,9 +79,15 @@ WSGI_APPLICATION = 'prodflux.wsgi.application'
 # Datenbank
 if RENDER:
     import dj_database_url
-    DATABASES = {
-        "default": dj_database_url.config(conn_max_age=600)
-    }
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL:
+        DATABASES = {
+            "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        }
+    else:
+        raise ValueError(
+            "DATABASE_URL environment variable is required in production"
+        )
 else:
     DATABASES = {
         'default': {
@@ -153,11 +159,30 @@ REST_FRAMEWORK = {
 }
 
 # CORS
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-    "https://prodflux-frontend.onrender.com",  
+if RENDER:
+    CORS_ALLOWED_ORIGINS = [
+        "https://prodflux-frontend.onrender.com",
+    ]
+    CORS_ALLOW_ALL_ORIGINS = False
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:4200",
+    ]
+    CORS_ALLOW_ALL_ORIGINS = False
+
+# Additional CORS settings for production
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
-CORS_ALLOW_ALL_ORIGINS = False
 
 # Logging
 LOGGING = {

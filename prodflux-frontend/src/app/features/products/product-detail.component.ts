@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ProductsService, Product, ProductMaterial } from './products.service';
+import { ProductsService, Product, ProductMaterial, MaterialDependencyResponse } from './products.service';
 import { FormsModule } from '@angular/forms';
 import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
+import { ToggleProductDialogComponent, ToggleProductDialogData, ToggleProductDialogResult } from './toggle-product-dialog.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -210,18 +211,14 @@ export class ProductDetailComponent {
       return;
     }
 
-    // Direkte API-Aufruf ohne Dialog
-    this.productsService.toggleProductDeprecated(this.product.id).subscribe({
-      next: (response) => {
-        this.product!.deprecated = response.product_deprecated;
-        const statusText = response.action === 'deprecated' ? 'als veraltet markiert' : 'wieder aktiviert';
-        this.snackBar.open(`Produkt wurde ${statusText}`, 'Schließen', {
-          duration: 3000
-        });
+    // Erst Material-Dependencies laden, dann Dialog öffnen
+    this.productsService.getProductMaterialDependencies(this.product.id).subscribe({
+      next: (dependencies) => {
+        this.openToggleDeprecatedDialog(dependencies);
       },
       error: (error) => {
-        console.error('Fehler beim Ändern des deprecated-Status:', error);
-        this.snackBar.open('Fehler beim Ändern des Status', 'Schließen', {
+        console.error('Fehler beim Laden der Material-Dependencies:', error);
+        this.snackBar.open('Fehler beim Laden der Dependencies', 'Schließen', {
           duration: 5000
         });
       }
@@ -231,6 +228,55 @@ export class ProductDetailComponent {
   deprecateProduct(): void {
     // Diese Methode ist jetzt redundant zu toggleDeprecatedStatus
     this.toggleDeprecatedStatus();
+  }
+
+  private openToggleDeprecatedDialog(dependencies: MaterialDependencyResponse): void {
+    if (!this.product) {
+      return;
+    }
+
+    const dialogData: ToggleProductDialogData = {
+      product: {
+        id: this.product.id,
+        bezeichnung: this.product.bezeichnung,
+        deprecated: this.product.deprecated || false
+      },
+      dependencies
+    };
+
+    const dialogRef = this.dialog.open(ToggleProductDialogComponent, {
+      data: dialogData,
+      width: '600px'
+    });
+
+    dialogRef.afterClosed().subscribe((result: ToggleProductDialogResult) => {
+      if (result?.confirmed) {
+        this.productsService.toggleProductDeprecated(
+          this.product!.id, 
+          result.handleMaterials
+        ).subscribe({
+          next: (response) => {
+            this.product!.deprecated = response.product_deprecated;
+            const statusText = response.action === 'deprecated' ? 'als veraltet markiert' : 'wieder aktiviert';
+            let message = `Produkt wurde ${statusText}`;
+            
+            if (response.materials_count > 0) {
+              message += ` (${response.materials_count} Materialien ${response.action === 'deprecated' ? 'ebenfalls als veraltet markiert' : 'wieder aktiviert'})`;
+            }
+            
+            this.snackBar.open(message, 'Schließen', {
+              duration: 4000
+            });
+          },
+          error: (error) => {
+            console.error('Fehler beim Ändern des deprecated-Status:', error);
+            this.snackBar.open('Fehler beim Ändern des Status', 'Schließen', {
+              duration: 5000
+            });
+          }
+        });
+      }
+    });
   }
 
 

@@ -10,6 +10,7 @@ export interface Material {
   hersteller_bezeichnung: string;
   bild: File | null;
   bild_url: string | null;
+  deprecated?: boolean;
   category?: {
     id: number;
     name: string;
@@ -65,8 +66,9 @@ export class MaterialsService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/api/materials/`;
 
-  getMaterialsGrouped(): Observable<MaterialCategoryGroup[]> {
-    return this.http.get<MaterialCategoryGroup[]>(this.baseUrl);
+  getMaterialsGrouped(includeDeprecated: boolean = false): Observable<MaterialCategoryGroup[]> {
+    const params = includeDeprecated ? '?include_deprecated=true' : '';
+    return this.http.get<MaterialCategoryGroup[]>(`${this.baseUrl}${params}`);
   }
 
   getMaterial(id: number) {

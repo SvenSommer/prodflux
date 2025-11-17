@@ -24,6 +24,10 @@ class Material(models.Model):
     bild = models.ImageField(upload_to='material_images/', null=True, blank=True)
     category = models.ForeignKey(MaterialCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='materials')
     alternatives = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='alternative_to')
+    deprecated = models.BooleanField(
+        default=False,
+        help_text="Material ist veraltet und wird nicht mehr verwendet"
+    )
 
     def __str__(self):
         return self.bezeichnung

@@ -1,12 +1,23 @@
 <div class="materials-wrapper">
   <div class="header-row">
     <h2>Materialien</h2>
-    <a routerLink="/materials/new">
-      <button mat-raised-button color="primary">
-        <mat-icon>add</mat-icon>
-        Neues Material
-      </button>
-    </a>
+    <div class="header-actions">
+      <mat-slide-toggle 
+        [(ngModel)]="includeDeprecated"
+        (ngModelChange)="onToggleDeprecated()"
+        color="accent"
+        class="deprecated-toggle"
+      >
+        Veraltete anzeigen
+      </mat-slide-toggle>
+      
+      <a routerLink="/materials/new">
+        <button mat-raised-button color="primary">
+          <mat-icon>add</mat-icon>
+          Neues Material
+        </button>
+      </a>
+    </div>
   </div>
 
   <div *ngIf="materialGroups$ | async as materialGroups">

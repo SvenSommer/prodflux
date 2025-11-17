@@ -14,9 +14,37 @@
   <mat-card-title>Produktdetails</mat-card-title>
 
   <mat-card-content>
-    <p><strong>Bezeichnung:</strong> {{ product?.bezeichnung }}</p>
-    <p><strong>Artikelnummer:</strong> {{ product?.artikelnummer }}</p>
-    <p><strong>Version:</strong> {{ product?.version }}</p>
+    <div class="product-info-header">
+      <div class="product-details">
+        <p><strong>Bezeichnung:</strong> {{ product?.bezeichnung }}</p>
+        <p><strong>Artikelnummer:</strong> {{ product?.artikelnummer }}</p>
+        <p><strong>Version:</strong> {{ product?.version }}</p>
+        
+        <!-- Deprecated Status -->
+        <div class="status-section">
+          <mat-chip-set *ngIf="product?.deprecated" class="deprecated-status">
+            <mat-chip color="warn" selected>
+              <mat-icon matChipAvatar>archive</mat-icon>
+              Veraltet
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+      
+      <div class="product-actions">
+        <button 
+          *ngIf="!product?.deprecated"
+          mat-stroked-button 
+          color="warn"
+          (click)="deprecateProduct()"
+          matTooltip="Produkt als veraltet markieren"
+          class="deprecate-button"
+        >
+          <mat-icon>archive</mat-icon>
+          Als veraltet markieren
+        </button>
+      </div>
+    </div>
 
     <div *ngIf="product?.bild" class="image-container">
       <img [src]="product?.bild" alt="Produktbild" class="product-image" />

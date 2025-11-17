@@ -11,6 +11,7 @@ export interface Product {
   bezeichnung: string;
   artikelnummer: string;
   bild?: string;
+  deprecated?: boolean;
   version?: {
     id: number;
     name: string;
@@ -32,6 +33,29 @@ export interface ProductMaterial {
     id: number;
     bezeichnung: string;
   };
+}
+
+export interface MaterialDependency {
+  id: number;
+  bezeichnung: string;
+  quantity_per_unit: number;
+  current_deprecated: boolean;
+  other_products_count?: number;
+}
+
+export interface MaterialDependencyResponse {
+  product_id: number;
+  product_name: string;
+  exclusive_materials: MaterialDependency[];
+  shared_materials: MaterialDependency[];
+  can_deprecate_materials: boolean;
+}
+
+export interface DeprecateProductResponse {
+  product_id: number;
+  product_deprecated: boolean;
+  materials_deprecated: number[];
+  materials_count: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -117,5 +141,22 @@ export class ProductsService {
 
   getAllProductMaterials(): Observable<ProductMaterial[]> {
     return this.http.get<ProductMaterial[]>(`${this.baseUrl}/product-materials/`);
+  }
+
+  // Deprecated functionality
+  getProductMaterialDependencies(productId: number): Observable<MaterialDependencyResponse> {
+    return this.http.get<MaterialDependencyResponse>(
+      `${this.baseUrl}/products/${productId}/material-dependencies/`
+    );
+  }
+
+  deprecateProductWithMaterials(
+    productId: number, 
+    deprecateMaterials: boolean = false
+  ): Observable<DeprecateProductResponse> {
+    return this.http.post<DeprecateProductResponse>(
+      `${this.baseUrl}/products/${productId}/deprecate/`,
+      { deprecate_materials: deprecateMaterials }
+    );
   }
 }

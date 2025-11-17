@@ -15,6 +15,16 @@ class MaterialListCreateView(generics.ListCreateAPIView):
     serializer_class = MaterialSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Standardmäßig deprecated Materialien ausblenden
+        include_deprecated = self.request.query_params.get(
+            'include_deprecated', 'false'
+        ).lower() == 'true'
+        if not include_deprecated:
+            queryset = queryset.filter(deprecated=False)
+        return queryset
+
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         return Response(group_materials_by_category(queryset, request))

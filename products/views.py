@@ -3,6 +3,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from django.db.models import Count
 
 from materials.serializers import MaterialSerializer
 from materials.utils import group_materials_by_category
@@ -40,6 +41,16 @@ class ProductListCreateView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Standardmäßig deprecated Produkte ausblenden
+        include_deprecated = self.request.query_params.get(
+            'include_deprecated', 'false'
+        ).lower() == 'true'
+        if not include_deprecated:
+            queryset = queryset.filter(deprecated=False)
+        return queryset
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
@@ -513,3 +524,105 @@ def product_lifecycle_overview(request):
         })
 
     return Response(result)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def product_material_dependencies(request, product_id):
+    """
+    Prüft, welche Materialien ausschließlich von diesem Produkt verwendet werden.
+    Gibt eine Liste von Materialien zurück, die deprecated werden können.
+    """
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response(
+            {"detail": "Produkt nicht gefunden"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Finde alle Materialien, die von diesem Produkt verwendet werden
+    product_materials = ProductMaterial.objects.filter(
+        product=product
+    ).select_related('material')
+
+    exclusive_materials = []
+    shared_materials = []
+
+    for pm in product_materials:
+        material = pm.material
+        
+        # Prüfe, ob das Material von anderen Produkten verwendet wird
+        other_usage_count = ProductMaterial.objects.filter(
+            material=material
+        ).exclude(product=product).count()
+        
+        material_data = {
+            'id': material.id,
+            'bezeichnung': material.bezeichnung,
+            'quantity_per_unit': float(pm.quantity_per_unit),
+            'current_deprecated': material.deprecated
+        }
+        
+        if other_usage_count == 0:
+            exclusive_materials.append(material_data)
+        else:
+            material_data['other_products_count'] = other_usage_count
+            shared_materials.append(material_data)
+
+    return Response({
+        'product_id': product.id,
+        'product_name': product.bezeichnung,
+        'exclusive_materials': exclusive_materials,
+        'shared_materials': shared_materials,
+        'can_deprecate_materials': len(exclusive_materials) > 0
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def deprecate_product_with_materials(request, product_id):
+    """
+    Setzt ein Produkt auf deprecated und optional auch seine 
+    exklusiv verwendeten Materialien.
+    """
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response(
+            {"detail": "Produkt nicht gefunden"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Produkt auf deprecated setzen
+    product.deprecated = True
+    product.save()
+
+    deprecate_materials = request.data.get('deprecate_materials', False)
+    deprecated_material_ids = []
+
+    if deprecate_materials:
+        # Finde exklusive Materialien
+        product_materials = ProductMaterial.objects.filter(
+            product=product
+        ).select_related('material')
+
+        for pm in product_materials:
+            material = pm.material
+            
+            # Prüfe, ob das Material von anderen Produkten verwendet wird
+            other_usage_count = ProductMaterial.objects.filter(
+                material=material
+            ).exclude(product=product).count()
+            
+            if other_usage_count == 0 and not material.deprecated:
+                material.deprecated = True
+                material.save()
+                deprecated_material_ids.append(material.id)
+
+    return Response({
+        'product_id': product.id,
+        'product_deprecated': True,
+        'materials_deprecated': deprecated_material_ids,
+        'materials_count': len(deprecated_material_ids)
+    })

@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ProductsService, Product, ProductMaterial } from './products.service';
+import { ProductsService, Product, ProductMaterial, MaterialDependencyResponse } from './products.service';
 import { FormsModule } from '@angular/forms';
 import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +11,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { DeprecateProductDialogComponent, DeprecateProductDialogData, DeprecateProductDialogResult } from './deprecate-product-dialog.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -25,7 +29,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatTooltipModule,
     MatTableModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatChipsModule,
+    DeprecateProductDialogComponent
   ],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss'],
@@ -35,6 +41,8 @@ export class ProductDetailComponent {
   private productsService = inject(ProductsService);
   private materialsService = inject(MaterialsService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   productId = Number(this.route.snapshot.paramMap.get('id'));
   product?: Product;
@@ -192,5 +200,64 @@ export class ProductDetailComponent {
     }
 
     return null;
+  }
+
+  deprecateProduct(): void {
+    if (!this.product) return;
+
+    // Lade Material-Dependencies
+    this.productsService.getProductMaterialDependencies(this.product.id).subscribe({
+      next: (dependencies: MaterialDependencyResponse) => {
+        // Öffne Dialog mit Dependencies-Informationen
+        const dialogRef = this.dialog.open(DeprecateProductDialogComponent, {
+          width: '600px',
+          data: {
+            product: {
+              id: this.product!.id,
+              bezeichnung: this.product!.bezeichnung
+            },
+            dependencies
+          } as DeprecateProductDialogData
+        });
+
+        dialogRef.afterClosed().subscribe((result: DeprecateProductDialogResult | undefined) => {
+          if (result?.confirmed) {
+            this.executeDeprecation(result.deprecateMaterials);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Fehler beim Laden der Material-Dependencies:', error);
+        this.snackBar.open('Fehler beim Prüfen der Materialabhängigkeiten', 'Schließen', {
+          duration: 5000
+        });
+      }
+    });
+  }
+
+  private executeDeprecation(deprecateMaterials: boolean): void {
+    if (!this.product) return;
+
+    this.productsService.deprecateProductWithMaterials(this.product.id, deprecateMaterials).subscribe({
+      next: (response) => {
+        // Produkt lokal als deprecated markieren
+        this.product!.deprecated = true;
+        
+        let message = `Produkt "${this.product!.bezeichnung}" wurde als veraltet markiert`;
+        if (response.materials_count > 0) {
+          message += ` und ${response.materials_count} Materialien wurden ebenfalls als veraltet markiert`;
+        }
+
+        this.snackBar.open(message, 'Schließen', {
+          duration: 6000
+        });
+      },
+      error: (error) => {
+        console.error('Fehler beim Markieren als veraltet:', error);
+        this.snackBar.open('Fehler beim Markieren des Produkts als veraltet', 'Schließen', {
+          duration: 5000
+        });
+      }
+    });
   }
 }

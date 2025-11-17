@@ -12,6 +12,22 @@
       font-weight: 600;
       margin: 0;
     }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+
+      .deprecated-toggle {
+        .mdc-switch__track {
+          background-color: #e0e0e0;
+        }
+
+        &.mat-mdc-slide-toggle-checked .mdc-switch__track {
+          background-color: #ff9800;
+        }
+      }
+    }
   }
 
   .category-section {

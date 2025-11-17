@@ -32,7 +32,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'bezeichnung', 'artikelnummer',
             'version', 'version_id',
             'varianten', 'varianten_ids',
-            'bild', 'bild_url', 'angelegt_am'
+            'bild', 'bild_url', 'deprecated', 'angelegt_am'
         ]
         read_only_fields = ['id', 'angelegt_am']
 

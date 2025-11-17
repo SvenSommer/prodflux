@@ -26,7 +26,7 @@ class MaterialSerializer(serializers.ModelSerializer):
             'id', 'bezeichnung', 'hersteller_bezeichnung', 'bestell_nr',
             'bild', 'bild_url',
             'category', 'category_id',
-            'alternatives',
+            'alternatives', 'deprecated',
             'current_stock' 
         ]
 

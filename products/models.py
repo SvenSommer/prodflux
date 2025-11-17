@@ -23,11 +23,14 @@ class Product(models.Model):
     version = models.ForeignKey(ProductVersion, on_delete=models.SET_NULL, null=True, blank=True)
     varianten = models.ManyToManyField(ProductVariant, blank=True)
     bild = models.ImageField(upload_to='product_images/', null=True, blank=True)
+    deprecated = models.BooleanField(
+        default=False,
+        help_text="Produkt ist veraltet und wird nicht mehr verwendet"
+    )
     angelegt_am = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.bezeichnung
-    
 
 
 class ProductMaterial(models.Model):

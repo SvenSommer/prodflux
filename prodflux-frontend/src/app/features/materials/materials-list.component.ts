@@ -9,6 +9,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableModule } from '@angular/material/table';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { FormsModule } from '@angular/forms';
 
 interface GroupedMaterial {
   group: Material[];
@@ -25,6 +27,8 @@ interface GroupedMaterial {
     MatButtonModule,
     MatTooltipModule,
     MatTableModule,
+    MatSlideToggleModule,
+    FormsModule,
   ],
   templateUrl: './materials-list.component.html',
   styleUrls: ['./materials-list.component.scss'],
@@ -32,13 +36,18 @@ interface GroupedMaterial {
 export class MaterialsListComponent {
   private materialsService = inject(MaterialsService);
   materialGroups$!: Observable<MaterialCategoryGroup[]>;
+  includeDeprecated = false;
 
   ngOnInit() {
     this.loadMaterials();
   }
 
   loadMaterials() {
-    this.materialGroups$ = this.materialsService.getMaterialsGrouped();
+    this.materialGroups$ = this.materialsService.getMaterialsGrouped(this.includeDeprecated);
+  }
+
+  onToggleDeprecated() {
+    this.loadMaterials();
   }
 
   delete(id: number) {

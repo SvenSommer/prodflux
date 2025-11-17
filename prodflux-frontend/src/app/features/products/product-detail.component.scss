@@ -47,6 +47,21 @@
   }
 }
 
+.toggle-deprecated-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+
+  &[color="warn"]:hover {
+    background-color: #ffebee;
+  }
+
+  &[color="primary"]:hover {
+    background-color: #e3f2fd;
+  }
+}
+
 .delete-button {
   position: absolute;
   top: 8px;
@@ -144,4 +159,37 @@
   height: 48px;
   object-fit: cover;
   border-radius: 6px;
+}
+
+/* Deprecated Material Styles */
+.deprecated-material {
+  opacity: 0.7;
+  text-decoration: line-through !important;
+  color: #9e9e9e !important;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline !important;
+  }
+}
+
+.deprecated-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffecb3;
+  color: #f57c00;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  margin-left: 8px;
+  vertical-align: middle;
+  text-decoration: none !important;
+
+  mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
 }

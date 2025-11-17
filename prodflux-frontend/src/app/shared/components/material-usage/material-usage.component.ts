@@ -221,12 +221,23 @@ export class MaterialUsageComponent implements OnInit, OnDestroy, OnChanges {
 
     console.log('MaterialUsageComponent: Loading usage data for material ID:', this.materialId);
 
-    const sub = this.productsService.getAllProductMaterials().subscribe({
+    // Verwende direkt getProductsUsingMaterial - das gibt bereits alle Produkte zurück (auch deprecated)
+    const productsSub = this.productsService.getProductsUsingMaterial(this.materialId).subscribe({
+      next: (products: Product[]) => {
+        console.log('MaterialUsageComponent: Found', products.length, 'products using material', this.materialId);
+        this.relatedProducts = products;
+      },
+      error: (error) => {
+        console.error('Fehler beim Laden der Produkte:', error);
+        this.relatedProducts = [];
+      }
+    });
+
+    // Lade auch die ProductMaterial-Daten für die Mengen-Informationen
+    const productMaterialsSub = this.productsService.getAllProductMaterials().subscribe({
       next: (productMaterials: ProductMaterial[]) => {
         // Filter ProductMaterials für das aktuelle Material
         const relevantProductMaterials = productMaterials.filter(pm => pm.material === this.materialId);
-
-        console.log('MaterialUsageComponent: Found', relevantProductMaterials.length, 'ProductMaterial entries for material', this.materialId);
 
         // Erstelle Usage-Map
         this.productMaterialUsage = {};
@@ -234,36 +245,17 @@ export class MaterialUsageComponent implements OnInit, OnDestroy, OnChanges {
           this.productMaterialUsage[pm.product] = pm.quantity_per_unit;
         });
 
-        // Lade die zugehörigen Produkte
-        const productIds = relevantProductMaterials.map(pm => pm.product);
-        if (productIds.length > 0) {
-          console.log('MaterialUsageComponent: Loading products for IDs:', productIds);
-          this.loadRelatedProducts(productIds);
-        } else {
-          console.log('MaterialUsageComponent: No products found for material', this.materialId);
-          this.relatedProducts = [];
-        }
+        console.log('MaterialUsageComponent: Usage map:', this.productMaterialUsage);
       },
       error: (error) => {
         console.error('Fehler beim Laden der ProductMaterial-Daten:', error);
       }
     });
 
-    this.subscriptions.push(sub);
+    this.subscriptions.push(productsSub, productMaterialsSub);
   }
 
-  private loadRelatedProducts(productIds: number[]): void {
-    const sub = this.productsService.getProducts().subscribe({
-      next: (products: Product[]) => {
-        this.relatedProducts = products.filter(p => productIds.includes(p.id));
-      },
-      error: (error: any) => {
-        console.error('Fehler beim Laden der Produkt-Daten:', error);
-      }
-    });
 
-    this.subscriptions.push(sub);
-  }
 
   getProductUsage(productId: number): number | null {
     return this.productMaterialUsage[productId] || null;

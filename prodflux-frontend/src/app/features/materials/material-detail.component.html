@@ -9,12 +9,34 @@
     <mat-card class="main-info-card">
       <mat-card-content>
         <div class="material-header">
-          <h1 class="material-title">{{ material?.bezeichnung }}</h1>
-          <a [routerLink]="['/materials', material?.id, 'edit']">
-            <button mat-icon-button class="edit-button" matTooltip="Bearbeiten">
-              <mat-icon>edit</mat-icon>
+          <div class="title-section">
+            <h1 class="material-title">{{ material?.bezeichnung }}</h1>
+            <!-- Deprecated Status Chip -->
+            <div *ngIf="material?.deprecated" class="deprecated-chip">
+              <mat-icon>archive</mat-icon>
+              <span>Veraltet</span>
+            </div>
+          </div>
+          <div class="header-actions">
+            <!-- Toggle Deprecated Button -->
+            <button
+              mat-stroked-button
+              [color]="material?.deprecated ? 'primary' : 'warn'"
+              (click)="toggleDeprecatedStatus()"
+              [matTooltip]="material?.deprecated ? 'Material wieder aktivieren' : 'Material als veraltet markieren'"
+              class="toggle-deprecated-button"
+            >
+              <mat-icon>{{ material?.deprecated ? 'unarchive' : 'archive' }}</mat-icon>
+              {{ material?.deprecated ? 'Wieder aktivieren' : 'Als veraltet markieren' }}
             </button>
-          </a>
+            
+            <!-- Edit Button -->
+            <a [routerLink]="['/materials', material?.id, 'edit']">
+              <button mat-icon-button class="edit-button" matTooltip="Bearbeiten">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </a>
+          </div>
         </div>
 
         <div class="material-content">

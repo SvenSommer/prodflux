@@ -30,19 +30,64 @@
       justify-content: space-between;
       margin-bottom: 2rem;
 
-      .material-title {
-        font-size: 2rem;
-        font-weight: 600;
-        color: #333;
-        margin: 0;
+      .title-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .material-title {
+          font-size: 2rem;
+          font-weight: 600;
+          color: #333;
+          margin: 0;
+        }
+
+        .deprecated-chip {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #ffecb3;
+          color: #f57c00;
+          padding: 0.5rem 1rem;
+          border-radius: 16px;
+          font-size: 0.875rem;
+          font-weight: 500;
+
+          mat-icon {
+            font-size: 1.125rem;
+            width: 1.125rem;
+            height: 1.125rem;
+          }
+        }
       }
 
-      .edit-button {
-        color: #666;
-        transition: color 0.2s ease;
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
 
-        &:hover {
-          color: #2196F3;
+        .toggle-deprecated-button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.3s ease;
+
+          &[color="warn"]:hover {
+            background-color: #ffebee;
+          }
+
+          &[color="primary"]:hover {
+            background-color: #e3f2fd;
+          }
+        }
+
+        .edit-button {
+          color: #666;
+          transition: color 0.2s ease;
+
+          &:hover {
+            color: #2196F3;
+          }
         }
       }
     }

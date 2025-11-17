@@ -5,6 +5,7 @@ from .models import Delivery, Material, MaterialCategory, MaterialMovement, Mate
 from .serializers import DeliverySerializer, MaterialCategorySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework import status
 from collections import defaultdict
 from rest_framework.exceptions import ValidationError  
 from .utils import group_materials_by_category
@@ -238,7 +239,16 @@ def material_stock_view(request, material_id):
 def all_materials_stock_by_workshop(request, workshop_id):
     from .utils import group_materials_by_category
 
-    materials = Material.objects.all()
+    # Standardmäßig deprecated Materialien ausblenden
+    include_deprecated = request.query_params.get(
+        'include_deprecated', 'false'
+    ).lower() == 'true'
+    
+    if include_deprecated:
+        materials = Material.objects.all()
+    else:
+        materials = Material.objects.filter(deprecated=False)
+    
     materials_with_stock = []
 
     for material in materials:
@@ -363,3 +373,31 @@ def material_products_view(request, material_id):
         return Response({
             'detail': f'Fehler beim Laden der Produkte: {str(e)}'
         }, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_material_deprecated(request, material_id):
+    """
+    Toggles (umschalten) den deprecated Status eines Materials
+    """
+    try:
+        material = Material.objects.get(id=material_id)
+    except Material.DoesNotExist:
+        return Response(
+            {"detail": "Material nicht gefunden"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Toggle the deprecated status
+    new_deprecated_status = not material.deprecated
+    material.deprecated = new_deprecated_status
+    material.save()
+
+    action = 'deprecated' if new_deprecated_status else 'reactivated'
+
+    return Response({
+        'material_id': material.id,
+        'material_deprecated': new_deprecated_status,
+        'action': action
+    })

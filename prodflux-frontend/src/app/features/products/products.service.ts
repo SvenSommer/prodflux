@@ -58,13 +58,22 @@ export interface DeprecateProductResponse {
   materials_count: number;
 }
 
+export interface ToggleDeprecatedResponse {
+  product_id: number;
+  product_deprecated: boolean;
+  materials_affected: number[];
+  materials_count: number;
+  action: 'deprecated' | 'reactivated';
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/api`;
 
-  getProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.baseUrl}/products/`);
+  getProducts(includeDeprecated: boolean = false): Observable<Product[]> {
+    const params = includeDeprecated ? '?include_deprecated=true' : '';
+    return this.http.get<Product[]>(`${this.baseUrl}/products/${params}`);
   }
 
   getProduct(id: number): Observable<Product> {
@@ -157,6 +166,16 @@ export class ProductsService {
     return this.http.post<DeprecateProductResponse>(
       `${this.baseUrl}/products/${productId}/deprecate/`,
       { deprecate_materials: deprecateMaterials }
+    );
+  }
+
+  toggleProductDeprecated(
+    productId: number,
+    handleMaterials: boolean = false
+  ): Observable<ToggleDeprecatedResponse> {
+    return this.http.post<ToggleDeprecatedResponse>(
+      `${this.baseUrl}/products/${productId}/toggle-deprecated/`,
+      { handle_materials: handleMaterials }
     );
   }
 }

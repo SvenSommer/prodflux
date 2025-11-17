@@ -43,11 +43,12 @@ export class MaterialsListComponent {
   }
 
   loadMaterials() {
-    this.materialGroups$ = this.materialsService.getMaterialsGrouped(this.includeDeprecated);
+    // Immer beide laden (aktive + deprecated) für bessere Trennung
+    this.materialGroups$ = this.materialsService.getMaterialsGrouped(true);
   }
 
   onToggleDeprecated() {
-    this.loadMaterials();
+    // Keine Neuladeung nötig, nur UI-State ändern
   }
 
   delete(id: number) {
@@ -56,6 +57,12 @@ export class MaterialsListComponent {
         this.loadMaterials();
       });
     }
+  }
+
+  separateMaterialsByStatus(materials: Material[]) {
+    const active = materials.filter(m => !m.deprecated);
+    const deprecated = materials.filter(m => m.deprecated);
+    return { active, deprecated };
   }
 
   groupMaterials(materials: Material[]): GroupedMaterial[] {

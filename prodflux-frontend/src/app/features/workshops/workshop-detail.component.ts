@@ -67,6 +67,7 @@ export class WorkshopDetailComponent {
   isLoading = true;
   stock: MaterialStockGroup[] = [];
   productLifecycle: ProductLifecycleEntry[] = [];
+  includeDeprecatedMaterials = false;
 
   selectedProduct: ProductLifecycleEntry | null = null;
   manufactureQty = 1;
@@ -113,9 +114,13 @@ export class WorkshopDetailComponent {
   }
 
   loadStock() {
-    this.workshopService.getStock(this.workshopId).subscribe((data) => {
+    this.workshopService.getStock(this.workshopId, this.includeDeprecatedMaterials).subscribe((data) => {
       this.stock = data;
     });
+  }
+
+  onToggleDeprecatedMaterials() {
+    this.loadStock();
   }
 
   loadLifecycleOverview() {

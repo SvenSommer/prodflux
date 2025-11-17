@@ -3,7 +3,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { MaterialsService, Material, MaterialMovement, MaterialStock } from './materials.service';
+import { MaterialsService, Material, MaterialMovement, MaterialStock, ToggleMaterialDeprecatedResponse } from './materials.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -11,6 +11,9 @@ import { MatTableModule } from '@angular/material/table';
 import { MatInputModule } from '@angular/material/input';
 import { Workshop, WorkshopsService } from '../settings/workshop.services';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialUsageComponent } from '../../shared/components/material-usage/material-usage.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -30,6 +33,8 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/componen
     MatSelectModule,
     MatTableModule,
     MatInputModule,
+    MatButtonModule,
+    MatTooltipModule,
     MaterialUsageComponent
   ]
 })
@@ -38,6 +43,7 @@ export class MaterialDetailComponent {
   private materialsService = inject(MaterialsService);
   private workshopsService = inject(WorkshopsService);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   materialId: number = Number(this.route.snapshot.paramMap.get('id'));
   material: Material | null = null;
@@ -203,6 +209,32 @@ export class MaterialDetailComponent {
         } else {
           this.errorMessage = 'Neuer Vorgang konnte nicht gespeichert werden.';
         }
+      }
+    });
+  }
+
+  toggleDeprecatedStatus(): void {
+    if (!this.material) return;
+
+    this.materialsService.toggleMaterialDeprecated(this.material.id).subscribe({
+      next: (response: ToggleMaterialDeprecatedResponse) => {
+        // Material Status lokal aktualisieren
+        if (this.material) {
+          this.material.deprecated = response.material_deprecated;
+        }
+
+        const message = `Material "${this.material?.bezeichnung}" wurde `;
+        const actionText = response.action === 'deprecated' ? 'als veraltet markiert' : 'wieder aktiviert';
+
+        this.snackBar.open(message + actionText, 'Schließen', {
+          duration: 4000
+        });
+      },
+      error: (error) => {
+        console.error('Fehler beim Ändern des Deprecated-Status:', error);
+        this.snackBar.open('Fehler beim Ändern des Deprecated-Status', 'Schließen', {
+          duration: 5000
+        });
       }
     });
   }

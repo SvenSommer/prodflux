@@ -73,8 +73,13 @@ export interface SaveCorrectionEvent {
           <ng-container matColumnDef="bezeichnung">
             <th mat-header-cell *matHeaderCellDef>Material</th>
             <td mat-cell *matCellDef="let element">
-              <a [routerLink]="['/materials', element.id]" class="material-link">
+              <a [routerLink]="['/materials', element.id]" class="material-link" 
+                 [class.deprecated-material]="element.deprecated">
                 {{ element.bezeichnung }}
+                <span *ngIf="element.deprecated" class="deprecated-badge">
+                  <mat-icon class="deprecated-icon">archive</mat-icon>
+                  Veraltet
+                </span>
               </a>
             </td>
           </ng-container>
@@ -180,9 +185,35 @@ export interface SaveCorrectionEvent {
           color: #1976d2;
           text-decoration: none;
           font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
 
           &:hover {
             text-decoration: underline;
+          }
+
+          &.deprecated-material {
+            color: #666;
+            opacity: 0.7;
+          }
+
+          .deprecated-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 0.125rem 0.375rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+
+            .deprecated-icon {
+              font-size: 0.875rem;
+              width: 14px;
+              height: 14px;
+            }
           }
         }
 

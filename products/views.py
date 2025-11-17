@@ -5,7 +5,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.db.models import Count
 
-from materials.serializers import MaterialSerializer
 from materials.utils import group_materials_by_category
 from .models import Product, ProductMaterial, ProductStock, ProductVariant, ProductVersion
 from materials.models import DeliveryItem, MaterialCategory, MaterialMovement, OrderItem
@@ -86,8 +85,21 @@ class ProductMaterialListView(generics.ListAPIView):
             material = pm.material
             category_name = material.category.name if material.category else "Ohne Kategorie"
 
-            material_data = MaterialSerializer(material, context={'request': request}).data
-            material_data["required_quantity_per_unit"] = float(pm.quantity_per_unit)
+            # Erstelle Material-Data manuell für deprecated Materialien
+            material_data = {
+                'id': material.id,
+                'bezeichnung': material.bezeichnung,
+                'hersteller_bezeichnung': material.hersteller_bezeichnung,
+                'bild_url': material.bild.url if material.bild else None,
+                'deprecated': material.deprecated,
+                'alternatives': list(
+                    material.alternatives.values_list('id', flat=True)
+                )
+            }
+            
+            material_data["required_quantity_per_unit"] = float(
+                pm.quantity_per_unit
+            )
             material_data["product_material_id"] = pm.id
 
             grouped_materials[category_name].append(material_data)
@@ -581,10 +593,69 @@ def product_material_dependencies(request, product_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def toggle_product_deprecated(request, product_id):
+    """
+    Toggles (umschalten) den deprecated Status eines Produkts und optional seiner exklusiven Materialien
+    """
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response(
+            {"detail": "Produkt nicht gefunden"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Toggle the deprecated status
+    new_deprecated_status = not product.deprecated
+    product.deprecated = new_deprecated_status
+    product.save()
+
+    handle_materials = request.data.get('handle_materials', False)
+    affected_material_ids = []
+
+    if handle_materials:
+        # Finde alle Materialien des Produkts
+        product_materials = ProductMaterial.objects.filter(
+            product=product
+        ).select_related('material')
+
+        for pm in product_materials:
+            material = pm.material
+            
+            # Prüfe, ob das Material von anderen aktiven Produkten verwendet wird
+            other_active_usage_count = ProductMaterial.objects.filter(
+                material=material,
+                product__deprecated=False
+            ).exclude(product=product).count()
+            
+            if new_deprecated_status:  # Deprecating
+                # Nur deprecaten wenn es nicht von anderen aktiven Produkten verwendet wird
+                if other_active_usage_count == 0 and not material.deprecated:
+                    material.deprecated = True
+                    material.save()
+                    affected_material_ids.append(material.id)
+            else:  # Reactivating
+                # Reactivate material wenn es deprecated ist und von diesem Produkt verwendet wird
+                if material.deprecated:
+                    material.deprecated = False
+                    material.save()
+                    affected_material_ids.append(material.id)
+
+    return Response({
+        'product_id': product.id,
+        'product_deprecated': new_deprecated_status,
+        'materials_affected': affected_material_ids,
+        'materials_count': len(affected_material_ids),
+        'action': 'deprecated' if new_deprecated_status else 'reactivated'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def deprecate_product_with_materials(request, product_id):
     """
-    Setzt ein Produkt auf deprecated und optional auch seine 
-    exklusiv verwendeten Materialien.
+    Deprecated ein Produkt und optional seine exklusiven Materialien
+    LEGACY: Verwende toggle_product_deprecated für neue Implementierungen
     """
     try:
         product = Product.objects.get(id=product_id)

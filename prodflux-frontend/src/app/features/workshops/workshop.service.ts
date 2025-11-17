@@ -17,6 +17,7 @@ export interface MaterialStockMaterial {
   bild_url: string | null;
   bestand: number; // Aus current_stock
   alternatives: number[];
+  deprecated?: boolean;
 }
 
 export interface MaterialStockGroup {
@@ -73,8 +74,9 @@ export class WorkshopService {
     return this.http.get<Workshop[]>(`${this.baseUrl}/workshops/`);
   }
 
-  getStock(workshopId: number): Observable<MaterialStockGroup[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/workshops/${workshopId}/material-stock/`).pipe(
+  getStock(workshopId: number, includeDeprecated: boolean = false): Observable<MaterialStockGroup[]> {
+    const params = includeDeprecated ? '?include_deprecated=true' : '';
+    return this.http.get<any[]>(`${this.baseUrl}/workshops/${workshopId}/material-stock/${params}`).pipe(
       tap((response) => {
         console.log('[WorkshopService] Material-Stock API Response:', response);
       }),
@@ -91,6 +93,7 @@ export class WorkshopService {
             bild_url: mat.bild_url ?? null,
             bestand: mat.current_stock ?? 0,  // 🛠 Hier musst du aufpassen, evtl. heißt das anders
             alternatives: mat.alternatives ?? [],
+            deprecated: mat.deprecated ?? false,
           }))
         }));
 

@@ -10,13 +10,13 @@ export interface Material {
   hersteller_bezeichnung: string;
   bild: File | null;
   bild_url: string | null;
-  deprecated?: boolean;
   category?: {
     id: number;
     name: string;
     order: number;
   };
   alternatives: number[];
+  deprecated?: boolean;
   required_quantity_per_unit?: number;
   product_material_id?: number; // Added to store product material ID
 }
@@ -145,4 +145,17 @@ export class MaterialsService {
   }): Observable<any> {
     return this.http.post(`${this.baseUrl}${materialId}/inventory-correction/`, data);
   }
+
+  toggleMaterialDeprecated(materialId: number): Observable<ToggleMaterialDeprecatedResponse> {
+    return this.http.post<ToggleMaterialDeprecatedResponse>(
+      `${this.baseUrl}${materialId}/toggle-deprecated/`,
+      {}
+    );
+  }
+}
+
+export interface ToggleMaterialDeprecatedResponse {
+  material_id: number;
+  material_deprecated: boolean;
+  action: 'deprecated' | 'reactivated';
 }

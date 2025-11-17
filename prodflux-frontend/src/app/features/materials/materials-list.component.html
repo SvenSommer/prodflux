@@ -25,36 +25,90 @@
       <div class="category-section">
         <div class="category-title">{{ group.category_name }}</div>
 
-        <div class="materials-grid">
-          <ng-container *ngFor="let grouped of groupMaterials(group.materials)">
+        <!-- Aktive Materialien -->
+        <ng-container *ngIf="separateMaterialsByStatus(group.materials) as separated">
+          <div class="materials-grid" *ngIf="separated.active.length > 0">
+            <ng-container *ngFor="let grouped of groupMaterials(separated.active)">
 
-            <ng-container *ngIf="grouped.group.length > 1; else singleMaterial">
-              <div class="material-group-wrapper">
-                <div class="group-label">Alternative Gruppe</div> <!-- NEU -->
-                <div class="material-group">
-                  <div *ngFor="let mat of grouped.group" class="material-card">
-                  <img *ngIf="mat.bild_url" [src]="mat.bild_url" alt="Bild" class="material-image" />
+              <ng-container *ngIf="grouped.group.length > 1; else singleActiveMaterial">
+                <div class="material-group-wrapper">
+                  <div class="group-label">Alternative Gruppe</div>
+                  <div class="material-group">
+                    <div *ngFor="let mat of grouped.group" class="material-card">
+                      <img *ngIf="mat.bild_url" [src]="mat.bild_url" alt="Bild" class="material-image" />
+                      <div class="material-info">
+                        <a [routerLink]="['/materials', mat.id]" class="material-name">{{ mat.bezeichnung }}</a>
+                        <div class="material-hersteller">{{ mat.hersteller_bezeichnung }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+
+              <ng-template #singleActiveMaterial>
+                <div class="material-card">
+                  <img *ngIf="grouped.group[0].bild_url" [src]="grouped.group[0].bild_url" alt="Bild" class="material-image" />
                   <div class="material-info">
-                    <a [routerLink]="['/materials', mat.id]" class="material-name">{{ mat.bezeichnung }}</a>
-                    <div class="material-hersteller">{{ mat.hersteller_bezeichnung }}</div>
-                  </div>
+                    <a [routerLink]="['/materials', grouped.group[0].id]" class="material-name">{{ grouped.group[0].bezeichnung }}</a>
+                    <div class="material-hersteller">{{ grouped.group[0].hersteller_bezeichnung }}</div>
                   </div>
                 </div>
-              </div>
+              </ng-template>
+
             </ng-container>
+          </div>
 
-            <ng-template #singleMaterial>
-              <div class="material-card">
-                <img *ngIf="grouped.group[0].bild_url" [src]="grouped.group[0].bild_url" alt="Bild" class="material-image" />
-                <div class="material-info">
-                  <a [routerLink]="['/materials', grouped.group[0].id]" class="material-name">{{ grouped.group[0].bezeichnung }}</a>
-                  <div class="material-hersteller">{{ grouped.group[0].hersteller_bezeichnung }}</div>
-                </div>
-              </div>
-            </ng-template>
+          <!-- Deprecated Materialien (nur wenn Toggle aktiviert) -->
+          <div *ngIf="includeDeprecated && separated.deprecated.length > 0" class="deprecated-materials-section">
+            <div class="deprecated-section-header">
+              <mat-icon>archive</mat-icon>
+              <span>Veraltete Materialien</span>
+            </div>
+            
+            <div class="materials-grid deprecated-grid">
+              <ng-container *ngFor="let grouped of groupMaterials(separated.deprecated)">
 
-          </ng-container>
-        </div>
+                <ng-container *ngIf="grouped.group.length > 1; else singleDeprecatedMaterial">
+                  <div class="material-group-wrapper deprecated">
+                    <div class="group-label">Alternative Gruppe</div>
+                    <div class="material-group">
+                      <div *ngFor="let mat of grouped.group" class="material-card deprecated">
+                        <img *ngIf="mat.bild_url" [src]="mat.bild_url" alt="Bild" class="material-image" />
+                        <div class="material-info">
+                          <a [routerLink]="['/materials', mat.id]" class="material-name">
+                            {{ mat.bezeichnung }}
+                            <span class="deprecated-badge">
+                              <mat-icon>archive</mat-icon>
+                              Veraltet
+                            </span>
+                          </a>
+                          <div class="material-hersteller">{{ mat.hersteller_bezeichnung }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <ng-template #singleDeprecatedMaterial>
+                  <div class="material-card deprecated">
+                    <img *ngIf="grouped.group[0].bild_url" [src]="grouped.group[0].bild_url" alt="Bild" class="material-image" />
+                    <div class="material-info">
+                      <a [routerLink]="['/materials', grouped.group[0].id]" class="material-name">
+                        {{ grouped.group[0].bezeichnung }}
+                        <span class="deprecated-badge">
+                          <mat-icon>archive</mat-icon>
+                          Veraltet
+                        </span>
+                      </a>
+                      <div class="material-hersteller">{{ grouped.group[0].hersteller_bezeichnung }}</div>
+                    </div>
+                  </div>
+                </ng-template>
+
+              </ng-container>
+            </div>
+          </div>
+        </ng-container>
 
       </div>
     </ng-container>

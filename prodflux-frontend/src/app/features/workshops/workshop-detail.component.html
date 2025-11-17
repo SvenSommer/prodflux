@@ -17,15 +17,36 @@
 
       <mat-expansion-panel>
         <mat-expansion-panel-header>
-          <mat-panel-title>Aktueller Materialbestand</mat-panel-title>
+          <mat-panel-title>
+            <span>Aktueller Materialbestand</span>
+            <div class="header-toggles" (click)="$event.stopPropagation()">
+              <mat-slide-toggle
+                [checked]="(inventoryService.state$ | async)?.isActive || false"
+                (change)="onInventoryModeToggle()"
+                color="primary"
+                class="inventory-toggle-inline"
+              >
+                Inventur
+              </mat-slide-toggle>
+              <mat-slide-toggle 
+                [(ngModel)]="includeDeprecatedMaterials"
+                (ngModelChange)="onToggleDeprecatedMaterials()"
+                color="accent"
+                class="deprecated-toggle-inline"
+              >
+                Veraltete anzeigen
+              </mat-slide-toggle>
+            </div>
+          </mat-panel-title>
         </mat-expansion-panel-header>
 
-        <!-- Inventur-Steuerung -->
+        <!-- Inventur-Aktionen (nur wenn Inventurmodus aktiv) -->
         <app-inventory-controls
           [inventoryModeActive]="(inventoryService.state$ | async)?.isActive || false"
           [navigationModeActive]="(inventoryService.state$ | async)?.isNavigationMode || false"
           [materialCount]="allMaterials.length"
           [unsavedCount]="getUnsavedInventoryCount()"
+          [showToggle]="false"
           (inventoryModeToggled)="onInventoryModeToggle()"
           (navigationStarted)="onStartInventoryNavigation()"
           (saveAllRequested)="onSaveAllInventoryCorrections()"

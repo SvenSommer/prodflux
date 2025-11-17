@@ -14,9 +14,9 @@ import { MatIconModule } from '@angular/material/icon';
     MatIconModule
   ],
   template: `
-    <div class="inventory-controls">
-      <!-- Inventurmodus Toggle -->
-      <div class="toggle-section">
+    <div class="inventory-controls" *ngIf="showToggle || inventoryModeActive">
+      <!-- Inventurmodus Toggle (nur anzeigen wenn showToggle true) -->
+      <div class="toggle-section" *ngIf="showToggle">
         <mat-slide-toggle
           [checked]="inventoryModeActive"
           (change)="onInventoryModeToggle()"
@@ -127,6 +127,7 @@ export class InventoryControlsComponent {
   @Input() navigationModeActive = false;
   @Input() materialCount = 0;
   @Input() unsavedCount = 0;
+  @Input() showToggle = true; // Kontrolle, ob Toggle angezeigt wird
 
   @Output() inventoryModeToggled = new EventEmitter<void>();
   @Output() navigationStarted = new EventEmitter<void>();

@@ -17,6 +17,7 @@ from .views import (
     material_stock_view,
     material_inventory_correction_view,
     material_products_view,
+    toggle_material_deprecated,
 )
 
 urlpatterns = [
@@ -44,4 +45,7 @@ urlpatterns = [
     path("materials/<int:material_id>/products/",
          material_products_view,
          name="material-products"),
+    path("materials/<int:material_id>/toggle-deprecated/",
+         toggle_material_deprecated,
+         name="toggle-material-deprecated"),
 ]

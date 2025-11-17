@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ProductsService, Product, ProductMaterial, MaterialDependencyResponse } from './products.service';
+import { ProductsService, Product, ProductMaterial } from './products.service';
 import { FormsModule } from '@angular/forms';
 import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
 import { MatCardModule } from '@angular/material/card';
@@ -14,7 +14,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
-import { DeprecateProductDialogComponent, DeprecateProductDialogData, DeprecateProductDialogResult } from './deprecate-product-dialog.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -30,8 +29,7 @@ import { DeprecateProductDialogComponent, DeprecateProductDialogData, DeprecateP
     MatTableModule,
     MatFormFieldModule,
     MatInputModule,
-    MatChipsModule,
-    DeprecateProductDialogComponent
+    MatChipsModule
   ],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss'],
@@ -58,7 +56,7 @@ export class ProductDetailComponent {
 
     this.loadProduct();
 
-    this.materialsService.getMaterialsGrouped().subscribe(materialGroups => {
+    this.materialsService.getMaterialsGrouped(true).subscribe(materialGroups => {
       this.materialGroups = materialGroups;
       const allMaterials = materialGroups.flatMap(g => g.materials);
       this.materialsList = allMaterials;
@@ -184,6 +182,11 @@ export class ProductDetailComponent {
     return mat?.alternatives || [];
   }
 
+  isMaterialDeprecated(materialId: number): boolean {
+    const mat = this.materialsList.find(m => m.id === materialId);
+    return mat?.deprecated || false;
+  }
+
   getMaterialOrAlternativeBildUrl(materialId: number): string | null {
     const material = this.materialsList.find(m => m.id === materialId);
     if (material?.bild_url) {
@@ -202,62 +205,33 @@ export class ProductDetailComponent {
     return null;
   }
 
-  deprecateProduct(): void {
-    if (!this.product) return;
+  toggleDeprecatedStatus(): void {
+    if (!this.product) {
+      return;
+    }
 
-    // Lade Material-Dependencies
-    this.productsService.getProductMaterialDependencies(this.product.id).subscribe({
-      next: (dependencies: MaterialDependencyResponse) => {
-        // Öffne Dialog mit Dependencies-Informationen
-        const dialogRef = this.dialog.open(DeprecateProductDialogComponent, {
-          width: '600px',
-          data: {
-            product: {
-              id: this.product!.id,
-              bezeichnung: this.product!.bezeichnung
-            },
-            dependencies
-          } as DeprecateProductDialogData
-        });
-
-        dialogRef.afterClosed().subscribe((result: DeprecateProductDialogResult | undefined) => {
-          if (result?.confirmed) {
-            this.executeDeprecation(result.deprecateMaterials);
-          }
-        });
-      },
-      error: (error) => {
-        console.error('Fehler beim Laden der Material-Dependencies:', error);
-        this.snackBar.open('Fehler beim Prüfen der Materialabhängigkeiten', 'Schließen', {
-          duration: 5000
-        });
-      }
-    });
-  }
-
-  private executeDeprecation(deprecateMaterials: boolean): void {
-    if (!this.product) return;
-
-    this.productsService.deprecateProductWithMaterials(this.product.id, deprecateMaterials).subscribe({
+    // Direkte API-Aufruf ohne Dialog
+    this.productsService.toggleProductDeprecated(this.product.id).subscribe({
       next: (response) => {
-        // Produkt lokal als deprecated markieren
-        this.product!.deprecated = true;
-
-        let message = `Produkt "${this.product!.bezeichnung}" wurde als veraltet markiert`;
-        if (response.materials_count > 0) {
-          message += ` und ${response.materials_count} Materialien wurden ebenfalls als veraltet markiert`;
-        }
-
-        this.snackBar.open(message, 'Schließen', {
-          duration: 6000
+        this.product!.deprecated = response.product_deprecated;
+        const statusText = response.action === 'deprecated' ? 'als veraltet markiert' : 'wieder aktiviert';
+        this.snackBar.open(`Produkt wurde ${statusText}`, 'Schließen', {
+          duration: 3000
         });
       },
       error: (error) => {
-        console.error('Fehler beim Markieren als veraltet:', error);
-        this.snackBar.open('Fehler beim Markieren des Produkts als veraltet', 'Schließen', {
+        console.error('Fehler beim Ändern des deprecated-Status:', error);
+        this.snackBar.open('Fehler beim Ändern des Status', 'Schließen', {
           duration: 5000
         });
       }
     });
   }
+
+  deprecateProduct(): void {
+    // Diese Methode ist jetzt redundant zu toggleDeprecatedStatus
+    this.toggleDeprecatedStatus();
+  }
+
+
 }

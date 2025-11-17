@@ -33,15 +33,28 @@
 
       <div class="product-actions">
         <button
+          mat-stroked-button
+          [color]="product?.deprecated ? 'primary' : 'warn'"
+          (click)="toggleDeprecatedStatus()"
+          [matTooltip]="product?.deprecated ? 'Produkt wieder aktivieren' : 'Produkt als veraltet markieren'"
+          class="toggle-deprecated-button"
+        >
+          <mat-icon>{{ product?.deprecated ? 'unarchive' : 'archive' }}</mat-icon>
+          {{ product?.deprecated ? 'Wieder aktivieren' : 'Als veraltet markieren' }}
+        </button>
+
+        <!-- Legacy Button (optional, kann entfernt werden) -->
+        <button
           *ngIf="!product?.deprecated"
           mat-stroked-button
           color="warn"
           (click)="deprecateProduct()"
-          matTooltip="Produkt als veraltet markieren"
+          matTooltip="Produkt als veraltet markieren (Legacy)"
           class="deprecate-button"
+          style="display: none;"
         >
           <mat-icon>archive</mat-icon>
-          Als veraltet markieren
+          Als veraltet markieren (Legacy)
         </button>
       </div>
     </div>
@@ -95,8 +108,13 @@
                     alt="Bild"
                     class="material-inline-image"
                   />
-                  <a [routerLink]="['/materials', m.material]">
+                  <a [routerLink]="['/materials', m.material]"
+                     [class.deprecated-material]="isMaterialDeprecated(m.material)">
                     {{ getMaterialBezeichnung(m.material) }}
+                    <span *ngIf="isMaterialDeprecated(m.material)" class="deprecated-badge">
+                      <mat-icon>archive</mat-icon>
+                      Veraltet
+                    </span>
                   </a>
                 </div>
 
@@ -125,8 +143,13 @@
                         alt="Bild Alternative"
                         class="material-inline-image"
                       />
-                      <a [routerLink]="['/materials', altId]">
+                      <a [routerLink]="['/materials', altId]"
+                         [class.deprecated-material]="isMaterialDeprecated(altId)">
                         {{ getMaterialBezeichnung(altId) }}
+                        <span *ngIf="isMaterialDeprecated(altId)" class="deprecated-badge">
+                          <mat-icon>archive</mat-icon>
+                          Veraltet
+                        </span>
                       </a>
                     </div>
                     <span *ngIf="getMaterialHersteller(altId)"
@@ -197,9 +220,14 @@
                     alt="Bild"
                     class="material-inline-image"
                   />
-                  <a [routerLink]="['/materials', mat.id]">{{
-                    mat.bezeichnung
-                  }}</a>
+                  <a [routerLink]="['/materials', mat.id]"
+                     [class.deprecated-material]="mat.deprecated">
+                    {{ mat.bezeichnung }}
+                    <span *ngIf="mat.deprecated" class="deprecated-badge">
+                      <mat-icon>archive</mat-icon>
+                      Veraltet
+                    </span>
+                  </a>
                 </div>
 
                 <!-- Alternativen darstellen -->
@@ -227,9 +255,14 @@
                         alt="Bild Alternative"
                         class="material-inline-image"
                       />
-                      <a [routerLink]="['/materials', altId]">{{
-                        getMaterialBezeichnung(altId)
-                      }}</a>
+                      <a [routerLink]="['/materials', altId]"
+                         [class.deprecated-material]="isMaterialDeprecated(altId)">
+                        {{ getMaterialBezeichnung(altId) }}
+                        <span *ngIf="isMaterialDeprecated(altId)" class="deprecated-badge">
+                          <mat-icon>archive</mat-icon>
+                          Veraltet
+                        </span>
+                      </a>
                     </div>
                     <span *ngIf="getMaterialHersteller(altId)"
                       >– {{ getMaterialHersteller(altId) }}</span

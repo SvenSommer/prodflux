@@ -1,37 +1,90 @@
 <mat-card class="product-list-card">
   <div class="header-row">
     <h2>Produkte</h2>
-    <a routerLink="/products/new">
-      <button mat-raised-button color="primary">
-        <mat-icon>add</mat-icon>
-        Neues Produkt
-      </button>
-    </a>
+    <div class="header-actions">
+      <mat-slide-toggle 
+        [(ngModel)]="includeDeprecated" 
+        (change)="onDeprecatedToggle()"
+        class="deprecated-toggle">
+        Veraltete anzeigen
+      </mat-slide-toggle>
+      <a routerLink="/products/new">
+        <button mat-raised-button color="primary">
+          <mat-icon>add</mat-icon>
+          Neues Produkt
+        </button>
+      </a>
+    </div>
   </div>
 
+  <div *ngIf="products$ | async as products">
+    <ng-container *ngIf="separateProductsByStatus(products) as separated">
+      
+      <!-- Aktive Produkte -->
+      <div class="product-grid" *ngIf="separated.active.length > 0">
+        <mat-card class="product-card" *ngFor="let product of separated.active">
+          <mat-card-header>
+            <mat-card-title>{{ product.bezeichnung }}</mat-card-title>
+            <mat-card-subtitle>Version: {{ product.version }}</mat-card-subtitle>
+            <mat-card-subtitle>Artikelnummer: {{ product.artikelnummer }}</mat-card-subtitle>
+          </mat-card-header>
 
-<div class="product-grid" *ngIf="products$ | async as products">
-  <mat-card class="product-card" *ngFor="let product of products">
-    <mat-card-header>
-      <mat-card-title>{{ product.bezeichnung }}</mat-card-title>
-      <mat-card-subtitle>Version: {{ product.version }}</mat-card-subtitle>
-      <mat-card-subtitle>Artikelnummer: {{ product.artikelnummer }}</mat-card-subtitle>
-    </mat-card-header>
+          <img mat-card-image *ngIf="product.bild" [src]="product.bild" alt="Produktbild" />
 
-    <img mat-card-image *ngIf="product.bild" [src]="product.bild" alt="Produktbild" />
+          <mat-card-actions align="end">
+            <a [routerLink]="['/products', product.id]">
+              <button mat-icon-button matTooltip="Details">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </a>
+            <a [routerLink]="['/products', product.id, 'edit']">
+              <button mat-icon-button matTooltip="Bearbeiten">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </a>
+          </mat-card-actions>
+        </mat-card>
+      </div>
 
-    <mat-card-actions align="end">
-      <a [routerLink]="['/products', product.id]">
-        <button mat-icon-button matTooltip="Details">
-          <mat-icon>visibility</mat-icon>
-        </button>
-      </a>
-      <a [routerLink]="['/products', product.id, 'edit']">
-        <button mat-icon-button matTooltip="Bearbeiten">
-          <mat-icon>edit</mat-icon>
-        </button>
-      </a>
-    </mat-card-actions>
-  </mat-card>
-</div>
+      <!-- Deprecated Produkte (nur wenn Toggle aktiviert) -->
+      <div *ngIf="includeDeprecated && separated.deprecated.length > 0" class="deprecated-products-section">
+        <div class="deprecated-section-header">
+          <mat-icon>archive</mat-icon>
+          <span>Veraltete Produkte</span>
+        </div>
+        
+        <div class="product-grid deprecated-grid">
+          <mat-card class="product-card deprecated" *ngFor="let product of separated.deprecated">
+            <mat-card-header>
+              <mat-card-title>
+                {{ product.bezeichnung }}
+                <span class="deprecated-badge">
+                  <mat-icon>archive</mat-icon>
+                  Veraltet
+                </span>
+              </mat-card-title>
+              <mat-card-subtitle>Version: {{ product.version }}</mat-card-subtitle>
+              <mat-card-subtitle>Artikelnummer: {{ product.artikelnummer }}</mat-card-subtitle>
+            </mat-card-header>
+
+            <img mat-card-image *ngIf="product.bild" [src]="product.bild" alt="Produktbild" />
+
+            <mat-card-actions align="end">
+              <a [routerLink]="['/products', product.id]">
+                <button mat-icon-button matTooltip="Details">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </a>
+              <a [routerLink]="['/products', product.id, 'edit']">
+                <button mat-icon-button matTooltip="Bearbeiten">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </a>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
 </mat-card>

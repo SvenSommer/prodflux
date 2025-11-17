@@ -46,12 +46,10 @@ import { BulkSaveResultDialogComponent, BulkSaveResultData } from './inventory/b
     MatIconModule,
     MatTooltipModule,
     ProductOverviewComponent,
-    // Neue Inventur-Komponenten
+    // Inventur-Komponenten (Dialoge werden programmatisch geöffnet)
     InventoryControlsComponent,
     MaterialInventoryTableComponent,
     InventoryNavigatorComponent,
-    InventoryCorrectionsDialogComponent,
-    BulkSaveResultDialogComponent,
   ],
 })
 export class WorkshopDetailComponent {

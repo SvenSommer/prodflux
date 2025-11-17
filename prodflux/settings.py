@@ -109,12 +109,20 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Frontend statische Dateien
-FRONTEND_ROOT = BASE_DIR / 'prodflux-frontend' / 'dist' / 'prodflux-frontend' / 'browser'
+FRONTEND_ROOT = (BASE_DIR / 'prodflux-frontend' / 'dist' /
+                 'prodflux-frontend' / 'browser')
 
 # Zusätzliche Verzeichnisse für statische Dateien
 STATICFILES_DIRS = [
     FRONTEND_ROOT,
 ] if FRONTEND_ROOT.exists() else []
+
+# WhiteNoise configuration for SPA support
+if RENDER:
+    # Configure WhiteNoise to handle SPA fallback
+    WHITENOISE_INDEX_FILE = True
+    # Don't let WhiteNoise serve index.html at all routes
+    # We handle SPA routing in our views
 
 MEDIA_URL = '/media/'
 if RENDER:

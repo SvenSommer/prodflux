@@ -3,7 +3,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import UserSerializer
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 from .models import Workshop
 from .serializers import WorkshopSerializer
 from django.http import JsonResponse, HttpResponse
@@ -39,20 +38,49 @@ def serve_frontend(request):
     
     # Check if the index.html file exists
     if os.path.exists(index_path):
-        with open(index_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-            response = HttpResponse(content, content_type='text/html')
-            # Add cache headers for better performance
-            response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-            response['Pragma'] = 'no-cache'
-            response['Expires'] = '0'
-            return response
+        try:
+            with open(index_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+                response = HttpResponse(content, content_type='text/html')
+                # Add cache headers for better performance
+                response['Cache-Control'] = ('no-cache, no-store, '
+                                             'must-revalidate')
+                response['Pragma'] = 'no-cache'
+                response['Expires'] = '0'
+                return response
+        except Exception:
+            # In production, return a simple error page
+            return HttpResponse(
+                '<h1>Application Error</h1>'
+                '<p>The application is temporarily unavailable.</p>',
+                content_type='text/html',
+                status=500
+            )
     else:
-        # Fallback for development or if build doesn't exist
+        # In production, always try to serve from static files
+        # This handles the case where static files are served by WhiteNoise
+        from django.contrib.staticfiles import finders
+        
+        # Try to find index.html in static files
+        static_index = finders.find('index.html')
+        if static_index:
+            try:
+                with open(static_index, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    response = HttpResponse(content, content_type='text/html')
+                    response['Cache-Control'] = ('no-cache, no-store, '
+                                                 'must-revalidate')
+                    response['Pragma'] = 'no-cache'
+                    response['Expires'] = '0'
+                    return response
+            except Exception:
+                pass
+        
+        # Fallback
         return HttpResponse(
-            '<h1>Frontend not found</h1>'
-            '<p>Please build the Angular frontend first: '
-            '<code>cd prodflux-frontend && ng build</code></p>',
+            '<h1>Application Loading</h1>'
+            '<p>Please wait while the application loads...</p>'
+            '<script>window.location.href = "/";</script>',
             content_type='text/html',
             status=404
         )

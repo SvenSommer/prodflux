@@ -38,11 +38,17 @@ urlpatterns = [
     path("api/shopbridge/", include("shopbridge.urls")),
 ]
 
-# Only serve frontend in production
+# Serve frontend for SPA routing (production or when explicitly enabled)
+# Always serve frontend in production (DEBUG=False) for deep URLs
 if not settings.DEBUG or os.environ.get('SERVE_FRONTEND') == 'True':
     urlpatterns += [
-        re_path(r'^(?!api/|admin/|static/).*$', serve_frontend, name='frontend'),
+        # Catch all non-API, non-admin, non-static routes for SPA
+        re_path(r'^(?!api/|admin/|static/|media/).*$',
+                serve_frontend, name='frontend'),
     ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )

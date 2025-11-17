@@ -15,6 +15,9 @@ services:
       cd ..
       # Collect static files including built frontend
       python manage.py collectstatic --noinput
+      # Verify frontend files are collected
+      ls -la staticfiles/ || echo "staticfiles directory not found"
+      ls -la staticfiles/index.html || echo "index.html not found in static files"
     startCommand: gunicorn prodflux.wsgi:application --bind=0.0.0.0:$PORT
     envVars:
       - key: DEBUG

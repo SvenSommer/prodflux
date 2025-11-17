@@ -1,0 +1,4 @@
+# SPA Redirects - This file is for static hosting providers like Netlify
+# All routes should fall back to index.html for Angular routing
+
+/*    /index.html   200

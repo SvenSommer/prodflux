@@ -151,7 +151,7 @@ export class ProductsService {
   }
 
   deprecateProductWithMaterials(
-    productId: number, 
+    productId: number,
     deprecateMaterials: boolean = false
   ): Observable<DeprecateProductResponse> {
     return this.http.post<DeprecateProductResponse>(

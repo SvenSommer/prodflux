@@ -2,7 +2,7 @@
   <div class="header-row">
     <h2>Materialien</h2>
     <div class="header-actions">
-      <mat-slide-toggle 
+      <mat-slide-toggle
         [(ngModel)]="includeDeprecated"
         (ngModelChange)="onToggleDeprecated()"
         color="accent"
@@ -10,7 +10,7 @@
       >
         Veraltete anzeigen
       </mat-slide-toggle>
-      
+
       <a routerLink="/materials/new">
         <button mat-raised-button color="primary">
           <mat-icon>add</mat-icon>

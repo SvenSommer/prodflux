@@ -242,7 +242,7 @@ export class ProductDetailComponent {
       next: (response) => {
         // Produkt lokal als deprecated markieren
         this.product!.deprecated = true;
-        
+
         let message = `Produkt "${this.product!.bezeichnung}" wurde als veraltet markiert`;
         if (response.materials_count > 0) {
           message += ` und ${response.materials_count} Materialien wurden ebenfalls als veraltet markiert`;

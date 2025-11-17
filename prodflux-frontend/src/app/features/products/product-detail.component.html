@@ -19,7 +19,7 @@
         <p><strong>Bezeichnung:</strong> {{ product?.bezeichnung }}</p>
         <p><strong>Artikelnummer:</strong> {{ product?.artikelnummer }}</p>
         <p><strong>Version:</strong> {{ product?.version }}</p>
-        
+
         <!-- Deprecated Status -->
         <div class="status-section">
           <mat-chip-set *ngIf="product?.deprecated" class="deprecated-status">
@@ -30,11 +30,11 @@
           </mat-chip-set>
         </div>
       </div>
-      
+
       <div class="product-actions">
-        <button 
+        <button
           *ngIf="!product?.deprecated"
-          mat-stroked-button 
+          mat-stroked-button
           color="warn"
           (click)="deprecateProduct()"
           matTooltip="Produkt als veraltet markieren"

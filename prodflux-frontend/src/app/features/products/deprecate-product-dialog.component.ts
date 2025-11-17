@@ -39,7 +39,7 @@ export interface DeprecateProductDialogResult {
 
     <mat-dialog-content class="dialog-content">
       <p class="product-info">
-        Das Produkt <strong>"{{ data.product.bezeichnung }}"</strong> wird als veraltet markiert 
+        Das Produkt <strong>"{{ data.product.bezeichnung }}"</strong> wird als veraltet markiert
         und erscheint nicht mehr in den Produktlisten.
       </p>
 
@@ -48,14 +48,14 @@ export interface DeprecateProductDialogResult {
           <mat-icon>inventory</mat-icon>
           <h3>Ausschließlich verwendete Materialien</h3>
         </div>
-        
+
         <p class="info-text">
           Die folgenden Materialien werden nur von diesem Produkt verwendet:
         </p>
 
         <div class="materials-list">
-          <div 
-            *ngFor="let material of data.dependencies.exclusive_materials" 
+          <div
+            *ngFor="let material of data.dependencies.exclusive_materials"
             class="material-item"
           >
             <mat-icon class="material-icon">category</mat-icon>
@@ -67,14 +67,14 @@ export interface DeprecateProductDialogResult {
         </div>
 
         <div class="deprecate-checkbox">
-          <mat-checkbox 
+          <mat-checkbox
             [(ngModel)]="deprecateMaterials"
             color="primary"
           >
             Auch diese Materialien als veraltet markieren
           </mat-checkbox>
           <p class="checkbox-hint">
-            Empfohlen: Materialien, die nicht mehr benötigt werden, 
+            Empfohlen: Materialien, die nicht mehr benötigt werden,
             sollten ebenfalls als veraltet markiert werden.
           </p>
         </div>
@@ -85,21 +85,21 @@ export interface DeprecateProductDialogResult {
           <mat-icon>share</mat-icon>
           <h3>Geteilte Materialien</h3>
         </div>
-        
+
         <p class="info-text">
           Diese Materialien werden auch von anderen Produkten verwendet und bleiben aktiv:
         </p>
 
         <div class="materials-list">
-          <div 
-            *ngFor="let material of data.dependencies.shared_materials" 
+          <div
+            *ngFor="let material of data.dependencies.shared_materials"
             class="material-item shared"
           >
             <mat-icon class="material-icon">category</mat-icon>
             <div class="material-details">
               <span class="material-name">{{ material.bezeichnung }}</span>
               <span class="material-usage">
-                {{ material.quantity_per_unit }}x pro Produkt 
+                {{ material.quantity_per_unit }}x pro Produkt
                 ({{ material.other_products_count }} weitere Produkte)
               </span>
             </div>
@@ -117,9 +117,9 @@ export interface DeprecateProductDialogResult {
       <button mat-button (click)="onCancel()">
         Abbrechen
       </button>
-      <button 
-        mat-raised-button 
-        color="warn" 
+      <button
+        mat-raised-button
+        color="warn"
         (click)="onConfirm()"
         class="deprecate-button"
       >

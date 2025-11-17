@@ -10,11 +10,11 @@
   align-items: flex-start;
   gap: 2rem;
   margin-bottom: 1rem;
-  
+
   .product-details {
     flex: 1;
   }
-  
+
   .product-actions {
     flex-shrink: 0;
     display: flex;
@@ -24,12 +24,12 @@
 
 .status-section {
   margin-top: 1rem;
-  
+
   .deprecated-status {
     mat-chip {
       background-color: #ffebee;
       color: #c62828;
-      
+
       mat-icon {
         color: #c62828;
       }
@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  
+
   &:hover {
     background-color: #ffebee;
   }

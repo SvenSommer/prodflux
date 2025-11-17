@@ -2,8 +2,8 @@
   <div class="header-row">
     <h2>Produkte</h2>
     <div class="header-actions">
-      <mat-slide-toggle 
-        [(ngModel)]="includeDeprecated" 
+      <mat-slide-toggle
+        [(ngModel)]="includeDeprecated"
         (change)="onDeprecatedToggle()"
         class="deprecated-toggle">
         Veraltete anzeigen
@@ -19,7 +19,7 @@
 
   <div *ngIf="products$ | async as products">
     <ng-container *ngIf="separateProductsByStatus(products) as separated">
-      
+
       <!-- Aktive Produkte -->
       <div class="product-grid" *ngIf="separated.active.length > 0">
         <mat-card class="product-card" *ngFor="let product of separated.active">
@@ -52,7 +52,7 @@
           <mat-icon>archive</mat-icon>
           <span>Veraltete Produkte</span>
         </div>
-        
+
         <div class="product-grid deprecated-grid">
           <mat-card class="product-card deprecated" *ngFor="let product of separated.deprecated">
             <mat-card-header>

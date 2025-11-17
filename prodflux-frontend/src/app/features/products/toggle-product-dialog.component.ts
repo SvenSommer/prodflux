@@ -40,7 +40,7 @@ export interface ToggleProductDialogResult {
 
     <mat-dialog-content class="dialog-content">
       <p class="product-info" [class.reactivate]="!isDeprecating">
-        Das Produkt <strong>"{{ data.product.bezeichnung }}"</strong> wird 
+        Das Produkt <strong>"{{ data.product.bezeichnung }}"</strong> wird
         {{ isDeprecating ? 'als veraltet markiert und erscheint nicht mehr in den Produktlisten' : 'wieder aktiviert und erscheint in den Produktlisten' }}.
       </p>
 
@@ -360,7 +360,7 @@ export class ToggleProductDialogComponent {
   }
 
   get hasAnyMaterials(): boolean {
-    return this.data.dependencies.exclusive_materials.length > 0 || 
+    return this.data.dependencies.exclusive_materials.length > 0 ||
            this.data.dependencies.shared_materials.length > 0;
   }
 

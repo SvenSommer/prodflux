@@ -59,8 +59,13 @@
       }
 
       img[mat-card-image] {
-        object-fit: cover;
-        max-height: 180px;
+        object-fit: contain;
+        max-height: 200px;
+        height: 200px;
+        width: 100%;
+        background-color: #f9f9f9;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
       }
 
       mat-card-actions {

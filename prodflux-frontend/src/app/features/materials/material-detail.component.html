@@ -29,7 +29,7 @@
               <mat-icon>{{ material?.deprecated ? 'unarchive' : 'archive' }}</mat-icon>
               {{ material?.deprecated ? 'Wieder aktivieren' : 'Als veraltet markieren' }}
             </button>
-            
+
             <!-- Edit Button -->
             <a [routerLink]="['/materials', material?.id, 'edit']">
               <button mat-icon-button class="edit-button" matTooltip="Bearbeiten">

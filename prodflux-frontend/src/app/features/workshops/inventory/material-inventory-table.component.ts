@@ -73,7 +73,7 @@ export interface SaveCorrectionEvent {
           <ng-container matColumnDef="bezeichnung">
             <th mat-header-cell *matHeaderCellDef>Material</th>
             <td mat-cell *matCellDef="let element">
-              <a [routerLink]="['/materials', element.id]" class="material-link" 
+              <a [routerLink]="['/materials', element.id]" class="material-link"
                  [class.deprecated-material]="element.deprecated">
                 {{ element.bezeichnung }}
                 <span *ngIf="element.deprecated" class="deprecated-badge">

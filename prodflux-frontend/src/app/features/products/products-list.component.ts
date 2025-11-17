@@ -36,7 +36,7 @@ interface SeparatedProducts {
 export class ProductsListComponent {
   private productsService = inject(ProductsService);
   includeDeprecated = false;
-  
+
   products$: Observable<Product[]> = this.productsService.getProducts(this.includeDeprecated);
 
   get safeProducts(): Product[] {

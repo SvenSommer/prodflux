@@ -118,6 +118,10 @@ export class WorkshopDetailComponent {
     });
   }
 
+  onStockUpdated() {
+    this.loadStock();
+  }
+
   onToggleDeprecatedMaterials() {
     this.loadStock();
   }

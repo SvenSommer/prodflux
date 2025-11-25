@@ -23,8 +23,7 @@ import { MaterialsService } from '../materials/materials.service';
 import { InventoryService } from './inventory/inventory.service';
 import { InventoryControlsComponent } from './inventory/inventory-controls.component';
 import { MaterialInventoryTableComponent, InventoryCountChangeEvent, SaveCorrectionEvent } from './inventory/material-inventory-table.component';
-import { InventoryNavigatorComponent, NavigationEvent, SaveAndNextEvent } from './inventory/inventory-navigator.component';
-import { InventoryCompletionDialogComponent, InventoryCompletionData } from './inventory/inventory-completion-dialog.component';
+import { InventoryNavigatorComponent } from './inventory/inventory-navigator.component';
 import { InventoryCorrectionsDialogComponent, InventoryCorrectionsDialogData } from './inventory/inventory-corrections-dialog.component';
 import { BulkSaveResultDialogComponent, BulkSaveResultData } from './inventory/bulk-save-result-dialog.component';
 import { MultiOrderDialogComponent } from './multi-order-dialog/multi-order-dialog.component';
@@ -78,6 +77,7 @@ export class WorkshopDetailComponent {
   filteredCoveredRequirements: MaterialRequirement[] = [];
 
   @ViewChild('orderDialog') orderDialog!: TemplateRef<any>;
+  @ViewChild(InventoryNavigatorComponent) inventoryNavigator!: InventoryNavigatorComponent;
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
@@ -195,19 +195,13 @@ export class WorkshopDetailComponent {
 
   // Inventurmodus umschalten
   onInventoryModeToggle(): void {
-    const currentState = this.inventoryService.currentState;
-
-    if (currentState.isActive) {
-      this.inventoryService.resetInventory();
-    } else {
-      // Alle Materialien aus den Gruppen sammeln
-      const allMaterials: any[] = [];
-      this.stock.forEach(group => {
-        group.materials.forEach(material => {
-          allMaterials.push(material);
-        });
-      });
-      this.inventoryService.initializeInventory(allMaterials);
+    if (this.inventoryNavigator) {
+      const currentState = this.inventoryService.currentState;
+      if (currentState.isActive) {
+        this.inventoryNavigator.stopInventoryMode();
+      } else {
+        this.inventoryNavigator.startInventoryMode();
+      }
     }
   }
 
@@ -237,75 +231,8 @@ export class WorkshopDetailComponent {
       return;
     }
 
-    const correctionData = {
-      workshop_id: this.workshopId,
-      inventory_count: inventoryCount,
-      note: `Inventurkorrektur für ${typedEvent.materialName}`
-    };
-
     this.inventoryService.markMaterialAsSaved(typedEvent.materialId);
-
     this.saveInventoryCorrection(typedEvent.materialId, typedEvent.materialName);
-  }
-
-    // Navigation zwischen Materialien
-  onNavigation(event: NavigationEvent): void {
-    // Speichere die aktuelle inventoryCount bevor wir navigieren
-    const currentMaterial = this.getCurrentMaterial();
-    const currentCount = this.getCurrentInventoryCount();
-
-    if (currentMaterial && currentCount !== undefined && currentCount !== null) {
-      this.inventoryService.setInventoryCount(currentMaterial.id, currentCount);
-    }
-
-    if (event.direction === 'next') {
-      this.inventoryService.goToNext();
-    } else {
-      this.inventoryService.goToPrevious();
-    }
-  }
-
-  // Speichern und weiter
-  onSaveAndNext(event: SaveAndNextEvent): void {
-    // Inventurmenge im Service aktualisieren
-    this.inventoryService.setInventoryCount(event.materialId, event.inventoryCount);
-
-    // Korrektur speichern
-    this.saveInventoryCorrection(event.materialId, event.materialName).then(() => {
-      // Zum nächsten Material wechseln
-      if (this.canGoToNextMaterial()) {
-        this.inventoryService.goToNext();
-      } else {
-        this.onFinishInventory();
-      }
-    }).catch((error) => {
-      console.error('Fehler beim Speichern der Inventurkorrektur:', error);
-      alert('Fehler beim Speichern der Inventurkorrektur. Bitte versuchen Sie es erneut.');
-    });
-  }
-
-  // Inventur beenden
-  onFinishInventory(): void {
-    const progress = this.inventoryService.getProgress();
-
-    const dialogData: InventoryCompletionData = {
-      processedCount: progress.processedCount,
-      savedCount: progress.savedCount,
-      totalCount: progress.totalCount
-    };
-
-    const dialogRef = this.dialog.open(InventoryCompletionDialogComponent, {
-      width: '500px',
-      maxWidth: '95vw',
-      data: dialogData,
-      disableClose: false
-    });
-
-    dialogRef.afterClosed().subscribe(() => {
-      this.inventoryService.finishNavigation();
-      // Jetzt Workshop neu laden um alle Änderungen anzuzeigen
-      this.loadWorkshop();
-    });
   }
 
   // Alle Korrekturen speichern
@@ -418,62 +345,9 @@ export class WorkshopDetailComponent {
     return Object.keys(currentState.inventoryCounts).length - currentState.savedMaterialIds.size;
   }
 
-  // Navigation-spezifische Hilfsmethoden
-  getCurrentMaterial(): any | null {
-    const currentState = this.inventoryService.currentState;
-    if (!currentState.isNavigationMode || currentState.allMaterials.length === 0) {
-      return null;
-    }
-    return currentState.allMaterials[currentState.currentMaterialIndex] || null;
-  }
-
-  getCurrentInventoryCount(): number | undefined {
-    const currentMaterial = this.getCurrentMaterial();
-    if (!currentMaterial) return undefined;
-
-    const currentState = this.inventoryService.currentState;
-    return currentState.inventoryCounts[currentMaterial.id];
-  }
-
-  canGoToNextMaterial(): boolean {
-    const currentState = this.inventoryService.currentState;
-    return currentState.currentMaterialIndex < currentState.allMaterials.length - 1;
-  }
-
-  canGoToPreviousMaterial(): boolean {
-    const currentState = this.inventoryService.currentState;
-    return currentState.currentMaterialIndex > 0;
-  }
-
-  onInventoryCountChanged(count: number): void {
-    const currentMaterial = this.getCurrentMaterial();
-    if (currentMaterial) {
-      this.inventoryService.setInventoryCount(currentMaterial.id, count);
-    }
-  }
-
-  // Event-Handler für die neuen Komponenten
-
   onStartInventoryNavigation(): void {
-    try {
-      // Erst prüfen, ob Materialien im Service vorhanden sind
-      const currentState = this.inventoryService.currentState;
-      if (currentState.allMaterials.length === 0) {
-        // Falls nicht, Materialien initialisieren
-        const allMaterials: any[] = [];
-        this.stock.forEach(group => {
-          group.materials.forEach(material => {
-            allMaterials.push(material);
-          });
-        });
-        this.inventoryService.initializeInventory(allMaterials);
-      }
-
-      // Dann Navigation starten
-      this.inventoryService.startNavigation();
-    } catch (error) {
-      console.error('Fehler beim Starten der Inventur-Navigation:', error);
-      alert('Keine Materialien zum Inventarisieren gefunden.');
+    if (this.inventoryNavigator) {
+      this.inventoryNavigator.startInventoryMode();
     }
   }
 

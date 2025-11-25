@@ -1,0 +1,136 @@
+<mat-card class="inventory-navigator" *ngIf="isVisible">
+  <mat-card-content>
+    <!-- Header mit Fortschrittsanzeige -->
+    <div class="progress-section">
+      <div class="progress-text">
+        Material {{ progress.currentIndex + 1 }} von {{ progress.totalCount }}
+        ({{ progress.progressPercentage }}% bearbeitet)
+      </div>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="progress.progressPercentage"
+        class="progress-bar">
+      </mat-progress-bar>
+    </div>
+
+    <!-- Material-Info-Container -->
+    <div class="material-info-container" *ngIf="currentMaterial">
+      <!-- Linke Seite: Material-Details -->
+      <div class="material-left-section">
+        <div class="material-header">
+          <a
+            [routerLink]="['/materials', currentMaterial.id]"
+            class="material-link"
+          >
+            <h4 class="material-name">{{ currentMaterial.bezeichnung }}</h4>
+          </a>
+        </div>
+
+        <!-- Material Bild -->
+        <div class="material-image-container">
+          <a
+            *ngIf="currentMaterial.bild_url"
+            [routerLink]="['/materials', currentMaterial.id]"
+            class="material-image-link"
+          >
+            <img
+              [src]="currentMaterial.bild_url"
+              [alt]="currentMaterial.bezeichnung"
+              class="material-image"
+              (error)="onImageError($event)"
+            />
+          </a>
+          <a
+            *ngIf="!currentMaterial.bild_url"
+            [routerLink]="['/materials', currentMaterial.id]"
+            class="material-image-link"
+          >
+            <div class="no-image-placeholder">
+              <mat-icon>image_not_supported</mat-icon>
+            </div>
+          </a>
+        </div>
+
+        <!-- Bestandsinfo -->
+        <div class="stock-info">
+          <span>Aktueller Bestand: <strong>{{ currentMaterial.bestand }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Rechte Seite: Produktinformationen -->
+      <div class="material-right-section">
+        <div class="product-usage-section">
+          <app-material-usage [materialId]="currentMaterial ? currentMaterial.id : null"></app-material-usage>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventur Eingabe -->
+    <div class="inventory-input-section" *ngIf="currentMaterial">
+      <mat-form-field appearance="outline" class="inventory-input-field">
+        <mat-label>Gezählte Menge</mat-label>
+        <input
+          #inventoryInput
+          matInput
+          type="number"
+          min="0"
+          step="1"
+          inputmode="numeric"
+          [(ngModel)]="inventoryCount"
+          (keydown)="onInputKeyPress($event)"
+          (focus)="onInputFocus($event)"
+          placeholder="Eingeben..."
+        />
+        <mat-hint>Enter = Speichern & Weiter</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="navigation-section">
+      <button
+        mat-button
+        (click)="onNavigate('previous')"
+        [disabled]="!canGoToPrevious"
+        matTooltip="Vorheriges Material (Pfeil Links)"
+      >
+        <mat-icon>chevron_left</mat-icon>
+        Zurück
+      </button>
+
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="onSaveAndNext()"
+        [disabled]="inventoryCount === undefined || inventoryCount < 0"
+        matTooltip="Material speichern und zum nächsten (Enter)"
+        class="save-button"
+      >
+        <mat-icon>save</mat-icon>
+        Speichern & Weiter
+      </button>
+
+      <button
+        mat-button
+        (click)="onNavigate('next')"
+        [disabled]="!canGoToNext"
+        matTooltip="Nächstes Material (Pfeil Rechts)"
+      >
+        Weiter
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+
+    <!-- Inventur beenden -->
+    <div class="finish-section">
+      <button
+        mat-stroked-button
+        color="accent"
+        (click)="onFinishInventory()"
+        matTooltip="Inventur-Navigation beenden"
+      >
+        <mat-icon>done</mat-icon>
+        Inventur beenden
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

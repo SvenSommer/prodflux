@@ -129,7 +129,7 @@ export class ProductsService {
   }
 
   addProductMaterial(data: ProductMaterial): Observable<ProductMaterial> {
-    return this.http.post<ProductMaterial>(`${this.baseUrl}/product-materials/`, data);
+    return this.http.post<ProductMaterial>(`${this.baseUrl}/product-materials/create/`, data);
   }
 
   deleteProductMaterial(id: number) {

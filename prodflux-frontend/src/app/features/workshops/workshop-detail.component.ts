@@ -315,6 +315,14 @@ export class WorkshopDetailComponent {
 
     // Navigation zwischen Materialien
   onNavigation(event: NavigationEvent): void {
+    // Speichere die aktuelle inventoryCount bevor wir navigieren
+    const currentMaterial = this.getCurrentMaterial();
+    const currentCount = this.getCurrentInventoryCount();
+
+    if (currentMaterial && currentCount !== undefined && currentCount !== null) {
+      this.inventoryService.setInventoryCount(currentMaterial.id, currentCount);
+    }
+
     if (event.direction === 'next') {
       this.inventoryService.goToNext();
     } else {
@@ -360,6 +368,8 @@ export class WorkshopDetailComponent {
 
     dialogRef.afterClosed().subscribe(() => {
       this.inventoryService.finishNavigation();
+      // Jetzt Workshop neu laden um alle Änderungen anzuzeigen
+      this.loadWorkshop();
     });
   }
 
@@ -550,7 +560,8 @@ export class WorkshopDetailComponent {
       try {
         const result = await this.materialsService.createInventoryCorrection(materialId, correctionData).toPromise();
         this.inventoryService.markMaterialAsSaved(materialId);
-        await this.loadWorkshop();
+        // Kein loadWorkshop() hier - aktualisiere nur lokal um Page-Refresh zu vermeiden
+        this.updateLocalMaterialStock(materialId, inventoryCount);
       } catch (error: any) {
         // Spezielle Behandlung für "Bestand ist bereits korrekt"
         const errorMessages = error?.error;
@@ -559,12 +570,23 @@ export class WorkshopDetailComponent {
              (errorMessages?.non_field_errors?.includes?.('Der Bestand ist bereits korrekt.')))) {
           // Bestand ist bereits korrekt - behandle als erfolgreich
           this.inventoryService.markMaterialAsSaved(materialId);
-          await this.loadWorkshop();
+          // Kein loadWorkshop() - Bestand ist bereits korrekt
           return;
         }
         throw error;
       }
     }
+  }
+
+  // Aktualisiert den Bestand eines Materials lokal ohne kompletten Reload
+  private updateLocalMaterialStock(materialId: number, newStock: number): void {
+    // Durchsuche alle Kategorien und aktualisiere das Material
+    this.stock.forEach(category => {
+      const material = category.materials.find(m => m.id === materialId);
+      if (material) {
+        material.bestand = newStock;
+      }
+    });
   }
 
 

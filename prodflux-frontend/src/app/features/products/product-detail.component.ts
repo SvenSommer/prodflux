@@ -252,18 +252,18 @@ export class ProductDetailComponent {
     dialogRef.afterClosed().subscribe((result: ToggleProductDialogResult) => {
       if (result?.confirmed) {
         this.productsService.toggleProductDeprecated(
-          this.product!.id, 
+          this.product!.id,
           result.handleMaterials
         ).subscribe({
           next: (response) => {
             this.product!.deprecated = response.product_deprecated;
             const statusText = response.action === 'deprecated' ? 'als veraltet markiert' : 'wieder aktiviert';
             let message = `Produkt wurde ${statusText}`;
-            
+
             if (response.materials_count > 0) {
               message += ` (${response.materials_count} Materialien ${response.action === 'deprecated' ? 'ebenfalls als veraltet markiert' : 'wieder aktiviert'})`;
             }
-            
+
             this.snackBar.open(message, 'Schließen', {
               duration: 4000
             });

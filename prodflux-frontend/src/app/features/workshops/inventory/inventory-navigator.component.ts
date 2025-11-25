@@ -118,8 +118,9 @@ export interface SaveAndNextEvent {
               matInput
               type="number"
               min="0"
+              step="1"
+              inputmode="numeric"
               [(ngModel)]="inventoryCount"
-              (ngModelChange)="onInventoryCountChange($event)"
               (keydown)="onInputKeyPress($event)"
               (focus)="onInputFocus($event)"
               placeholder="Eingeben..."
@@ -505,7 +506,7 @@ export interface SaveAndNextEvent {
               width: 100px;
               height: 100px;
             }
-            
+
             .material-image {
               object-fit: contain;
               background-color: #f5f5f5;
@@ -523,7 +524,7 @@ export interface SaveAndNextEvent {
                   width: 40px;
                   height: 40px;
                 }
-                
+
                 .product-image {
                   object-fit: contain;
                   background-color: #f9f9f9;
@@ -574,7 +575,7 @@ export interface SaveAndNextEvent {
               width: 100px;
               height: 100px;
             }
-            
+
             .material-image {
               object-fit: contain;
               background-color: #f5f5f5;
@@ -611,7 +612,7 @@ export interface SaveAndNextEvent {
             width: 80px;
             height: 80px;
           }
-          
+
           .material-image {
             object-fit: contain;
             background-color: #f5f5f5;
@@ -629,7 +630,7 @@ export interface SaveAndNextEvent {
                 width: 36px;
                 height: 36px;
               }
-              
+
               .product-image {
                 object-fit: contain;
                 background-color: #f9f9f9;
@@ -677,7 +678,7 @@ export interface SaveAndNextEvent {
             width: 80px;
             height: 80px;
           }
-          
+
           .material-image {
             padding: 4px;
           }
@@ -800,6 +801,7 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
   productMaterialUsage: { [productId: number]: number } = {};
   shouldFocus = false;
   private subscription: Subscription = new Subscription();
+  private lastLoadedMaterialId: number | null = null;
 
   constructor(
     private inventoryService: InventoryService,
@@ -812,17 +814,24 @@ export class InventoryNavigatorComponent implements OnInit, OnDestroy, OnChanges
       this.inventoryService.state$.subscribe(() => {
         this.progress = this.inventoryService.getProgress();
         this.shouldFocus = this.isVisible;
-        this.loadRelatedProducts();
+        // Nicht die Produkte laden - das passiert in ngOnChanges wenn Material wechselt
       })
     );
   }
 
   ngOnChanges(): void {
-    // Reload products when current material changes
-    if (this.currentMaterial) {
+    // Reload products only when current material actually changes
+    if (this.currentMaterial && this.currentMaterial.id !== this.lastLoadedMaterialId) {
+      this.lastLoadedMaterialId = this.currentMaterial.id;
       this.loadRelatedProducts();
       // Fokussiert das Input-Feld bei Material-Wechsel
       this.focusInventoryInput();
+    } else if (this.currentMaterial) {
+      // Nur fokussieren, aber keine Produkte neu laden
+      this.focusInventoryInput();
+    } else {
+      // Kein Material mehr ausgewählt
+      this.lastLoadedMaterialId = null;
     }
   }
 

@@ -27,6 +27,7 @@ import { InventoryNavigatorComponent, NavigationEvent, SaveAndNextEvent } from '
 import { InventoryCompletionDialogComponent, InventoryCompletionData } from './inventory/inventory-completion-dialog.component';
 import { InventoryCorrectionsDialogComponent, InventoryCorrectionsDialogData } from './inventory/inventory-corrections-dialog.component';
 import { BulkSaveResultDialogComponent, BulkSaveResultData } from './inventory/bulk-save-result-dialog.component';
+import { MultiOrderDialogComponent } from './multi-order-dialog/multi-order-dialog.component';
 
 @Component({
   selector: 'app-workshop-detail',
@@ -75,10 +76,8 @@ export class WorkshopDetailComponent {
   materialRequirements: MaterialRequirement[] = [];
   filteredMissingRequirements: MaterialRequirement[] = [];
   filteredCoveredRequirements: MaterialRequirement[] = [];
-  multiOrderProducts: { product_id: number; product: string; quantity: number }[] = [];
 
   @ViewChild('orderDialog') orderDialog!: TemplateRef<any>;
-  @ViewChild('multiOrderDialog') multiOrderDialog!: TemplateRef<any>;
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {
@@ -177,84 +176,20 @@ export class WorkshopDetailComponent {
   }
 
   openMultiOrderModal() {
-    console.log('TemplateRef:', this.multiOrderDialog);
-    if (!this.multiOrderDialog) {
-      console.error('❌ multiOrderDialog not available!');
-      return;
-    }
-
-    this.multiOrderProducts = this.productLifecycle.map((p) => ({
-      product_id: p.product_id,
-      product: p.product,
-      quantity: 0,
-    }));
-    this.filteredMissingRequirements = [];
-    this.filteredCoveredRequirements = [];
-    this.dialog.open(this.multiOrderDialog, {
+    this.dialog.open(MultiOrderDialogComponent, {
       width: '95vw',
       maxWidth: 'none',
       height: '95vh',
-      autoFocus: false
+      autoFocus: false,
+      data: {
+        workshopId: this.workshopId,
+        workshopName: this.workshop?.name || '',
+        productLifecycle: this.productLifecycle
+      }
     });
   }
 
-  loadAggregatedRequirements() {
-    const products = this.multiOrderProducts
-      .filter((p) => p.quantity > 0)
-      .map((p) => ({ product_id: p.product_id, quantity: p.quantity }));
 
-    if (!products.length || !this.workshop) {
-      this.materialRequirements = [];
-      this.filteredMissingRequirements = [];
-      this.filteredCoveredRequirements = [];
-      return;
-    }
-
-    this.workshopService
-      .getAggregatedRequirements(this.workshop.id, products)
-      .subscribe((data) => {
-        this.materialRequirements = data;
-        this.filteredMissingRequirements = data.filter(m => m.missing_quantity > 0);
-        this.filteredCoveredRequirements = data.filter(m => m.missing_quantity <= 0);
-      });
-  }
-
-  confirmAggregatedOrder(dialogRef: any) {
-    const werkstattName = this.workshop?.name ?? '[Unbekannte Werkstatt]';
-
-    const bestellteProdukte = this.multiOrderProducts
-      .filter(p => p.quantity > 0)
-      .map(p => `- ${p.product}: ${p.quantity} Stück`)
-      .join('\n');
-
-    const formatTableRow = (m: MaterialRequirement) => {
-      return `${m.bezeichnung.padEnd(75)} | ${String(m.required_quantity).padStart(8)} | ${String(m.ordered_quantity).padStart(8)} | ${String(m.available_quantity).padStart(9)} | ${String(m.missing_quantity).padStart(7)}`;
-    };
-
-    const fehlendeHeader = `Material                                                             | Benötigt | Bestellt | Vorhanden | Fehlend\n` +
-                           `---------------------------------------------------------------------|----------|----------|-----------|--------`;
-
-    const gedeckteHeader = `Material                                                            | Benötigt | Bestellt | Vorhanden | Fehlend\n` +
-                           `--------------------------------------------------------------------|----------|----------|-----------|--------`;
-
-    const fehlendeMaterialien = this.filteredMissingRequirements.map(formatTableRow).join('\n');
-    const gedeckteMaterialien = this.filteredCoveredRequirements.map(formatTableRow).join('\n');
-
-    const body = encodeURIComponent(
-      `Materialbedarf für folgende Produkte:\n\n` +
-      `${bestellteProdukte}\n\n` +
-      `In der Werkstatt "${werkstattName}" werden folgende Materialien benötigt:\n\n` +
-      `${fehlendeHeader}\n${fehlendeMaterialien || '(keine)'}\n\n` +
-      `Folgende Bestände sind bereits gedeckt:\n\n` +
-      `${gedeckteHeader}\n${gedeckteMaterialien || '(keine)'}\n`
-    );
-
-    const subject = encodeURIComponent(`Materialbedarf für Werkstatt ${werkstattName}`);
-    const mailto = `mailto:info@sdlink.de?subject=${subject}&body=${body}`;
-
-    window.location.href = mailto;
-    dialogRef.close();
-  }
 
   // Neue service-basierte Inventur-Methoden
 

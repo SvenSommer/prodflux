@@ -1,0 +1,115 @@
+<h2 mat-dialog-title>Materialbedarf planen und bestellen</h2>
+<mat-dialog-content class="multi-dialog-content">
+
+  <!-- Produktmenge pro Produkt -->
+  <table class="full-width-table">
+    <thead>
+      <tr>
+        <th>Produkt</th>
+        <th>Menge</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let entry of multiOrderProducts">
+        <td>{{ entry.product }}</td>
+        <td>
+          <mat-form-field appearance="outline">
+            <input
+              matInput
+              type="number"
+              min="0"
+              [(ngModel)]="entry.quantity"
+              (ngModelChange)="loadAggregatedRequirements()"
+            />
+          </mat-form-field>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Fehlende Materialien -->
+  <h3 class="mt-4">Fehlende Materialien</h3>
+  <table class="full-width-table mt-2">
+    <thead>
+      <tr>
+        <th>Bild</th>
+        <th>Material</th>
+        <th>Benötigt</th>
+        <th>Bestellt</th>
+        <th>Vorhanden</th>
+        <th>Fehlend</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="!filteredMissingRequirements.length">
+        <td colspan="6" class="text-center text-gray-500 py-2">
+          Keine fehlenden Materialien.
+        </td>
+      </tr>
+      <tr *ngFor="let req of filteredMissingRequirements">
+        <td>
+          <img
+            *ngIf="req.bild_url"
+            [src]="req.bild_url"
+            alt="{{ req.bezeichnung }}"
+            class="table-image small"
+          />
+        </td>
+        <td>{{ req.bezeichnung }}</td>
+        <td>{{ req.required_quantity }}</td>
+        <td>{{ req.ordered_quantity }}</td>
+        <td>{{ req.available_quantity }}</td>
+        <td>{{ req.missing_quantity }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Bereits gedeckte Materialien -->
+  <h3 class="mt-6">Bereits gedeckte Materialien</h3>
+  <table class="full-width-table mt-2">
+    <thead>
+      <tr>
+        <th>Bild</th>
+        <th>Material</th>
+        <th>Benötigt</th>
+        <th>Bestellt</th>
+        <th>Vorhanden</th>
+        <th>Fehlend</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="!filteredCoveredRequirements.length">
+        <td colspan="6" class="text-center text-gray-500 py-2">
+          Keine vollständig gedeckten Materialien.
+        </td>
+      </tr>
+      <tr *ngFor="let req of filteredCoveredRequirements">
+        <td>
+          <img
+            *ngIf="req.bild_url"
+            [src]="req.bild_url"
+            alt="{{ req.bezeichnung }}"
+            class="table-image small"
+          />
+        </td>
+        <td>{{ req.bezeichnung }}</td>
+        <td>{{ req.required_quantity }}</td>
+        <td>{{ req.ordered_quantity }}</td>
+        <td>{{ req.available_quantity }}</td>
+        <td>{{ req.missing_quantity }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Schließen</button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="!filteredMissingRequirements.length"
+    (click)="confirmAggregatedOrder()"
+  >
+    Bestellen
+  </button>
+</mat-dialog-actions>

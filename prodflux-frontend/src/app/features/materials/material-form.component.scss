@@ -1,11 +1,35 @@
 .form-container {
-  max-width: 700px;
+  max-width: 900px;
   margin: 40px auto;
   padding: 0 16px;
 }
 
 .material-form-card {
   padding: 24px;
+}
+
+.material-form {
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #424242;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+    
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  mat-form-field {
+    margin-bottom: 8px;
+  }
+
+  .full-width {
+    width: 100%;
+  }
 }
 
 .image-preview img {

@@ -24,8 +24,10 @@
       class="material-form"
       #form="ngForm"
     >
-      <!-- Formularfelder -->
-      <mat-form-field appearance="fill">
+      <!-- Grunddaten -->
+      <h3 class="section-title">Grunddaten</h3>
+      
+      <mat-form-field appearance="fill" class="full-width">
         <mat-label>Bezeichnung</mat-label>
         <input
           matInput
@@ -34,8 +36,8 @@
           required
         />
       </mat-form-field>
-      <br />
-      <mat-form-field appearance="fill">
+
+      <mat-form-field appearance="fill" class="full-width">
         <mat-label>Hersteller-Bezeichnung</mat-label>
         <input
           matInput
@@ -43,6 +45,19 @@
           name="hersteller_bezeichnung"
         />
       </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Kategorie</mat-label>
+        <mat-select [(ngModel)]="selectedCategoryId" name="category_id">
+          <mat-option [value]="null">Keine Kategorie</mat-option>
+          <mat-option *ngFor="let cat of categories" [value]="cat.id">
+            {{ cat.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Bild -->
+      <h3 class="section-title">Bild</h3>
 
       <div class="image-preview" *ngIf="currentImageUrl || newImagePreview">
         <p class="text-sm mb-1">Bildvorschau:</p>
@@ -58,21 +73,12 @@
         <input type="file" (change)="onFileSelected($event)" accept="image/*" />
       </div>
 
-      <!-- Materialkategorie auswählen -->
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Kategorie</mat-label>
-        <mat-select [(ngModel)]="selectedCategoryId" name="category_id">
-          <mat-option [value]="null">Keine Kategorie</mat-option>
-          <mat-option *ngFor="let cat of categories" [value]="cat.id">
-            {{ cat.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <!-- Lieferanten -->
+      <h3 class="section-title">Lieferanten</h3>
 
-      <!-- Lieferanten auswählen -->
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Lieferanten</mat-label>
-        <mat-select [(ngModel)]="selectedSupplierIds" name="suppliers" multiple>
+        <mat-label>Lieferanten (Mehrfachauswahl möglich)</mat-label>
+        <mat-select [(ngModel)]="selectedSupplierIds" name="suppliers" multiple panelClass="wide-dropdown">
           <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
             {{ supplier.name }}
           </mat-option>
@@ -80,9 +86,9 @@
       </mat-form-field>
 
       <!-- Alternativen verwalten -->
+      <h3 class="section-title">Alternativmaterialien</h3>
+      
       <div class="alternatives-section">
-        <h3>Alternativmaterialien</h3>
-
         <!-- Alternative hinzufügen -->
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Alternative hinzufügen</mat-label>

@@ -2,3 +2,9 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Breiteres Dropdown für mat-select mit wide-dropdown Klasse */
+.wide-dropdown.mat-mdc-select-panel {
+  min-width: 500px !important;
+  max-width: none !important;
+}

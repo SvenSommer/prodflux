@@ -12,6 +12,7 @@ export interface MaterialTableColumn {
 export interface MaterialTableRow {
   materialId: number;
   materialName: string;
+  materialManufacturerName?: string;
   materialImageUrl?: string | null;
   categoryName: string;
   categoryOrder: number;

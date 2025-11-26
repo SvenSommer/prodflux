@@ -129,6 +129,7 @@ export class OrderFormComponent {
         this.materialTableRows.push({
           materialId: mat.id,
           materialName: mat.bezeichnung,
+          materialManufacturerName: mat.hersteller_bezeichnung,
           materialImageUrl: mat.bild_url,
           categoryName: group?.category_name || 'Ohne Kategorie',
           categoryOrder: mat.category?.order ?? 9999,

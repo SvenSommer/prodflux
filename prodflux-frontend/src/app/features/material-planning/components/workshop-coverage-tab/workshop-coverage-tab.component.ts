@@ -41,6 +41,7 @@ export class WorkshopCoverageTabComponent implements OnChanges {
         materialId: row.materialId,
         materialName: row.materialName,
         materialImageUrl: material?.bild_url || null,
+        materialManufacturerName: material?.hersteller_bezeichnung,
         categoryName: material?.category?.name || 'Ohne Kategorie',
         categoryOrder: material?.category?.order ?? 9999,
         data: row

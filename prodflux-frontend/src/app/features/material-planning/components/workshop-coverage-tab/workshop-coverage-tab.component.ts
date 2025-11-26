@@ -1,6 +1,5 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { WorkshopCoverage } from '../../models/planning/planning-result.models';
 import { Workshop } from '../../models/api/workshop.model';
@@ -23,7 +22,7 @@ interface WorkshopColumnData {
 @Component({
   selector: 'app-workshop-coverage-tab',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatTableModule, MaterialTableComponent],
+  imports: [CommonModule, MatTableModule, MaterialTableComponent],
   templateUrl: './workshop-coverage-tab.component.html',
   styleUrl: './workshop-coverage-tab.component.scss'
 })

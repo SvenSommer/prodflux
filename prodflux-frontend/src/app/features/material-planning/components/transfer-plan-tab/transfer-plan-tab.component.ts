@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import {
@@ -27,7 +26,7 @@ interface TransferPlanRowVm {
 @Component({
   selector: 'app-transfer-plan-tab',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatTableModule, MatButtonModule, MaterialTableComponent],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MaterialTableComponent],
   templateUrl: './transfer-plan-tab.component.html',
   styleUrl: './transfer-plan-tab.component.scss'
 })

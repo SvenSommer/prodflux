@@ -9,11 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { debounceTime } from 'rxjs';
 import { WorkshopProductTarget } from '../models/workshop-product-target';
-
-interface ProductOption {
-  id: number;
-  label: string;
-}
+import { ProductSelectComponent, ProductOption } from '../../../shared/components/product-select/product-select.component';
 
 interface WorkshopOption {
   id: number;
@@ -31,7 +27,8 @@ interface WorkshopOption {
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    MatTableModule
+    MatTableModule,
+    ProductSelectComponent
   ],
   templateUrl: './material-planner-targets-form.component.html',
   styleUrl: './material-planner-targets-form.component.scss'
@@ -61,11 +58,6 @@ export class MaterialPlannerTargetsFormComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    // Use provided products or fall back to dummy data
-    if (!this.products || this.products.length === 0) {
-      this.products = this.dummyProducts;
-    }
-
     // Add initial row if workshops are already available
     this.addInitialRowIfNeeded();
 

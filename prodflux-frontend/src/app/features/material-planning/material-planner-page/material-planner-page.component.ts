@@ -21,11 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
-
-interface ProductOption {
-  id: number;
-  label: string;
-}
+import { ProductOption } from '../../../shared/components/product-select/product-select.component';
 
 interface WorkshopOption {
   id: number;
@@ -79,7 +75,8 @@ export class MaterialPlannerPageComponent implements OnInit {
     this.productsForForm$ = this.planningData$.pipe(
       map(data => data.products.map(p => ({
         id: p.id,
-        label: `${p.bezeichnung} (${p.artikelnummer})`
+        label: `${p.bezeichnung} (${p.artikelnummer})`,
+        imageUrl: p.bild_url || null
       })))
     );
 

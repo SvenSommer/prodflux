@@ -1,0 +1,40 @@
+<mat-form-field [appearance]="appearance" class="product-select-field">
+  <mat-label>{{ label }}</mat-label>
+  <mat-select
+    [value]="value"
+    (selectionChange)="onValueChange($event.value)"
+    [disabled]="disabled"
+    [required]="required"
+    [placeholder]="placeholder">
+
+    <!-- Custom trigger to show selected product with image -->
+    <mat-select-trigger>
+      @if (getSelectedProduct(); as product) {
+        <div class="product-trigger">
+          @if (product.imageUrl) {
+            <img [src]="product.imageUrl" [alt]="product.label" class="product-image-small">
+          } @else {
+            <div class="product-image-placeholder-small">
+              <span>📦</span>
+            </div>
+          }
+          <span class="product-label">{{ product.label }}</span>
+        </div>
+      }
+    </mat-select-trigger>
+
+    <!-- Options with images -->
+    <mat-option *ngFor="let product of products" [value]="product.id">
+      <div class="product-option">
+        @if (product.imageUrl) {
+          <img [src]="product.imageUrl" [alt]="product.label" class="product-image">
+        } @else {
+          <div class="product-image-placeholder">
+            <span>📦</span>
+          </div>
+        }
+        <span class="product-name">{{ product.label }}</span>
+      </div>
+    </mat-option>
+  </mat-select>
+</mat-form-field>

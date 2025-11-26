@@ -1,0 +1,241 @@
+.suppliers-management-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.suppliers-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  .card-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    background-color: #fafafa;
+  }
+
+  .card-title {
+    margin: 0;
+  }
+
+  .title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .title-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 500;
+    color: #1976d2;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  mat-card-content {
+    padding: 0;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.suppliers-table {
+  width: 100%;
+  background-color: white;
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+    padding: 16px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  .supplier-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+
+    .supplier-icon {
+      color: #1976d2;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .supplier-url {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #1976d2;
+    text-decoration: none;
+    transition: color 0.2s;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover {
+      color: #1565c0;
+      text-decoration: underline;
+    }
+
+    .link-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .kundenkonto {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .account-icon {
+      color: rgba(0, 0, 0, 0.54);
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .no-data {
+    color: rgba(0, 0, 0, 0.38);
+    font-style: italic;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+
+    &.active {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+
+      mat-icon {
+        color: #4caf50;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    &.inactive {
+      background-color: #ffebee;
+      color: #c62828;
+
+      mat-icon {
+        color: #f44336;
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+
+    button {
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.54);
+
+  mat-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+    color: rgba(0, 0, 0, 0.26);
+    margin-bottom: 24px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    font-size: 14px;
+  }
+
+  button mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    color: white;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .suppliers-management-container {
+    padding: 16px;
+  }
+
+  .title-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .suppliers-table {
+    th, td {
+      padding: 12px 8px;
+      font-size: 13px;
+    }
+
+    .supplier-url {
+      max-width: 150px;
+    }
+  }
+}

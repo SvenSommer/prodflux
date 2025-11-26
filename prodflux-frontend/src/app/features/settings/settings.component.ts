@@ -10,14 +10,10 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog } from '@angular/material/dialog';
 import { WorkshopsService, Workshop } from './workshop.services';
 import { VersionsService, ProductVersion } from './versions.service';
 import { VariantsService, ProductVariant } from './variants.service';
 import { MaterialCategoriesService, MaterialCategory } from './material-categories.service';
-import { SuppliersService } from './suppliers.service';
-import { Supplier } from './models/supplier.model';
-import { SupplierDialogComponent, SupplierDialogData } from '../../shared/components/supplier-dialog/supplier-dialog.component';
 
 @Component({
   selector: 'app-settings',
@@ -43,8 +39,6 @@ export class SettingsComponent {
   private versionsService = inject(VersionsService);
   private variantsService = inject(VariantsService);
   private materialCategoriesService = inject(MaterialCategoriesService);
-  private suppliersService = inject(SuppliersService);
-  private dialog = inject(MatDialog);
 
   workshops: Workshop[] = [];
   newWorkshopName = '';
@@ -65,8 +59,6 @@ export class SettingsComponent {
   newVariantDescription = '';
   editingVariant: ProductVariant | null = null;
 
-  suppliers: Supplier[] = [];
-
   ngOnInit() {
     this.load();
   }
@@ -76,7 +68,6 @@ export class SettingsComponent {
     this.versionsService.getAll().subscribe(v => this.versions = v);
     this.variantsService.getAll().subscribe(v => this.variants = v);
     this.materialCategoriesService.getAll().subscribe(mc => this.materialCategories = mc);
-    this.suppliersService.getAll().subscribe(s => this.suppliers = s);
   }
 
   saveWorkshop() {
@@ -192,31 +183,6 @@ export class SettingsComponent {
   deleteVariant(id: number) {
     if (confirm('Wirklich löschen?')) {
       this.variantsService.delete(id).subscribe(() => this.load());
-    }
-  }
-
-  openSupplierDialog(supplier?: Supplier) {
-    const dialogData: SupplierDialogData = {
-      supplier: supplier
-    };
-
-    const dialogRef = this.dialog.open(SupplierDialogComponent, {
-      width: '600px',
-      data: dialogData,
-      disableClose: false
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Dialog wurde mit gespeichertem Lieferanten geschlossen
-        this.load();
-      }
-    });
-  }
-
-  deleteSupplier(id: number) {
-    if (confirm('Wirklich löschen?')) {
-      this.suppliersService.delete(id).subscribe(() => this.load());
     }
   }
 }

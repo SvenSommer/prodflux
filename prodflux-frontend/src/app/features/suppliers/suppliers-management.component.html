@@ -1,0 +1,123 @@
+<div class="suppliers-management-container">
+  <!-- Breadcrumb Navigation -->
+  <app-breadcrumb [links]="getBreadcrumbLinks()"></app-breadcrumb>
+
+  <mat-card class="suppliers-card">
+    <mat-card-header class="card-header">
+      <mat-card-title class="card-title">
+        <div class="title-row">
+          <div class="title-with-icon">
+            <mat-icon>business</mat-icon>
+            <span>Lieferantenverwaltung</span>
+          </div>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="openSupplierDialog()"
+            matTooltip="Neuen Lieferanten anlegen"
+          >
+            <mat-icon>add</mat-icon>
+            Neuer Lieferant
+          </button>
+        </div>
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="suppliers" class="suppliers-table mat-elevation-z2">
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="supplier-name">
+                <mat-icon class="supplier-icon">business</mat-icon>
+                {{ supplier.name }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- URL Column -->
+          <ng-container matColumnDef="url">
+            <th mat-header-cell *matHeaderCellDef>URL</th>
+            <td mat-cell *matCellDef="let supplier">
+              <a
+                *ngIf="supplier.url"
+                [href]="supplier.url"
+                target="_blank"
+                class="supplier-url"
+                matTooltip="In neuem Tab öffnen"
+              >
+                <mat-icon class="link-icon">link</mat-icon>
+                {{ supplier.url }}
+              </a>
+              <span *ngIf="!supplier.url" class="no-data">—</span>
+            </td>
+          </ng-container>
+
+          <!-- Kundenkonto Column -->
+          <ng-container matColumnDef="kundenkonto">
+            <th mat-header-cell *matHeaderCellDef>Kundenkonto</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div *ngIf="supplier.kundenkonto" class="kundenkonto">
+                <mat-icon class="account-icon">account_circle</mat-icon>
+                {{ supplier.kundenkonto }}
+              </div>
+              <span *ngIf="!supplier.kundenkonto" class="no-data">—</span>
+            </td>
+          </ng-container>
+
+          <!-- Active Status Column -->
+          <ng-container matColumnDef="is_active">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="status-badge" [class.active]="supplier.is_active" [class.inactive]="!supplier.is_active">
+                <mat-icon>{{ supplier.is_active ? 'check_circle' : 'cancel' }}</mat-icon>
+                <span>{{ supplier.is_active ? 'Aktiv' : 'Inaktiv' }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="aktionen">
+            <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="action-buttons">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="openSupplierDialog(supplier)"
+                  matTooltip="Bearbeiten"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="deleteSupplier(supplier)"
+                  matTooltip="Löschen"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+
+        <!-- Empty State -->
+        <div *ngIf="suppliers.length === 0" class="empty-state">
+          <mat-icon>business_center</mat-icon>
+          <h3>Keine Lieferanten vorhanden</h3>
+          <p>Legen Sie Ihren ersten Lieferanten an, um zu beginnen.</p>
+          <button mat-raised-button color="primary" (click)="openSupplierDialog()">
+            <mat-icon>add</mat-icon>
+            Ersten Lieferanten anlegen
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

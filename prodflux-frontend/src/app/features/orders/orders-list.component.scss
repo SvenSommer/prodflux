@@ -91,4 +91,13 @@
     color: #ff9800;
     cursor: help;
   }
+
+  .materials-list {
+    font-size: 0.9rem;
+    color: #555;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

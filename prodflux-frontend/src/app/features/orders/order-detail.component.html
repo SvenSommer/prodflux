@@ -23,9 +23,17 @@
 
     <p><strong>Bestellt am:</strong> {{ formatDate(order.bestellt_am) }}</p>
     <p><strong>Angekommen am:</strong> {{ formatDate(order.angekommen_am) }}</p>
-    <p>
-      <strong>Versandkosten:</strong> {{ formatCurrency(order.versandkosten) }}
-    </p>
+    <div class="versandkosten-section">
+      <p>
+        <strong>Versandkosten (netto):</strong> {{ formatCurrency(order.versandkosten) }}
+      </p>
+      <p>
+        <strong>MwSt.-Satz:</strong> {{ order.versandkosten_mwst_satz ?? 19 }}%
+      </p>
+      <p>
+        <strong>Versandkosten (brutto):</strong> {{ formatCurrency(calculateBrutto(order.versandkosten ?? 0, order.versandkosten_mwst_satz)) }}
+      </p>
+    </div>
     <p><strong>Notiz:</strong> {{ order.notiz || "—" }}</p>
     <p *ngIf="order.is_historical" class="historical-notice">
       <mat-icon class="historical-icon">history</mat-icon>

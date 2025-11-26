@@ -22,10 +22,13 @@
         <input matInput type="date" [(ngModel)]="bestellt_am" name="bestellt_am" required />
       </mat-form-field>
 
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Versandkosten (€)</mat-label>
-        <input matInput type="number" min="0" step="0.01" [(ngModel)]="versandkosten" name="versandkosten" required />
-      </mat-form-field>
+      <div class="full-width">
+        <label class="versand-label">Versandkosten</label>
+        <app-price-input
+          [(ngModel)]="versandkosten"
+          name="versandkosten"
+        ></app-price-input>
+      </div>
 
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Notiz</mat-label>

@@ -380,8 +380,8 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'supplier', 'order_number', 'bestellt_am',
-            'angekommen_am', 'versandkosten', 'notiz', 'is_historical',
-            'items'
+            'angekommen_am', 'versandkosten', 'versandkosten_mwst_satz',
+            'notiz', 'is_historical', 'items'
         ]
 
     def create(self, validated_data):

@@ -99,7 +99,15 @@ class Order(models.Model):
         help_text='Bestellnummer (z.B. ORD-2025-001)'
     )
     bestellt_am = models.DateField()
-    versandkosten = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    versandkosten = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    versandkosten_mwst_satz = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=19.00,
+        help_text='MwSt.-Satz für Versandkosten in Prozent'
+    )
     notiz = models.TextField(blank=True)
     is_historical = models.BooleanField(
         default=False,

@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { OrdersService, Order } from './orders.service';
 import { MaterialCategoryGroup, MaterialsService } from '../materials/materials.service';
+import { SuppliersService } from '../settings/suppliers.service';
+import { Supplier } from '../../shared/models/supplier.model';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,17 +28,25 @@ import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.componen
 })
 export class OrdersListComponent {
   private materialsService = inject(MaterialsService);
+  private suppliersService = inject(SuppliersService);
   private router = inject(Router);
   private ordersService = inject(OrdersService);
 
   orders: Order[] = [];
   materialsMap = new Map<number, string>();
+  suppliersMap = new Map<number, string>();
 
   materialGroups: MaterialCategoryGroup[] = [];
 
   ngOnInit() {
     this.ordersService.getAll().subscribe(list => {
       this.orders = list;
+    });
+
+    this.suppliersService.getAll().subscribe(suppliers => {
+      suppliers.forEach(s => {
+        this.suppliersMap.set(s.id, s.name);
+      });
     });
 
     this.materialsService.getMaterialsGrouped().subscribe(groups => {
@@ -99,5 +109,31 @@ export class OrdersListComponent {
   getTotalQuantityByCategory(items: Order['items'], categoryId: number | null): number {
     const categoryItems = this.getItemsByCategory(items, categoryId);
     return categoryItems.reduce((sum, item) => sum + parseFloat(item.quantity as any), 0);
+  }
+
+  getSupplierName(supplierId: number): string {
+    return this.suppliersMap.get(supplierId) || `#${supplierId}`;
+  }
+
+  calculateTotalCost(order: Order): number {
+    const itemsCost = order.items.reduce((sum, item) => {
+      const netto = item.preis_pro_stueck * item.quantity;
+      const mwst = (item.mwst_satz ?? 19) / 100;
+      return sum + (netto * (1 + mwst));
+    }, 0);
+
+    const versandNetto = order.versandkosten ?? 0;
+    const versandMwst = (order.versandkosten_mwst_satz ?? 19) / 100;
+    const versandBrutto = versandNetto * (1 + versandMwst);
+
+    return itemsCost + versandBrutto;
+  }
+
+  getMaterialsList(items: Order['items']): string {
+    if (items.length === 0) return '—';
+    if (items.length > 3) {
+      return `${items.length} Materialien`;
+    }
+    return items.map(i => `${i.quantity}× ${this.getMaterialName(i.material)}`).join(', ');
   }
 }

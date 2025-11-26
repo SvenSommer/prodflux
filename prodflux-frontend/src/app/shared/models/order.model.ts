@@ -20,6 +20,7 @@ export interface Order {
   bestellt_am: string;
   angekommen_am: string | null; // read-only, derived from deliveries
   versandkosten: number | null;
+  versandkosten_mwst_satz?: number;
   notiz?: string;
   is_historical: boolean;
   items: OrderItem[];
@@ -30,6 +31,7 @@ export interface CreateOrUpdateOrder {
   order_number?: string; // optional, auto-generated if empty
   bestellt_am: string;
   versandkosten: number | null;
+  versandkosten_mwst_satz?: number;
   notiz?: string;
   is_historical?: boolean;
   items: OrderItem[];

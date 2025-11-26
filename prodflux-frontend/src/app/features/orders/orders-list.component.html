@@ -25,6 +25,12 @@
         <td mat-cell *matCellDef="let o">{{ o.id }}</td>
       </ng-container>
 
+      <!-- Supplier -->
+      <ng-container matColumnDef="supplier">
+        <th mat-header-cell *matHeaderCellDef>Lieferant</th>
+        <td mat-cell *matCellDef="let o">{{ getSupplierName(o.supplier) }}</td>
+      </ng-container>
+
       <!-- Bestellt am -->
       <ng-container matColumnDef="bestellt_am">
         <th mat-header-cell *matHeaderCellDef>Bestellt am</th>
@@ -53,6 +59,24 @@
         <td mat-cell *matCellDef="let o">{{ o.notiz || "—" }}</td>
       </ng-container>
 
+      <!-- Materialien -->
+      <ng-container matColumnDef="materials">
+        <th mat-header-cell *matHeaderCellDef>Materialien</th>
+        <td mat-cell *matCellDef="let o">
+          <div class="materials-list">
+            {{ getMaterialsList(o.items) }}
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Gesamtkosten -->
+      <ng-container matColumnDef="total_cost">
+        <th mat-header-cell *matHeaderCellDef>Gesamtkosten</th>
+        <td mat-cell *matCellDef="let o">
+          <strong>{{ formatCurrency(calculateTotalCost(o)) }}</strong>
+        </td>
+      </ng-container>
+
       <!-- Versandkosten -->
       <ng-container matColumnDef="versandkosten">
         <th mat-header-cell *matHeaderCellDef>Versandkosten</th>
@@ -61,32 +85,17 @@
         </td>
       </ng-container>
 
-<!-- Materialien (kategorisiert) -->
-<ng-container matColumnDef="items">
-  <th mat-header-cell *matHeaderCellDef>Materialien</th>
-  <td mat-cell *matCellDef="let o">
-    <div class="materials-preview">
-      <ng-container *ngFor="let group of materialGroups">
-        <ng-container *ngIf="group.category_id !== null && getItemsByCategory(o.items, group.category_id!).length > 0">
-          <div class="material-category-summary">
-            {{ group.category_name }}: {{ getTotalQuantityByCategory(o.items, group.category_id!) }} Materialien
-          </div>
-        </ng-container>
-      </ng-container>
-    </div>
-  </td>
-</ng-container>
-
       <tr
         mat-header-row
         *matHeaderRowDef="[
           'id',
+          'supplier',
           'bestellt_am',
           'angekommen_am',
           'is_historical',
-          'notiz',
-          'versandkosten',
-          'items'
+          'materials',
+          'total_cost',
+          'notiz'
         ]"
       ></tr>
       <tr
@@ -95,12 +104,13 @@
           let row;
           columns: [
             'id',
+            'supplier',
             'bestellt_am',
             'angekommen_am',
             'is_historical',
-            'notiz',
-            'versandkosten',
-            'items'
+            'materials',
+            'total_cost',
+            'notiz'
           ]
         "
         (click)="navigateToDetail(row.id)"

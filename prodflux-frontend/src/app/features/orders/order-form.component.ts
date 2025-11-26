@@ -49,7 +49,7 @@ export class OrderFormComponent {
   supplier: number | null = null;
   order_number: string = '';
   bestellt_am: string = '';
-  versandkosten: number = 0;
+  versandkosten: PriceData = { netto: 0, mwst_satz: 19 };
   notiz: string = '';
   is_historical: boolean = false;
 
@@ -116,7 +116,10 @@ export class OrderFormComponent {
           this.supplier = order.supplier;
           this.order_number = order.order_number || '';
           this.bestellt_am = order.bestellt_am;
-          this.versandkosten = order.versandkosten ?? 0;
+          this.versandkosten = {
+            netto: order.versandkosten ?? 0,
+            mwst_satz: order.versandkosten_mwst_satz ?? 19
+          };
           this.notiz = order.notiz || '';
           this.is_historical = order.is_historical || false;
 
@@ -167,7 +170,8 @@ export class OrderFormComponent {
       supplier: this.supplier,
       order_number: this.order_number || undefined,
       bestellt_am: this.bestellt_am,
-      versandkosten: this.versandkosten,
+      versandkosten: this.versandkosten.netto,
+      versandkosten_mwst_satz: this.versandkosten.mwst_satz,
       notiz: this.notiz,
       is_historical: this.is_historical,
       items

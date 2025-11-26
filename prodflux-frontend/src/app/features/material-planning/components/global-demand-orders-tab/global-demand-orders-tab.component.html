@@ -1,0 +1,114 @@
+<div class="global-demand-orders-container">
+  @if (rows.length === 0) {
+    <div class="empty-state">
+      <p>Noch kein Plan berechnet.</p>
+      <p class="hint">Erfassen Sie Produktionsziele und klicken Sie auf "Plan berechnen".</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <table mat-table [dataSource]="rows" class="demand-table">
+        <!-- Material Column -->
+        <ng-container matColumnDef="material">
+          <th mat-header-cell *matHeaderCellDef>Material</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="material-info">
+              <span class="material-name">{{ getMaterialName(row.materialId) }}</span>
+              <span class="material-order-number">{{ getMaterialOrderNumber(row.materialId) }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Total Required Column -->
+        <ng-container matColumnDef="totalRequired">
+          <th mat-header-cell *matHeaderCellDef>Gesamtbedarf</th>
+          <td mat-cell *matCellDef="let row">{{ row.totalRequired | number:'1.0-2' }}</td>
+        </ng-container>
+
+        <!-- Total Stock Column -->
+        <ng-container matColumnDef="totalStock">
+          <th mat-header-cell *matHeaderCellDef>Gesamtbestand</th>
+          <td mat-cell *matCellDef="let row">{{ row.totalStock | number:'1.0-2' }}</td>
+        </ng-container>
+
+        <!-- Open Orders Column -->
+        <ng-container matColumnDef="openOrders">
+          <th mat-header-cell *matHeaderCellDef>Offene Bestellungen</th>
+          <td mat-cell *matCellDef="let row">{{ row.openOrders | number:'1.0-2' }}</td>
+        </ng-container>
+
+        <!-- Total Available Column -->
+        <ng-container matColumnDef="totalAvailable">
+          <th mat-header-cell *matHeaderCellDef>Verfügbar gesamt</th>
+          <td mat-cell *matCellDef="let row">{{ row.totalAvailable | number:'1.0-2' }}</td>
+        </ng-container>
+
+        <!-- Shortage Column -->
+        <ng-container matColumnDef="shortage">
+          <th mat-header-cell *matHeaderCellDef>Fehlmenge</th>
+          <td mat-cell *matCellDef="let row" [class.shortage]="row.shortage > 0">
+            {{ row.shortage | number:'1.0-2' }}
+          </td>
+        </ng-container>
+
+        <!-- Suggested Order Column -->
+        <ng-container matColumnDef="suggestedOrder">
+          <th mat-header-cell *matHeaderCellDef>Vorgeschlagene Bestellung</th>
+          <td mat-cell *matCellDef="let row" [class.suggested-order]="row.suggestedOrderToCentral > 0">
+            {{ row.suggestedOrderToCentral | number:'1.0-2' }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <!-- Order Proposal Section -->
+    @if (ordersToPlace.length > 0) {
+      <div class="order-proposal-section">
+        <button mat-raised-button color="accent" type="button" (click)="toggleOrderProposal()">
+          {{ showOrderProposal ? 'Bestellungsvorschlag ausblenden' : 'Bestellungsvorschlag anzeigen' }}
+        </button>
+
+        @if (showOrderProposal) {
+          <div class="order-proposal-content">
+            <h4>Bestellungsvorschlag (nach Rauen)</h4>
+            <p class="proposal-hint">
+              Folgende Materialien sollten bestellt werden:
+            </p>
+
+            <table mat-table [dataSource]="ordersToPlace" class="proposal-table">
+              <ng-container matColumnDef="material">
+                <th mat-header-cell *matHeaderCellDef>Material</th>
+                <td mat-cell *matCellDef="let row">
+                  <div>{{ getMaterialName(row.materialId) }}</div>
+                  <div class="order-number">{{ getMaterialOrderNumber(row.materialId) }}</div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Menge</th>
+                <td mat-cell *matCellDef="let row">{{ row.suggestedOrderToCentral | number:'1.0-2' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="price">
+                <th mat-header-cell *matHeaderCellDef>Preis/Einheit</th>
+                <td mat-cell *matCellDef="let row">
+                  <span class="placeholder-text">1.00 € (Backend TODO)</span>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['material', 'quantity', 'price']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['material', 'quantity', 'price'];"></tr>
+            </table>
+
+            <div class="backend-note">
+              <strong>Backend TODO:</strong> Preis/Preis_pro_stueck ist noch nicht im Planning-Flow integriert.
+              Später: POST <code>/api/orders/</code> mit OrderRequest (workshop = Rauen, items[] …).
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

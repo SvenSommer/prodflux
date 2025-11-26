@@ -1,0 +1,83 @@
+<div class="targets-form-container">
+  <div class="header">
+    <h3>Produktziele (nach Werkstatt)</h3>
+    <button mat-raised-button color="primary" type="button" (click)="addTarget()">
+      <mat-icon>add</mat-icon>
+      Zeile hinzufügen
+    </button>
+  </div>
+
+  <form [formGroup]="form">
+    <table mat-table [dataSource]="dataSource" class="targets-table" formArrayName="targets">
+      <!-- Workshop Column -->
+      <ng-container matColumnDef="workshop">
+        <th mat-header-cell *matHeaderCellDef>Werkstatt</th>
+        <td mat-cell *matCellDef="let control; let i = index" [formGroupName]="i">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Werkstatt wählen</mat-label>
+            <mat-select formControlName="workshopId" required>
+              <mat-option *ngFor="let workshop of workshops" [value]="workshop.id">
+                {{ workshop.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="control.get('workshopId')?.hasError('required')">
+              Werkstatt ist erforderlich
+            </mat-error>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <!-- Product Column -->
+      <ng-container matColumnDef="product">
+        <th mat-header-cell *matHeaderCellDef>Produkt</th>
+        <td mat-cell *matCellDef="let control; let i = index" [formGroupName]="i">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Produkt wählen</mat-label>
+            <mat-select formControlName="productId" required>
+              <mat-option *ngFor="let product of availableProducts" [value]="product.id">
+                {{ product.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="control.get('productId')?.hasError('required')">
+              Produkt ist erforderlich
+            </mat-error>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <!-- Quantity Column -->
+      <ng-container matColumnDef="quantity">
+        <th mat-header-cell *matHeaderCellDef>Menge</th>
+        <td mat-cell *matCellDef="let control; let i = index" [formGroupName]="i">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Menge</mat-label>
+            <input matInput type="number" formControlName="quantity" required min="0">
+            <mat-error *ngIf="control.get('quantity')?.hasError('required')">
+              Menge ist erforderlich
+            </mat-error>
+            <mat-error *ngIf="control.get('quantity')?.hasError('min')">
+              Menge muss mindestens 0 sein
+            </mat-error>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+        <td mat-cell *matCellDef="let control; let i = index">
+          <button mat-icon-button color="warn" (click)="removeTarget(i)" type="button">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <div class="empty-state" *ngIf="targets.length === 0">
+      <p>Noch keine Produktziele definiert. Klicken Sie auf "Zeile hinzufügen", um zu beginnen.</p>
+    </div>
+  </form>
+</div>

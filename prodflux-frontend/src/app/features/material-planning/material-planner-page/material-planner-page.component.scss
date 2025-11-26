@@ -1,0 +1,146 @@
+.material-planner-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .header {
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 500;
+    }
+
+    .description {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px;
+
+    p {
+      margin-top: 16px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .content-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .form-section,
+    .results-section {
+      height: fit-content;
+    }
+
+    .form-section {
+      .calculate-button-container {
+        margin-top: 16px;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .error-message {
+        margin-top: 16px;
+
+        .error-card {
+          background-color: #ffebee;
+          border-color: #ef5350;
+
+          .error-text {
+            color: #d32f2f;
+            margin: 0;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    .results-section {
+      .no-result-hint {
+        padding: 24px 16px;
+        text-align: center;
+        color: rgba(0, 0, 0, 0.6);
+
+        p {
+          margin: 0;
+        }
+      }
+
+      .tab-content {
+        padding: 24px 16px;
+        min-height: 200px;
+
+        p {
+          margin: 0 0 8px 0;
+        }
+
+        .placeholder-note {
+          color: rgba(0, 0, 0, 0.54);
+          font-style: italic;
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    .todos-section {
+      .todos-table {
+        width: 100%;
+
+        tr.completed {
+          opacity: 0.6;
+          text-decoration: line-through;
+        }
+      }
+
+      .backend-note {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        font-size: 0.875rem;
+
+        strong {
+          color: #856404;
+        }
+
+        code {
+          background-color: rgba(0, 0, 0, 0.1);
+          padding: 0.125rem 0.25rem;
+          border-radius: 3px;
+          font-family: monospace;
+        }
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1023px) {
+  .material-planner-container {
+    .content-layout {
+      .form-section {
+        order: 1;
+      }
+
+      .results-section {
+        order: 2;
+      }
+    }
+  }
+}

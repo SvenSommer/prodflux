@@ -1,0 +1,77 @@
+<div class="transfer-plan-container">
+  @if (rows.length === 0) {
+    <div class="empty-state">
+      <p>Noch kein Plan berechnet.</p>
+      <p class="hint">Erfassen Sie Produktionsziele und klicken Sie auf "Plan berechnen".</p>
+    </div>
+  } @else {
+    <!-- Transfer ToDos Button -->
+    @if (transfers.length > 0) {
+      <div class="action-section">
+        <button mat-raised-button color="accent" type="button" (click)="onAdoptTodos()">
+          Transfer-ToDos übernehmen
+        </button>
+        <p class="action-hint">Übernimmt die Transfervorschläge in die ToDo-Liste</p>
+      </div>
+    }
+
+    <div class="table-container">
+      <table mat-table [dataSource]="rows" class="transfer-table">
+        <!-- Material Column -->
+        <ng-container matColumnDef="material">
+          <th mat-header-cell *matHeaderCellDef>Material</th>
+          <td mat-cell *matCellDef="let row">{{ row.materialName }}</td>
+        </ng-container>
+
+        <!-- Workshop Columns (dynamic based on workshopIds) -->
+        @for (workshopId of workshopIds; track workshopId) {
+          <ng-container [matColumnDef]="'workshop-' + workshopId">
+            <th mat-header-cell *matHeaderCellDef>{{ getWorkshopName(workshopId) }}</th>
+            <td mat-cell *matCellDef="let row">
+              @if (row.workshopData[workshopId]) {
+                <div class="workshop-data">
+                  <div>Bedarf: {{ row.workshopData[workshopId].required | number:'1.0-2' }}</div>
+                  <div>Verfügbar: {{ row.workshopData[workshopId].availableAfter | number:'1.0-2' }}</div>
+                  <div [class.delta-positive]="row.workshopData[workshopId].delta >= 0"
+                       [class.delta-negative]="row.workshopData[workshopId].delta < 0">
+                    Delta: {{ row.workshopData[workshopId].delta | number:'1.0-2' }}
+                  </div>
+                </div>
+              } @else {
+                <span class="no-data">—</span>
+              }
+            </td>
+          </ng-container>
+        }
+
+        <!-- Solution Column -->
+        <ng-container matColumnDef="solution">
+          <th mat-header-cell *matHeaderCellDef>Lösungsvorschlag</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="solution-content">
+              @if (row.orderQty > 0) {
+                <div class="order-suggestion">
+                  Bestellung: {{ row.orderQty | number:'1.0-2' }}
+                  @if (centralWorkshopId) {
+                    <span class="central-info">(nach {{ getWorkshopName(centralWorkshopId) }})</span>
+                  }
+                </div>
+              }
+              @if (row.transfers.length > 0) {
+                <div class="transfer-suggestion">
+                  Transfer: {{ getTransferText(row.transfers) }}
+                </div>
+              }
+              @if (row.orderQty === 0 && row.transfers.length === 0) {
+                <span class="no-action">—</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
+        <tr mat-row *matRowDef="let row; columns: getDisplayedColumns();"></tr>
+      </table>
+    </div>
+  }
+</div>

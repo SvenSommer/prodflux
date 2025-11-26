@@ -129,6 +129,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/workshops/workshop-detail.component').then(m => m.WorkshopDetailComponent)
       },
 
+      // MATERIALPLANUNG - geschützt
+      {
+        path: 'material-planner',
+        loadChildren: () => import('./features/material-planning/material-planning.routes').then(m => m.materialPlanningRoutes)
+      },
+
       // Fallback für leere Route
       {
         path: '',

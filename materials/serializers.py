@@ -4,10 +4,18 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from core.models import Workshop
-from .models import Material, MaterialCategory, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem
+from .models import Material, MaterialCategory, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem, Supplier
 from .validators import validate_stock_movement
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum
+
+
+class SupplierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Supplier
+        fields = ['id', 'name', 'url', 'kundenkonto', 'notes', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
 
 class MaterialCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +27,12 @@ class MaterialSerializer(serializers.ModelSerializer):
     category = MaterialCategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(queryset=MaterialCategory.objects.all(), source='category', write_only=True, required=False)
     alternatives = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all(), many=True, required=False)
+    suppliers = serializers.PrimaryKeyRelatedField(
+        queryset=Supplier.objects.all(),
+        many=True,
+        required=False
+    )
+    supplier_details = serializers.SerializerMethodField()
     current_stock = serializers.SerializerMethodField()
 
     class Meta:
@@ -27,8 +41,8 @@ class MaterialSerializer(serializers.ModelSerializer):
             'id', 'bezeichnung', 'hersteller_bezeichnung', 'bestell_nr',
             'bild', 'bild_url',
             'category', 'category_id',
-            'alternatives', 'deprecated',
-            'current_stock' 
+            'alternatives', 'suppliers', 'supplier_details', 'deprecated',
+            'current_stock'
         ]
 
     def get_bild_url(self, obj):
@@ -38,6 +52,12 @@ class MaterialSerializer(serializers.ModelSerializer):
         elif obj.bild:
             return obj.bild.url
         return None
+
+    def get_supplier_details(self, obj):
+        return [
+            {'id': supplier.id, 'name': supplier.name}
+            for supplier in obj.suppliers.all()
+        ]
 
     def get_current_stock(self, obj):
         return getattr(obj, 'current_stock', None)

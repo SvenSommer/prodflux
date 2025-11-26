@@ -13,6 +13,8 @@ from .views import (
     MaterialTransferListCreateView,
     OrderDetailView,
     OrderListCreateView,
+    SupplierDetailView,
+    SupplierListCreateView,
     all_materials_stock_by_workshop,
     material_stock_view,
     material_inventory_correction_view,
@@ -21,6 +23,8 @@ from .views import (
 )
 
 urlpatterns = [
+    path("suppliers/", SupplierListCreateView.as_view(), name="supplier-list-create"),
+    path("suppliers/<int:pk>/", SupplierDetailView.as_view(), name="supplier-detail"),
     path("materials/", MaterialListCreateView.as_view()),
     path("materials/<int:pk>/", MaterialDetailView.as_view(), name="material-detail"),
     path("materials/<int:material_id>/movements/", MaterialMovementListCreateView.as_view()),

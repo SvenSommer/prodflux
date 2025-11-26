@@ -1,8 +1,8 @@
 from decimal import Decimal
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .models import Delivery, Material, MaterialCategory, MaterialMovement, MaterialTransfer, Order
-from .serializers import DeliverySerializer, MaterialCategorySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer
+from .models import Delivery, Material, MaterialCategory, MaterialMovement, MaterialTransfer, Order, Supplier
+from .serializers import DeliverySerializer, MaterialCategorySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer, SupplierSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,6 +10,27 @@ from collections import defaultdict
 from rest_framework.exceptions import ValidationError  
 from .utils import group_materials_by_category
 from .validators import validate_stock_movement
+
+
+class SupplierListCreateView(generics.ListCreateAPIView):
+    queryset = Supplier.objects.all()
+    serializer_class = SupplierSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Optional: Filter by is_active
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            is_active_bool = is_active.lower() == 'true'
+            queryset = queryset.filter(is_active=is_active_bool)
+        return queryset
+
+
+class SupplierDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Supplier.objects.all()
+    serializer_class = SupplierSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class MaterialListCreateView(generics.ListCreateAPIView):

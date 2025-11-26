@@ -216,6 +216,19 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/docs/:
+    get:
+      operationId: docs_retrieve
+      description: Custom Swagger UI view with integrated login form.
+      tags:
+      - docs
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/manufacture/:
     post:
       operationId: manufacture_create
@@ -644,7 +657,7 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/materials/{material_id}/stock:
+  /api/materials/{material_id}/stock/:
     get:
       operationId: materials_stock_retrieve
       parameters:
@@ -1801,6 +1814,19 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/redoc/:
+    get:
+      operationId: redoc_retrieve
+      description: Custom ReDoc view with integrated login form.
+      tags:
+      - redoc
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/shopbridge/orders/:
     get:
       operationId: shopbridge_orders_retrieve
@@ -1828,6 +1854,149 @@ paths:
       - Bearer: []
       responses:
         '200':
+          description: No response body
+  /api/suppliers/:
+    get:
+      operationId: suppliers_list
+      tags:
+      - suppliers
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Supplier'
+          description: ''
+    post:
+      operationId: suppliers_create
+      tags:
+      - suppliers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SupplierRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SupplierRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+          description: ''
+  /api/suppliers/{id}/:
+    get:
+      operationId: suppliers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - suppliers
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+          description: ''
+    put:
+      operationId: suppliers_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - suppliers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SupplierRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SupplierRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+          description: ''
+    patch:
+      operationId: suppliers_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - suppliers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSupplierRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSupplierRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSupplierRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+          description: ''
+    delete:
+      operationId: suppliers_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - suppliers
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
           description: No response body
   /api/transfers/:
     get:
@@ -2262,6 +2431,13 @@ components:
           type: array
           items:
             type: integer
+        suppliers:
+          type: array
+          items:
+            type: integer
+        supplier_details:
+          type: string
+          readOnly: true
         deprecated:
           type: boolean
           description: Material ist veraltet und wird nicht mehr verwendet
@@ -2274,6 +2450,7 @@ components:
       - category
       - current_stock
       - id
+      - supplier_details
     MaterialCategory:
       type: object
       properties:
@@ -2285,9 +2462,8 @@ components:
           maxLength: 255
         order:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
       required:
       - id
       - name
@@ -2300,9 +2476,8 @@ components:
           maxLength: 255
         order:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
       required:
       - name
     MaterialMovement:
@@ -2377,6 +2552,10 @@ components:
           type: integer
           writeOnly: true
         alternatives:
+          type: array
+          items:
+            type: integer
+        suppliers:
           type: array
           items:
             type: integer
@@ -2582,9 +2761,8 @@ components:
           maxLength: 255
         order:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
     PatchedMaterialMovementRequest:
       type: object
       properties:
@@ -2620,6 +2798,10 @@ components:
           type: integer
           writeOnly: true
         alternatives:
+          type: array
+          items:
+            type: integer
+        suppliers:
           type: array
           items:
             type: integer
@@ -2718,6 +2900,24 @@ components:
         description:
           type: string
           nullable: true
+    PatchedSupplierRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        kundenkonto:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        is_active:
+          type: boolean
     PatchedWorkshopRequest:
       type: object
       properties:
@@ -2884,6 +3084,59 @@ components:
         description:
           type: string
           nullable: true
+      required:
+      - name
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        kundenkonto:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    SupplierRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        kundenkonto:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        is_active:
+          type: boolean
       required:
       - name
     TokenObtainPair:

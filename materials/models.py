@@ -7,6 +7,23 @@ from core.models import Workshop
 from decimal import Decimal, ROUND_HALF_UP
 
 
+class Supplier(models.Model):
+    """Lieferant für Materialien"""
+    name = models.CharField(max_length=255)
+    url = models.URLField(blank=True)
+    kundenkonto = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class MaterialCategory(models.Model):
     name = models.CharField(max_length=255)
     order = models.PositiveIntegerField(default=0)
@@ -24,6 +41,7 @@ class Material(models.Model):
     bild = models.ImageField(upload_to='material_images/', null=True, blank=True)
     category = models.ForeignKey(MaterialCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='materials')
     alternatives = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='alternative_to')
+    suppliers = models.ManyToManyField(Supplier, blank=True, related_name='materials')
     deprecated = models.BooleanField(
         default=False,
         help_text="Material ist veraltet und wird nicht mehr verwendet"

@@ -1,0 +1,121 @@
+### Prodflux API - Supplier Management Tests
+### Base URL
+@baseUrl = http://localhost:8000/api
+@token = YOUR_JWT_TOKEN_HERE
+
+### 1. Login (to get token)
+POST {{baseUrl}}/auth/login/
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+### 2. List all suppliers
+GET {{baseUrl}}/suppliers/
+Authorization: Bearer {{token}}
+
+### 3. List active suppliers only
+GET {{baseUrl}}/suppliers/?is_active=true
+Authorization: Bearer {{token}}
+
+### 4. Create a new supplier
+POST {{baseUrl}}/suppliers/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Lieferant GmbH",
+  "url": "https://lieferant.de",
+  "kundenkonto": "KONTO-12345",
+  "notes": "Hauptlieferant für PETG Filamente",
+  "is_active": true
+}
+
+### 5. Create minimal supplier (only name required)
+POST {{baseUrl}}/suppliers/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Minimaler Lieferant"
+}
+
+### 6. Get supplier details
+GET {{baseUrl}}/suppliers/1/
+Authorization: Bearer {{token}}
+
+### 7. Update supplier (PATCH)
+PATCH {{baseUrl}}/suppliers/1/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "notes": "Updated notes",
+  "is_active": false
+}
+
+### 8. Update supplier (PUT - full update)
+PUT {{baseUrl}}/suppliers/1/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Updated Lieferant GmbH",
+  "url": "https://updated-lieferant.de",
+  "kundenkonto": "KONTO-99999",
+  "notes": "Completely updated",
+  "is_active": true
+}
+
+### 9. Delete supplier
+DELETE {{baseUrl}}/suppliers/1/
+Authorization: Bearer {{token}}
+
+### ========================================
+### Material-Supplier Association Tests
+### ========================================
+
+### 10. Create material with suppliers
+POST {{baseUrl}}/materials/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bezeichnung": "PETG Filament Schwarz",
+  "hersteller_bezeichnung": "Prusa PETG Black",
+  "bestell_nr": "PET-BLK-001",
+  "category_id": 1,
+  "suppliers": [1, 2]
+}
+
+### 11. Get material with supplier details
+GET {{baseUrl}}/materials/1/
+Authorization: Bearer {{token}}
+
+### 12. Update material suppliers (PATCH)
+PATCH {{baseUrl}}/materials/1/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "suppliers": [2, 3]
+}
+
+### 13. Remove all suppliers from material
+PATCH {{baseUrl}}/materials/1/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "suppliers": []
+}
+
+### 14. List materials (grouped by category, includes supplier info)
+GET {{baseUrl}}/materials/
+Authorization: Bearer {{token}}
+
+### 15. List materials with deprecated items
+GET {{baseUrl}}/materials/?include_deprecated=true
+Authorization: Bearer {{token}}

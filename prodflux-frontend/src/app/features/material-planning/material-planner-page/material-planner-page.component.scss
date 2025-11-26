@@ -98,33 +98,10 @@
     }
 
     .todos-section {
-      .todos-table {
-        width: 100%;
-
-        tr.completed {
-          opacity: 0.6;
-          text-decoration: line-through;
-        }
-      }
-
-      .backend-note {
-        margin-top: 1rem;
-        padding: 0.75rem;
-        background-color: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 4px;
-        font-size: 0.875rem;
-
-        strong {
-          color: #856404;
-        }
-
-        code {
-          background-color: rgba(0, 0, 0, 0.1);
-          padding: 0.125rem 0.25rem;
-          border-radius: 3px;
-          font-family: monospace;
-        }
+      .todos-hint {
+        margin: 0 0 1rem 0;
+        color: rgba(0, 0, 0, 0.7);
+        font-size: 0.95rem;
       }
     }
   }

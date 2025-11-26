@@ -20,8 +20,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { ProductOption } from '../../../shared/components/product-select/product-select.component';
+import { TransferTodosDialogComponent } from '../components/transfer-todos-dialog/transfer-todos-dialog.component';
 
 interface WorkshopOption {
   id: number;
@@ -53,6 +55,7 @@ export class MaterialPlannerPageComponent implements OnInit {
   private dataService = inject(MaterialPlanningDataService);
   private actionsService = inject(MaterialPlanningActionsService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   targets: WorkshopProductTarget[] = [];
   planningData$!: Observable<MaterialPlanningData>;
@@ -90,6 +93,10 @@ export class MaterialPlannerPageComponent implements OnInit {
 
   onTargetsChange(targets: WorkshopProductTarget[]): void {
     this.targets = targets;
+  }
+
+  get openTodosCount(): number {
+    return this.transferTodos.filter(t => !t.done).length;
   }
 
   calculatePlan(planningData: MaterialPlanningData): void {
@@ -166,6 +173,9 @@ export class MaterialPlannerPageComponent implements OnInit {
     }).filter((todo): todo is TransferTodo => todo !== null);
 
     this.transferTodos = [...this.transferTodos, ...newTodos];
+
+    // Open dialog directly
+    this.openTransferTodosDialog();
   }
 
   toggleTodoDone(todoId: string): void {
@@ -177,6 +187,24 @@ export class MaterialPlannerPageComponent implements OnInit {
 
   deleteTodo(todoId: string): void {
     this.transferTodos = this.transferTodos.filter(t => t.id !== todoId);
+  }
+
+  openTransferTodosDialog(): void {
+    const dialogRef = this.dialog.open(TransferTodosDialogComponent, {
+      data: {
+        transferTodos: this.transferTodos,
+        onToggleDone: (todoId: string) => this.toggleTodoDone(todoId),
+        onDelete: (todoId: string) => this.deleteTodo(todoId)
+      },
+      width: '1000px',
+      maxWidth: '90vw'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 'create') {
+        this.createTransfersFromTodos();
+      }
+    });
   }
 
   createOrderFromPlan(): void {

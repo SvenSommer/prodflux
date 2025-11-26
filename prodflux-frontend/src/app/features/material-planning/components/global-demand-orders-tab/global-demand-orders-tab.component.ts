@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { GlobalMaterialRow } from '../../models/planning/planning-result.models';
 import { Material } from '../../models/api/material.model';
 import { MaterialTableComponent, MaterialTableRow, MaterialTableColumn } from '../../../../shared/components/material-table/material-table.component';
+import { OrderProposalDialogComponent } from '../order-proposal-dialog/order-proposal-dialog.component';
 
 @Component({
   selector: 'app-global-demand-orders-tab',
@@ -38,7 +40,7 @@ export class GlobalDemandOrdersTabComponent {
     'suggestedOrder'
   ];
 
-  showOrderProposal = false;
+  constructor(private dialog: MatDialog) {}
 
   getMaterialName(materialId: number): string {
     const material = this.materialById[materialId];
@@ -48,10 +50,6 @@ export class GlobalDemandOrdersTabComponent {
   getMaterialOrderNumber(materialId: number): string {
     const material = this.materialById[materialId];
     return material?.bestell_nr || '—';
-  }
-
-  toggleOrderProposal(): void {
-    this.showOrderProposal = !this.showOrderProposal;
   }
 
   get filteredRows(): GlobalMaterialRow[] {
@@ -77,6 +75,19 @@ export class GlobalDemandOrdersTabComponent {
   }
 
   onCreateOrder(): void {
-    this.createOrder.emit();
+    const dialogRef = this.dialog.open(OrderProposalDialogComponent, {
+      data: {
+        ordersToPlace: this.ordersToPlace,
+        materialById: this.materialById
+      },
+      width: '1200px',
+      maxWidth: '90vw'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.createOrder.emit();
+      }
+    });
   }
 }

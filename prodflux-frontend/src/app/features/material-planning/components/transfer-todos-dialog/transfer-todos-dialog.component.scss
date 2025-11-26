@@ -1,0 +1,37 @@
+mat-dialog-content {
+  min-width: 800px;
+  padding: 1.5rem;
+}
+
+.todos-table {
+  width: 100%;
+  margin-bottom: 1rem;
+
+  th {
+    font-weight: 600;
+    background-color: #f5f5f5;
+  }
+
+  tr.completed {
+    opacity: 0.5;
+    text-decoration: line-through;
+  }
+}
+
+.backend-note {
+  padding: 0.75rem;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+
+  strong {
+    color: #856404;
+  }
+}
+
+mat-dialog-actions {
+  padding: 1rem 1.5rem;
+  gap: 0.5rem;
+}

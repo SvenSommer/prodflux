@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Bestellungsvorschlag (nach Rauen)</h2>
+
+<mat-dialog-content>
+  <p class="proposal-hint">
+    Folgende Materialien sollten bestellt werden:
+  </p>
+
+  <app-material-table
+    [rows]="materialTableRows"
+    [columns]="columns"
+    [showImage]="true"
+    [showCategory]="true">
+    <ng-template #customColumn let-row let-column="column">
+      @switch (column.key) {
+        @case ('quantity') {
+          {{ row.data.suggestedOrderToCentral | number:'1.0-2' }}
+        }
+        @case ('price') {
+          <span class="placeholder-text">1.00 € (Backend TODO)</span>
+        }
+      }
+    </ng-template>
+  </app-material-table>
+
+  <div class="backend-note">
+    <strong>Backend TODO:</strong> Preis/Preis_pro_stueck ist noch nicht im Planning-Flow integriert.
+    Später: POST <code>/api/orders/</code> mit OrderRequest (workshop = Rauen, items[] …).
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="onConfirm()">
+    Bestellung im Backend anlegen
+  </button>
+</mat-dialog-actions>

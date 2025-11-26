@@ -1,0 +1,57 @@
+### Prodflux OpenAPI Endpoints
+### Diese Datei testet die OpenAPI-Dokumentations-Endpunkte
+
+### Variablen
+@baseUrl = http://localhost:8000
+@token = your-jwt-token-here
+
+### 1. OpenAPI Schema als JSON abrufen
+GET {{baseUrl}}/api/schema/?format=json
+Accept: application/json
+
+### 2. OpenAPI Schema als YAML abrufen
+GET {{baseUrl}}/api/schema/?format=yaml
+Accept: application/vnd.oai.openapi
+
+### 3. Swagger UI (im Browser öffnen)
+# GET {{baseUrl}}/api/docs/
+
+### 4. ReDoc (im Browser öffnen)
+# GET {{baseUrl}}/api/redoc/
+
+### 5. Health Check (zum Testen)
+GET {{baseUrl}}/api/
+Accept: application/json
+
+###############################################
+### Beispiel: Login und Token erhalten
+###############################################
+
+### 6. Login
+POST {{baseUrl}}/api/auth/login/
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+###############################################
+### Beispiel: API mit Token verwenden
+###############################################
+
+### 7. Aktuellen Benutzer abrufen
+GET {{baseUrl}}/api/auth/me/
+Authorization: Bearer {{token}}
+
+### 8. Workshops abrufen
+GET {{baseUrl}}/api/workshops/
+Authorization: Bearer {{token}}
+
+### 9. Materialien abrufen
+GET {{baseUrl}}/api/materials/
+Authorization: Bearer {{token}}
+
+### 10. Produkte abrufen
+GET {{baseUrl}}/api/products/
+Authorization: Bearer {{token}}

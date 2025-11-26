@@ -1,0 +1,2963 @@
+openapi: 3.0.3
+info:
+  title: Prodflux API
+  version: 1.0.0
+  description: Production and Materials Management System - API Documentation
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/deliveries/:
+    get:
+      operationId: deliveries_list
+      tags:
+      - deliveries
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Delivery'
+          description: ''
+    post:
+      operationId: deliveries_create
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+  /api/deliveries/{id}/:
+    get:
+      operationId: deliveries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - deliveries
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+    put:
+      operationId: deliveries_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+    patch:
+      operationId: deliveries_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - deliveries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeliveryRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delivery'
+          description: ''
+    delete:
+      operationId: deliveries_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - deliveries
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/manufacture/:
+    post:
+      operationId: manufacture_create
+      tags:
+      - manufacture
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/material-categories/:
+    get:
+      operationId: material_categories_list
+      tags:
+      - material-categories
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaterialCategory'
+          description: ''
+    post:
+      operationId: material_categories_create
+      tags:
+      - material-categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialCategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialCategory'
+          description: ''
+  /api/material-categories/{id}/:
+    get:
+      operationId: material_categories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - material-categories
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialCategory'
+          description: ''
+    put:
+      operationId: material_categories_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - material-categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialCategoryRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialCategory'
+          description: ''
+    patch:
+      operationId: material_categories_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - material-categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialCategoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialCategoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialCategoryRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialCategory'
+          description: ''
+    delete:
+      operationId: material_categories_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - material-categories
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/material-requirements/:
+    post:
+      operationId: material_requirements_create
+      tags:
+      - material-requirements
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/materials/:
+    get:
+      operationId: materials_list
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Material'
+          description: ''
+    post:
+      operationId: materials_create
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Material'
+          description: ''
+  /api/materials/{material_id}/inventory-correction/:
+    post:
+      operationId: materials_inventory_correction_create
+      description: |-
+        Erstellt eine Inventur-Korrektur für ein Material in einer bestimmten Werkstatt.
+
+        Expected POST data:
+        {
+            "workshop_id": int,
+            "inventory_count": decimal,
+            "note": string (optional)
+        }
+      parameters:
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/materials/{material_id}/movements/:
+    get:
+      operationId: materials_movements_list
+      parameters:
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaterialMovement'
+          description: ''
+    post:
+      operationId: materials_movements_create
+      parameters:
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialMovementRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialMovementRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialMovementRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialMovement'
+          description: ''
+  /api/materials/{material_id}/movements/{id}/:
+    get:
+      operationId: materials_movements_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialMovement'
+          description: ''
+    put:
+      operationId: materials_movements_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialMovementRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialMovementRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialMovementRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialMovement'
+          description: ''
+    patch:
+      operationId: materials_movements_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialMovementRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialMovementRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialMovementRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialMovement'
+          description: ''
+    delete:
+      operationId: materials_movements_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/materials/{material_id}/products/:
+    get:
+      operationId: materials_products_retrieve
+      description: Gibt alle Produkte zurück, in denen das angegebene Material verwendet
+        wird.
+      parameters:
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/materials/{material_id}/stock:
+    get:
+      operationId: materials_stock_retrieve
+      parameters:
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/materials/{material_id}/toggle-deprecated/:
+    post:
+      operationId: materials_toggle_deprecated_create
+      description: Toggles (umschalten) den deprecated Status eines Materials
+      parameters:
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/materials/{id}/:
+    get:
+      operationId: materials_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Material'
+          description: ''
+    put:
+      operationId: materials_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Material'
+          description: ''
+    patch:
+      operationId: materials_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Material'
+          description: ''
+    delete:
+      operationId: materials_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/materials/{id}/alternatives/:
+    get:
+      operationId: materials_alternatives_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Material'
+          description: ''
+    post:
+      operationId: materials_alternatives_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Material'
+          description: ''
+    delete:
+      operationId: materials_alternatives_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/materials/{id}/alternatives/{alternative_pk}/:
+    get:
+      operationId: materials_alternatives_list_2
+      parameters:
+      - in: path
+        name: alternative_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Material'
+          description: ''
+    post:
+      operationId: materials_alternatives_create_2
+      parameters:
+      - in: path
+        name: alternative_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Material'
+          description: ''
+    delete:
+      operationId: materials_alternatives_destroy_2
+      parameters:
+      - in: path
+        name: alternative_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/orders/:
+    get:
+      operationId: orders_list
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+          description: ''
+    post:
+      operationId: orders_create
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+  /api/orders/{id}/:
+    get:
+      operationId: orders_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    put:
+      operationId: orders_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    patch:
+      operationId: orders_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+          description: ''
+    delete:
+      operationId: orders_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/product-materials/:
+    get:
+      operationId: product_materials_list
+      tags:
+      - product-materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductMaterial'
+          description: ''
+  /api/product-materials/{id}/:
+    get:
+      operationId: product_materials_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMaterial'
+          description: ''
+    put:
+      operationId: product_materials_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductMaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductMaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductMaterialRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMaterial'
+          description: ''
+    patch:
+      operationId: product_materials_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProductMaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProductMaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProductMaterialRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMaterial'
+          description: ''
+    delete:
+      operationId: product_materials_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/product-materials/create/:
+    post:
+      operationId: product_materials_create_create
+      tags:
+      - product-materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductMaterialRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductMaterialRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductMaterialRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductMaterial'
+          description: ''
+  /api/product-variants/:
+    get:
+      operationId: product_variants_list
+      tags:
+      - product-variants
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductVariant'
+          description: ''
+    post:
+      operationId: product_variants_create
+      tags:
+      - product-variants
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVariantRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductVariantRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductVariantRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariant'
+          description: ''
+  /api/product-variants/{id}/:
+    get:
+      operationId: product_variants_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-variants
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariant'
+          description: ''
+    put:
+      operationId: product_variants_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-variants
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVariantRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductVariantRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductVariantRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariant'
+          description: ''
+    patch:
+      operationId: product_variants_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-variants
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProductVariantRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProductVariantRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProductVariantRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVariant'
+          description: ''
+    delete:
+      operationId: product_variants_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-variants
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/product-versions/:
+    get:
+      operationId: product_versions_list
+      tags:
+      - product-versions
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductVersion'
+          description: ''
+    post:
+      operationId: product_versions_create
+      tags:
+      - product-versions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVersionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductVersionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductVersionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVersion'
+          description: ''
+  /api/product-versions/{id}/:
+    get:
+      operationId: product_versions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-versions
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVersion'
+          description: ''
+    put:
+      operationId: product_versions_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-versions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVersionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductVersionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductVersionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVersion'
+          description: ''
+    patch:
+      operationId: product_versions_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-versions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProductVersionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProductVersionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProductVersionRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVersion'
+          description: ''
+    delete:
+      operationId: product_versions_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product-versions
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/products/:
+    get:
+      operationId: products_list
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+    post:
+      operationId: products_create
+      tags:
+      - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/products/{id}/:
+    get:
+      operationId: products_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    put:
+      operationId: products_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    patch:
+      operationId: products_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProductRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    delete:
+      operationId: products_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/products/{product_id}/deprecate/:
+    post:
+      operationId: products_deprecate_create
+      description: |-
+        Deprecated ein Produkt und optional seine exklusiven Materialien
+        LEGACY: Verwende toggle_product_deprecated für neue Implementierungen
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/{product_id}/material-dependencies/:
+    get:
+      operationId: products_material_dependencies_retrieve
+      description: |-
+        Prüft, welche Materialien ausschließlich von diesem Produkt verwendet werden.
+        Gibt eine Liste von Materialien zurück, die deprecated werden können.
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/{product_id}/materials/:
+    get:
+      operationId: products_materials_retrieve
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/{product_id}/producible:
+    get:
+      operationId: products_producible_retrieve_2
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/{product_id}/requirements/:
+    get:
+      operationId: products_requirements_retrieve
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/{product_id}/stock:
+    get:
+      operationId: products_stock_retrieve
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/{product_id}/toggle-deprecated/:
+    post:
+      operationId: products_toggle_deprecated_create
+      description: Toggles (umschalten) den deprecated Status eines Produkts und optional
+        seiner exklusiven Materialien
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/lifecycle-overview/:
+    get:
+      operationId: products_lifecycle_overview_retrieve
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/products/producible:
+    get:
+      operationId: products_producible_retrieve
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/shopbridge/orders/:
+    get:
+      operationId: shopbridge_orders_retrieve
+      tags:
+      - shopbridge
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/shopbridge/orders/{order_id}/:
+    get:
+      operationId: shopbridge_orders_retrieve_2
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - shopbridge
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/transfers/:
+    get:
+      operationId: transfers_list
+      tags:
+      - transfers
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaterialTransfer'
+          description: ''
+    post:
+      operationId: transfers_create
+      tags:
+      - transfers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialTransferRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialTransferRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialTransferRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialTransfer'
+          description: ''
+  /api/transfers/{id}/:
+    get:
+      operationId: transfers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - transfers
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialTransfer'
+          description: ''
+    put:
+      operationId: transfers_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - transfers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialTransferRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialTransferRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialTransferRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialTransfer'
+          description: ''
+    patch:
+      operationId: transfers_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - transfers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialTransferRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialTransferRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialTransferRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialTransfer'
+          description: ''
+    delete:
+      operationId: transfers_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - transfers
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/workshops/:
+    get:
+      operationId: workshops_list
+      tags:
+      - workshops
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workshop'
+          description: ''
+    post:
+      operationId: workshops_create
+      tags:
+      - workshops
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkshopRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkshopRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkshopRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workshop'
+          description: ''
+  /api/workshops/{id}/:
+    get:
+      operationId: workshops_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - workshops
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workshop'
+          description: ''
+    put:
+      operationId: workshops_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - workshops
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkshopRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkshopRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkshopRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workshop'
+          description: ''
+    patch:
+      operationId: workshops_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - workshops
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkshopRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkshopRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedWorkshopRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workshop'
+          description: ''
+    delete:
+      operationId: workshops_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - workshops
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/workshops/{workshop_id}/material-stock/:
+    get:
+      operationId: workshops_material_stock_retrieve
+      parameters:
+      - in: path
+        name: workshop_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - workshops
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/workshops/{workshop_id}/products/overview/:
+    get:
+      operationId: workshops_products_overview_retrieve
+      parameters:
+      - in: path
+        name: workshop_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - workshops
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    ChangeTypeEnum:
+      enum:
+      - lieferung
+      - verbrauch
+      - verlust
+      - korrektur
+      - transfer
+      - inventur
+      type: string
+      description: |-
+        * `lieferung` - Lieferung
+        * `verbrauch` - Verbrauch
+        * `verlust` - Verlust
+        * `korrektur` - Korrektur
+        * `transfer` - Transfer
+        * `inventur` - Inventur
+    Delivery:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        workshop:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryItem'
+      required:
+      - created_at
+      - id
+      - items
+      - workshop
+    DeliveryItem:
+      type: object
+      properties:
+        material:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+      required:
+      - material
+      - quantity
+    DeliveryItemRequest:
+      type: object
+      properties:
+        material:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+      required:
+      - material
+      - quantity
+    DeliveryRequest:
+      type: object
+      properties:
+        workshop:
+          type: integer
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryItemRequest'
+      required:
+      - items
+      - workshop
+    Material:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bezeichnung:
+          type: string
+          maxLength: 255
+        hersteller_bezeichnung:
+          type: string
+          maxLength: 255
+        bestell_nr:
+          type: string
+          maxLength: 100
+        bild:
+          type: string
+          format: uri
+          nullable: true
+        bild_url:
+          type: string
+          readOnly: true
+        category:
+          allOf:
+          - $ref: '#/components/schemas/MaterialCategory'
+          readOnly: true
+        alternatives:
+          type: array
+          items:
+            type: integer
+        deprecated:
+          type: boolean
+          description: Material ist veraltet und wird nicht mehr verwendet
+        current_stock:
+          type: string
+          readOnly: true
+      required:
+      - bezeichnung
+      - bild_url
+      - category
+      - current_stock
+      - id
+    MaterialCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - id
+      - name
+    MaterialCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - name
+    MaterialMovement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        change_type:
+          $ref: '#/components/schemas/ChangeTypeEnum'
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        content_type:
+          type: integer
+          readOnly: true
+          nullable: true
+        object_id:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - change_type
+      - content_type
+      - created_at
+      - id
+      - object_id
+      - quantity
+    MaterialMovementRequest:
+      type: object
+      properties:
+        workshop_id:
+          type: integer
+          writeOnly: true
+        change_type:
+          $ref: '#/components/schemas/ChangeTypeEnum'
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+      required:
+      - change_type
+      - quantity
+      - workshop_id
+    MaterialRequest:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          minLength: 1
+          maxLength: 255
+        hersteller_bezeichnung:
+          type: string
+          maxLength: 255
+        bestell_nr:
+          type: string
+          maxLength: 100
+        bild:
+          type: string
+          format: binary
+          nullable: true
+        category_id:
+          type: integer
+          writeOnly: true
+        alternatives:
+          type: array
+          items:
+            type: integer
+        deprecated:
+          type: boolean
+          description: Material ist veraltet und wird nicht mehr verwendet
+      required:
+      - bezeichnung
+    MaterialTransfer:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        source_workshop:
+          type: integer
+        target_workshop:
+          type: integer
+        note:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaterialTransferItem'
+      required:
+      - created_at
+      - id
+      - items
+      - source_workshop
+      - target_workshop
+    MaterialTransferItem:
+      type: object
+      properties:
+        material:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+      required:
+      - material
+      - quantity
+    MaterialTransferItemRequest:
+      type: object
+      properties:
+        material:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+      required:
+      - material
+      - quantity
+    MaterialTransferRequest:
+      type: object
+      properties:
+        source_workshop:
+          type: integer
+        target_workshop:
+          type: integer
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaterialTransferItemRequest'
+      required:
+      - items
+      - source_workshop
+      - target_workshop
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bestellt_am:
+          type: string
+          format: date
+        angekommen_am:
+          type: string
+          format: date
+          nullable: true
+        versandkosten:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        notiz:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+      required:
+      - bestellt_am
+      - id
+      - items
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        material:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        preis_pro_stueck:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        preis_pro_stueck_mit_versand:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        quelle:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - material
+      - preis_pro_stueck
+      - quantity
+    OrderItemRequest:
+      type: object
+      properties:
+        material:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        preis_pro_stueck:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        preis_pro_stueck_mit_versand:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        quelle:
+          type: string
+          maxLength: 255
+      required:
+      - material
+      - preis_pro_stueck
+      - quantity
+    OrderRequest:
+      type: object
+      properties:
+        bestellt_am:
+          type: string
+          format: date
+        angekommen_am:
+          type: string
+          format: date
+          nullable: true
+        versandkosten:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        notiz:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemRequest'
+      required:
+      - bestellt_am
+      - items
+    PatchedDeliveryRequest:
+      type: object
+      properties:
+        workshop:
+          type: integer
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryItemRequest'
+    PatchedMaterialCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+    PatchedMaterialMovementRequest:
+      type: object
+      properties:
+        workshop_id:
+          type: integer
+          writeOnly: true
+        change_type:
+          $ref: '#/components/schemas/ChangeTypeEnum'
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+    PatchedMaterialRequest:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          minLength: 1
+          maxLength: 255
+        hersteller_bezeichnung:
+          type: string
+          maxLength: 255
+        bestell_nr:
+          type: string
+          maxLength: 100
+        bild:
+          type: string
+          format: binary
+          nullable: true
+        category_id:
+          type: integer
+          writeOnly: true
+        alternatives:
+          type: array
+          items:
+            type: integer
+        deprecated:
+          type: boolean
+          description: Material ist veraltet und wird nicht mehr verwendet
+    PatchedMaterialTransferRequest:
+      type: object
+      properties:
+        source_workshop:
+          type: integer
+        target_workshop:
+          type: integer
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaterialTransferItemRequest'
+    PatchedOrderRequest:
+      type: object
+      properties:
+        bestellt_am:
+          type: string
+          format: date
+        angekommen_am:
+          type: string
+          format: date
+          nullable: true
+        versandkosten:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        notiz:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemRequest'
+    PatchedProductMaterialRequest:
+      type: object
+      properties:
+        quantity_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        product:
+          type: integer
+        material:
+          type: integer
+    PatchedProductRequest:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          minLength: 1
+          maxLength: 255
+        artikelnummer:
+          type: string
+          minLength: 1
+          maxLength: 100
+        version_id:
+          type: integer
+          writeOnly: true
+        varianten_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        bild:
+          type: string
+          format: binary
+          nullable: true
+        deprecated:
+          type: boolean
+          description: Produkt ist veraltet und wird nicht mehr verwendet
+    PatchedProductVariantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+    PatchedProductVersionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+    PatchedWorkshopRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        bezeichnung:
+          type: string
+          maxLength: 255
+        artikelnummer:
+          type: string
+          maxLength: 100
+        version:
+          allOf:
+          - $ref: '#/components/schemas/ProductVersion'
+          readOnly: true
+        varianten:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariant'
+          readOnly: true
+        bild:
+          type: string
+          format: uri
+          nullable: true
+        bild_url:
+          type: string
+          readOnly: true
+        deprecated:
+          type: boolean
+          description: Produkt ist veraltet und wird nicht mehr verwendet
+        angelegt_am:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - angelegt_am
+      - artikelnummer
+      - bezeichnung
+      - bild_url
+      - id
+      - varianten
+      - version
+    ProductMaterial:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quantity_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        product:
+          type: integer
+        material:
+          type: integer
+      required:
+      - id
+      - material
+      - product
+      - quantity_per_unit
+    ProductMaterialRequest:
+      type: object
+      properties:
+        quantity_per_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        product:
+          type: integer
+        material:
+          type: integer
+      required:
+      - material
+      - product
+      - quantity_per_unit
+    ProductRequest:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          minLength: 1
+          maxLength: 255
+        artikelnummer:
+          type: string
+          minLength: 1
+          maxLength: 100
+        version_id:
+          type: integer
+          writeOnly: true
+        varianten_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        bild:
+          type: string
+          format: binary
+          nullable: true
+        deprecated:
+          type: boolean
+          description: Produkt ist veraltet und wird nicht mehr verwendet
+      required:
+      - artikelnummer
+      - bezeichnung
+    ProductVariant:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+      required:
+      - id
+      - name
+    ProductVariantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+      required:
+      - name
+    ProductVersion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+      required:
+      - id
+      - name
+    ProductVersionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+      required:
+      - name
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    Workshop:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    WorkshopRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+      required:
+      - name
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'JWT Authorization header using the Bearer scheme. Example: "Authorization:
+        Bearer {token}"'
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

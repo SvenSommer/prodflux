@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'products',
     'manufacturing',
     'rest_framework',
+    'drf_spectacular',
     'corsheaders',
     'shopbridge',
 ]
@@ -62,7 +63,7 @@ ROOT_URLCONF = 'prodflux.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -156,6 +157,40 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# DRF Spectacular (OpenAPI) Settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Prodflux API',
+    'DESCRIPTION': 'Production and Materials Management System - API Documentation',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': r'/api/',
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+    },
+    'AUTHENTICATION_WHITELIST': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'SECURITY': [
+        {
+            'Bearer': [],
+        }
+    ],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'Bearer': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+                'description': 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
+            }
+        }
+    },
 }
 
 # CORS

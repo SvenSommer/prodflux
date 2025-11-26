@@ -1,6 +1,205 @@
 # 🏭 Prodflux - Production & Materials Management System
 
-A comprehensive production and materials management system built with Django REST Framework and Angular.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Die Swagger UI ist jetzt ein **All-in-One Tool** für API-Entwicklung und Testing!✅ **Zeitersparnis** bei jedem API-Test  ✅ **Bessere Developer Experience**  ✅ **Automatische Token-Verwaltung**  ✅ **Schneller Login** direkt in der Dokumentation  ✅ **Keine externen Tools** mehr notwendig  Das Quick Login Feature macht die API-Dokumentation zu einem vollständigen Entwicklungstool:## Zusammenfassung- Keine Standard-Credentials im Template- CORS richtig konfigurieren- HTTPS verwenden (Token-Sicherheit)**Wichtig:**```https://your-domain.com/api/docs/```In Produktion funktioniert das Feature identisch:## Produktionsumgebung- Browser-Einstellungen für Cookies/Storage prüfen- Private/Incognito-Modus löscht localStorage- LocalStorage könnte deaktiviert sein### Token bleibt nicht erhalten- Browser-Cache leeren- Logout und erneuter Login- Prüfen Sie, ob das Schloss-Symbol geschlossen ist### Token funktioniert nicht bei API-Requests- Network-Tab prüfen für failed requests- Nach JavaScript-Fehlern suchen- Browser-Console öffnen (F12)### Token wird nicht gesetzt- Stellen Sie sicher, dass der Benutzer in der Datenbank existiert- Überprüfen Sie Username/Password### "Login failed: Invalid credentials"## Fehlerbehebung```const LOGIN_URL = API_BASE_URL + '/api/custom-auth/';// In templates/swagger_ui.html```javascriptWenn Sie einen anderen Auth-Endpoint verwenden:### Unterschiedliche Login-URLs```}    /* Position, Farben, etc. anpassen */#login-panel {/* In templates/swagger_ui.html <style> section */```cssDas Login-Panel kann über CSS angepasst werden:### Styling anpassen⚠️ **Warnung:** Nur für lokale Entwicklung! Niemals in Produktion!```<input type="password" id="password" placeholder="Password" value="admin"><input type="text" id="username" placeholder="Username" value="admin"><!-- In templates/swagger_ui.html -->```htmlFür Entwicklung können Sie Standard-Credentials im Template setzen:### Standard-Benutzer## Anpassungen**Zeitersparnis:** ~90%3. ✓ Fertig!2. "Login & Authorize" klicken1. Username + Password eingeben### Jetzt (Integriert):6. Bei jedem Browser-Neustart wiederholen5. Token manuell einfügen4. "Authorize" klicken3. In Swagger UI wechseln2. Token aus Response kopieren1. Login-Request in separatem Tool (curl, Postman, etc.)### Vorher (Manuell):## Vorteile gegenüber manueller Autorisierung```7. UI wird auf "logged-in" Status aktualisiert   ↓6. Swagger UI setzt "Authorization: Bearer {token}" in alle Requests   ↓5. JavaScript ruft ui.preauthorizeApiKey("Bearer", token)   ↓4. JavaScript speichert Access Token in localStorage   ↓3. Django gibt JWT Access + Refresh Token zurück   ↓2. JavaScript sendet POST zu /api/auth/login/   ↓1. Benutzer gibt Credentials ein```### Login-Flow- Logout löscht Token vollständig- Token wird nur für API-Requests verwendet- LocalStorage ist domain-spezifisch**Sicherheit:**- Automatisches Laden beim Öffnen der Swagger UI- Kein erneuter Login bei Seitenaktualisierung- Token bleibt über Browser-Neustarts erhalten**Vorteile:**```localStorage.setItem('username', username);localStorage.setItem('jwt_token', token);```javascriptDer Token wird im Browser's localStorage gespeichert:### Token-Speicherung- Login-Endpoint: `/api/auth/login/` (JWT SimpleJWT)- Template: `templates/swagger_ui.html`- Custom View: `core/swagger_views.py` - `CustomSwaggerView`**Backend (Django):**- SwaggerUIBundle.preauthorizeApiKey() für Token-Verwaltung- Fetch API für Login-Request- LocalStorage für Token-Persistenz- Custom Swagger UI Template mit integriertem Login-Formular**Frontend (JavaScript):**### Implementierung## Technische Details```3. Autorisierung wird aus Swagger UI entfernt2. Token wird gelöscht1. Klicken Sie den roten "Logout" Button im Login-Panel```### 3. Logout- Sie können sofort API-Endpunkte testen- Der Bearer-Token wird automatisch in allen Requests mitgesendet- Alle API-Endpunkte zeigen das geschlossene Schloss-Symbol ✓Nach dem Login:### 2. API verwenden- ✓ Alle API-Endpunkte sind sofort nutzbar- ✓ Ihr Username wird angezeigt- ✓ Panel wechselt zu grünem Hintergrund- ✓ Token wird automatisch in Swagger UI gesetzt- ✓ Erfolgsmeldung wird angezeigt**Ergebnis:**```5. Klicken Sie "Login & Authorize" (oder drücken Enter)4. Geben Sie Ihr Password ein3. Geben Sie Ihren Username ein2. Finden Sie das "🔐 Quick Login" Panel rechts oben1. Öffnen Sie: http://localhost:8000/api/docs/```### 1. Login## Verwendung✅ **Keyboard-Support** - Enter-Taste für schnellen Login  ✅ **Logout-Funktion** - Einfaches Löschen des Tokens  ✅ **Benutzeranzeige** - Sichtbare Anzeige des angemeldeten Benutzers  ✅ **Persistenz** - Token bleibt über Browser-Neustarts erhalten  ✅ **Automatische Autorisierung** - Token wird sofort in Swagger UI gesetzt  ✅ **Direkter Login** - Keine manuelle Token-Verwaltung notwendig  Das Login-Panel befindet sich **rechts oben** in der Swagger UI und bietet:### 🔐 Quick Login Panel## FeaturesDie Swagger UI wurde mit einem integrierten Login-Panel erweitert, das die Authentifizierung vereinfacht und den JWT-Token automatisch verwaltet.## ÜberblickA comprehensive production and materials management system built with Django REST Framework and Angular.
 
 [![Django](https://img.shields.io/badge/Django-5.2.8-green.svg)](https://www.djangoproject.com/)
 [![Angular](https://img.shields.io/badge/Angular-19-red.svg)](https://angular.io/)
@@ -45,6 +244,7 @@ A comprehensive production and materials management system built with Django RES
 ### Backend
 - **Django 5.2.8** - Web framework
 - **Django REST Framework 3.16.0** - API framework
+- **drf-spectacular 0.27.2** - OpenAPI 3.0 schema generation
 - **PostgreSQL** (Production) / **SQLite** (Development) - Database
 - **JWT Authentication** - djangorestframework_simplejwt
 - **WhiteNoise** - Static file serving
@@ -113,29 +313,54 @@ npm start
 ./start_dev.sh
 ```
 
-## 📡 API Endpoints
+## 📡 API Documentation
 
-### Authentication
+### 📖 Interactive API Documentation
+
+Prodflux provides comprehensive OpenAPI 3.0 documentation with interactive interfaces:
+
+- **🔵 Swagger UI:** http://localhost:8000/api/docs/
+  - **Integriertes Login-Panel** für schnelle Authentifizierung 🆕
+  - Automatische Token-Verwaltung
+  - Interactive API testing
+  - Built-in authentication
+  - Request/Response examples
+  
+- **📘 ReDoc:** http://localhost:8000/api/redoc/
+  - Beautiful, readable documentation
+  - Three-column layout
+  - Detailed schemas
+
+- **📄 OpenAPI Schema:** http://localhost:8000/api/schema/
+  - Download as JSON or YAML
+  - Import into Postman, Insomnia, etc.
+  - Code generation support
+
+For detailed information, see [OPENAPI.md](OPENAPI.md)
+
+### Key API Endpoints
+
+#### Authentication
 - `POST /api/auth/login/` - Login and get JWT token
 - `POST /api/auth/refresh/` - Refresh JWT token
 - `GET /api/auth/me/` - Get current user profile
 
-### Materials
+#### Materials
 - `GET|POST /api/materials/` - List/Create materials
 - `GET|PUT|DELETE /api/materials/{id}/` - Material operations
 - `GET|POST /api/materials/{id}/movements/` - Material movements
 - `GET|POST /api/material-categories/` - Material categories
 
-### Products
+#### Products
 - `GET|POST /api/products/` - List/Create products
 - `GET|PUT|DELETE /api/products/{id}/` - Product operations
 - `GET|POST /api/product-materials/` - Bill of Materials
 
-### Workshops
+#### Workshops
 - `GET|POST /api/workshops/` - Workshop management
 - `GET|PUT|DELETE /api/workshops/{id}/` - Workshop operations
 
-For complete API documentation, see [DEVELOPMENT.md](DEVELOPMENT.md)
+For complete API documentation, see [DEVELOPMENT.md](DEVELOPMENT.md) and [OPENAPI.md](OPENAPI.md)
 
 ## 🏗️ Project Structure
 
@@ -178,7 +403,10 @@ SERVE_FRONTEND=False
 ### API Testing
 Use the provided HTTP test files:
 - `api-test.http` - General API testing
+- `api-test-openapi.http` - OpenAPI endpoint testing
 - `api-test Workshops.http` - Workshop-specific tests
+
+Or use the interactive Swagger UI at http://localhost:8000/api/docs/
 
 ### Database Migrations
 ```bash
@@ -234,6 +462,7 @@ python manage.py collectstatic
 ## 📄 Documentation
 
 - [Development Guide](DEVELOPMENT.md) - Detailed technical documentation
+- [OpenAPI Documentation](OPENAPI.md) - API documentation and usage
 - [GitHub Copilot Instructions](.github/copilot-instructions.md) - AI assistant configuration
 
 ## 📝 License

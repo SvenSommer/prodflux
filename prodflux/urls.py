@@ -24,14 +24,22 @@ from rest_framework_simplejwt.views import (
 from django.conf import settings
 from django.conf.urls.static import static
 from core.views import serve_frontend
+from core.swagger_views import CustomSwaggerView, CustomRedocView
+from drf_spectacular.views import SpectacularAPIView
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # OpenAPI Schema & Documentation
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', CustomSwaggerView.as_view(), name='swagger-ui'),
+    path('api/redoc/', CustomRedocView.as_view(), name='redoc'),
+    # Authentication
     path('api/auth/login/', TokenObtainPairView.as_view(), 
          name='token_obtain_pair'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), 
          name='token_refresh'),
+    # API Routes
     path('api/', include('core.urls')),
     path('api/', include('materials.urls')),
     path('api/', include('products.urls')),

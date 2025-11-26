@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #login-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #d4d4d4;
+            border-radius: 4px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 300px;
+        }
+        
+        #login-panel.logged-in {
+            background: #e8f5e9;
+        }
+        
+        #login-panel h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        #login-panel input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #d4d4d4;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        #login-panel button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        #login-btn {
+            background: #4caf50;
+            color: white;
+        }
+        
+        #login-btn:hover {
+            background: #45a049;
+        }
+        
+        #logout-btn {
+            background: #f44336;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        #logout-btn:hover {
+            background: #da190b;
+        }
+        
+        #login-status {
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #user-info {
+            font-size: 13px;
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        
+        #token-display {
+            font-size: 11px;
+            color: #666;
+            margin-top: 10px;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            word-break: break-all;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Panel -->
+    <div id="login-panel">
+        <h3>🔐 Quick Login</h3>
+        <div id="login-status" class="hidden"></div>
+        <div id="user-info" class="hidden"></div>
+        <div id="login-form">
+            <input type="text" id="username" placeholder="Username" autocomplete="username">
+            <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+            <button id="login-btn" onclick="login()">Login</button>
+        </div>
+        <button id="logout-btn" class="hidden" onclick="logout()">Logout</button>
+        <div id="token-display" class="hidden"></div>
+    </div>
+
+    <!-- ReDoc -->
+    <redoc spec-url="{{ schema_url }}"></redoc>
+
+    <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
+    <script>
+        // Configuration
+        const API_BASE_URL = window.location.origin;
+        const LOGIN_URL = API_BASE_URL + '/api/auth/login/';
+        
+        // Check if we have a stored token on load
+        window.addEventListener('load', function() {
+            const storedToken = localStorage.getItem('jwt_token');
+            const storedUser = localStorage.getItem('username');
+            if (storedToken && storedUser) {
+                showLoggedInState(storedUser, storedToken);
+            }
+        });
+
+        // Login function
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showStatus('Please enter username and password', 'error');
+                return;
+            }
+            
+            showStatus('Logging in...', 'info');
+            
+            try {
+                const response = await fetch(LOGIN_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const token = data.access;
+                    
+                    // Store token and username
+                    localStorage.setItem('jwt_token', token);
+                    localStorage.setItem('username', username);
+                    
+                    // Update UI
+                    showLoggedInState(username, token);
+                    showStatus('✓ Logged in successfully! Token stored', 'success');
+                    
+                    // Clear password
+                    document.getElementById('password').value = '';
+                } else {
+                    const error = await response.json();
+                    showStatus('Login failed: ' + (error.detail || 'Invalid credentials'), 'error');
+                }
+            } catch (error) {
+                showStatus('Login error: ' + error.message, 'error');
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            // Clear stored data
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('username');
+            
+            // Update UI
+            showLoggedOutState();
+            showStatus('Logged out successfully', 'info');
+        }
+        
+        // Show logged in state
+        function showLoggedInState(username, token) {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('logout-btn').classList.remove('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-info').textContent = '👤 Logged in as: ' + username;
+            document.getElementById('login-panel').classList.add('logged-in');
+            
+            // Show token
+            const tokenDisplay = document.getElementById('token-display');
+            tokenDisplay.classList.remove('hidden');
+            tokenDisplay.innerHTML = '<strong>Token:</strong><br>' + token;
+        }
+        
+        // Show logged out state
+        function showLoggedOutState() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('logout-btn').classList.add('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+            document.getElementById('token-display').classList.add('hidden');
+            document.getElementById('login-panel').classList.remove('logged-in');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('login-status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status-' + type;
+            statusDiv.classList.remove('hidden');
+            
+            // Auto-hide success messages after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.classList.add('hidden');
+                }, 3000);
+            }
+        }
+        
+        // Allow login with Enter key
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+        
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('password').focus();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -78,18 +78,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'prodflux.wsgi.application'
 
 # Datenbank
-if RENDER:
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    # Use DATABASE_URL if set (production or local PostgreSQL)
     import dj_database_url
-    DATABASE_URL = os.environ.get('DATABASE_URL')
-    if DATABASE_URL:
-        DATABASES = {
-            "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-        }
-    else:
-        raise ValueError(
-            "DATABASE_URL environment variable is required in production"
-        )
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+elif RENDER:
+    # Production without DATABASE_URL - error
+    raise ValueError(
+        "DATABASE_URL environment variable is required in production"
+    )
 else:
+    # Local development without DATABASE_URL - use SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

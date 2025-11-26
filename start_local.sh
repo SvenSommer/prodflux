@@ -6,6 +6,9 @@ echo "🚀 Starting ProdFlux Backend (Django)..."
 # Navigate to project directory
 cd /Users/Shared/dev/prodflux
 
+# Add PostgreSQL 16 to PATH for database support
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+
 # Check if virtual environment exists
 if [ ! -d "venv" ]; then
     echo "❌ Virtual environment not found. Please run setup first."

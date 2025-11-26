@@ -1,6 +1,17 @@
 media/
 .env
+.env.*
+!.env.example
 db.sqlite3
+
+# Database backups and scripts with credentials
+backups/
+scripts/pull_prod_db.sh
+scripts/restore_prod_db.sh
+scripts/switch_to_prod_db.sh
+scripts/update_prod_db.sh
+*.sql
+*.dump
 
 # Python
 __pycache__/

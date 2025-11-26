@@ -117,7 +117,7 @@ export class MaterialFormComponent {
     if (this.selectedCategoryId !== null) {
       formData.append('category_id', this.selectedCategoryId.toString());
     }
-    
+
     // Add suppliers
     this.selectedSupplierIds.forEach((supplierId, index) => {
       formData.append(`suppliers[${index}]`, supplierId.toString());

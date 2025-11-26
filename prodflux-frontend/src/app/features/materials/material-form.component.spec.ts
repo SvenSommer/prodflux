@@ -138,7 +138,7 @@ describe('MaterialFormComponent - Suppliers', () => {
       component.save();
 
       expect(materialsService.createMaterialFormData).toHaveBeenCalled();
-      
+
       // Check that FormData includes suppliers
       const callArgs = materialsService.createMaterialFormData.calls.mostRecent().args[0];
       expect(callArgs).toBeInstanceOf(FormData);

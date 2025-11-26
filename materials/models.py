@@ -137,7 +137,7 @@ class OrderItem(models.Model):
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     preis_pro_stueck = models.DecimalField(
         max_digits=10,
-        decimal_places=2,
+        decimal_places=5,
         help_text='Netto-Preis pro Stück'
     )
     mwst_satz = models.DecimalField(
@@ -148,7 +148,7 @@ class OrderItem(models.Model):
     )
     preis_pro_stueck_mit_versand = models.DecimalField(
         max_digits=10,
-        decimal_places=2,
+        decimal_places=5,
         null=True,
         blank=True
     )
@@ -165,7 +165,9 @@ class OrderItem(models.Model):
         versand_anteil = (self.quantity / gesamtmenge) * self.order.versandkosten
         gesamtpreis = self.preis_pro_stueck + (versand_anteil / self.quantity)
 
-        return Decimal(gesamtpreis).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return Decimal(gesamtpreis).quantize(
+            Decimal('0.00001'), rounding=ROUND_HALF_UP
+        )
 
     def save(self, *args, **kwargs):
         self.preis_pro_stueck_mit_versand = self.berechne_versandanteil()

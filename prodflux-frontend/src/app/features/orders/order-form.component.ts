@@ -193,9 +193,9 @@ export class OrderFormComponent {
       .filter(([_, v]) => v.quantity > 0)
       .map(([materialId, v]) => ({
         material: +materialId,
-        quantity: v.quantity,
-        preis_pro_stueck: v.price.netto,
-        mwst_satz: v.price.mwst_satz,
+        quantity: Number(v.quantity),
+        preis_pro_stueck: Number(v.price.netto),
+        mwst_satz: Number(v.price.mwst_satz),
         quelle: v.quelle || ''
       }));
 
@@ -203,8 +203,8 @@ export class OrderFormComponent {
       supplier: this.supplier,
       order_number: this.order_number || undefined,
       bestellt_am: this.bestellt_am,
-      versandkosten: this.versandkosten.netto,
-      versandkosten_mwst_satz: this.versandkosten.mwst_satz,
+      versandkosten: this.versandkosten.netto ? Number(this.versandkosten.netto) : null,
+      versandkosten_mwst_satz: Number(this.versandkosten.mwst_satz),
       notiz: this.notiz,
       is_historical: this.is_historical,
       items
@@ -217,9 +217,53 @@ export class OrderFormComponent {
       ? this.ordersService.update(this.orderId, payload)
       : this.ordersService.create(payload);
 
-    request.subscribe(result => {
-      console.log('[OrderForm] Save successful, result:', result);
-      this.router.navigate(['/orders']);
+    request.subscribe({
+      next: (result) => {
+        console.log('[OrderForm] Save successful, result:', result);
+        this.router.navigate(['/orders']);
+      },
+      error: (error) => {
+        console.error('[OrderForm] Save failed:', error);
+
+        let errorMessage = 'Beim Speichern ist ein Fehler aufgetreten.';
+
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error.items && Array.isArray(error.error.items)) {
+            // Items validation errors
+            const itemErrors = error.error.items
+              .map((itemError: any, index: number) => {
+                if (itemError && Object.keys(itemError).length > 0) {
+                  const errors = Object.entries(itemError)
+                    .map(([field, msg]) => `${field}: ${msg}`)
+                    .join(', ');
+                  return `Item ${index + 1}: ${errors}`;
+                }
+                return null;
+              })
+              .filter((e: any) => e !== null);
+
+            if (itemErrors.length > 0) {
+              errorMessage = 'Validierungsfehler:\n' + itemErrors.join('\n');
+            }
+          } else if (error.error.detail) {
+            errorMessage = error.error.detail;
+          } else {
+            // Other field errors
+            const fieldErrors = Object.entries(error.error)
+              .map(([field, msg]) => `${field}: ${Array.isArray(msg) ? msg.join(', ') : msg}`)
+              .join('\n');
+            if (fieldErrors) {
+              errorMessage = 'Validierungsfehler:\n' + fieldErrors;
+            }
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        alert(errorMessage);
+      }
     });
   }
 

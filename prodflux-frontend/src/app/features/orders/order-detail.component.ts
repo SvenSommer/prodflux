@@ -57,7 +57,8 @@ export class OrderDetailComponent {
   formatCurrency(value: any): string {
     const num = typeof value === 'number' ? value : parseFloat(value);
     if (isNaN(num)) return '—';
-    return `${num.toFixed(2)} €`;
+    // Zeige bis zu 5 Dezimalstellen, aber entferne trailing zeros
+    return `${num.toFixed(5).replace(/\.?0+$/, '')} €`;
   }
 
   calculateBrutto(netto: number, mwstSatz?: number): number {

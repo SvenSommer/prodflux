@@ -5,48 +5,35 @@
       <p class="hint">Erfassen Sie Produktionsziele und klicken Sie auf "Plan berechnen".</p>
     </div>
   } @else {
-    <div class="table-container">
-      <table mat-table [dataSource]="rows" class="coverage-table">
-        <!-- Material Column -->
-        <ng-container matColumnDef="material">
-          <th mat-header-cell *matHeaderCellDef>Material</th>
-          <td mat-cell *matCellDef="let row">{{ row.materialName }}</td>
-        </ng-container>
-
-        <!-- Workshop Columns (dynamic) -->
-        @for (workshopId of workshopIds; track workshopId) {
-          <ng-container [matColumnDef]="'workshop-' + workshopId">
-            <th mat-header-cell *matHeaderCellDef>
-              <div class="workshop-header">
-                {{ getWorkshopName(workshopId) }}
-                <div class="column-labels">
-                  <span>Bedarf</span>
-                  <span>Lokal</span>
-                  <span>Transfer</span>
-                  <span>Fehlmenge</span>
-                </div>
+    <app-material-table 
+      [rows]="materialTableRows" 
+      [columns]="workshopColumns"
+      [showImage]="true"
+      [showCategory]="true">
+      <ng-template #customColumn let-row let-column="column">
+        @if (column.key.startsWith('workshop-')) {
+          @if (getWorkshopData(row.data, +column.key.replace('workshop-', '')); as data) {
+            <div class="workshop-coverage-data">
+              <div class="coverage-header">
+                <span>Bedarf</span>
+                <span>Lokal</span>
+                <span>Transfer</span>
+                <span>Fehlmenge</span>
               </div>
-            </th>
-            <td mat-cell *matCellDef="let row">
-              @if (getWorkshopData(row, workshopId); as data) {
-                <div class="workshop-coverage-data">
-                  <span>{{ data.required | number:'1.0-2' }}</span>
-                  <span>{{ data.local | number:'1.0-2' }}</span>
-                  <span>{{ data.transfer | number:'1.0-2' }}</span>
-                  <span [class.has-shortage]="data.shortage > 0">
-                    {{ data.shortage | number:'1.0-2' }}
-                  </span>
-                </div>
-              } @else {
-                <span class="no-data">—</span>
-              }
-            </td>
-          </ng-container>
+              <div class="coverage-values">
+                <span>{{ data.required | number:'1.0-2' }}</span>
+                <span>{{ data.local | number:'1.0-2' }}</span>
+                <span>{{ data.transfer | number:'1.0-2' }}</span>
+                <span [class.has-shortage]="data.shortage > 0">
+                  {{ data.shortage | number:'1.0-2' }}
+                </span>
+              </div>
+            </div>
+          } @else {
+            <span class="no-data">—</span>
+          }
         }
-
-        <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
-        <tr mat-row *matRowDef="let row; columns: getDisplayedColumns();"></tr>
-      </table>
-    </div>
+      </ng-template>
+    </app-material-table>
   }
 </div>

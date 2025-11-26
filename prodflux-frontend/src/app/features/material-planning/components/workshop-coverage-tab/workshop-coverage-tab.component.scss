@@ -1,5 +1,46 @@
 .workshop-coverage-container {
   padding: 1rem;
+
+  .workshop-coverage-data {
+    .coverage-header {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.6);
+      margin-bottom: 0.25rem;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px solid #e0e0e0;
+
+      span {
+        text-align: center;
+      }
+    }
+
+    .coverage-values {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.25rem;
+      font-size: 0.875rem;
+
+      span {
+        text-align: center;
+        padding: 0.25rem;
+
+        &.has-shortage {
+          color: #d32f2f;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .no-data {
+    color: rgba(0, 0, 0, 0.4);
+    text-align: center;
+    display: block;
+  }
 }
 
 .empty-state {
@@ -18,6 +59,23 @@
   max-width: 100%;
 }
 
+.category-section {
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.category-header {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1976d2;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #1976d2;
+}
+
 .coverage-table {
   width: 100%;
   min-width: 700px;
@@ -25,6 +83,23 @@
   th {
     font-weight: 600;
     background-color: #f5f5f5;
+  }
+
+  .material-link {
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-block;
+
+    &:hover {
+      color: #1565c0;
+      text-decoration: underline;
+    }
+
+    &:active {
+      color: #0d47a1;
+    }
   }
 
   .workshop-header {

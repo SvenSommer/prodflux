@@ -1,0 +1,64 @@
+<div class="material-table-container">
+  @if (rows.length === 0) {
+    <div class="empty-state">
+      <p>Keine Daten vorhanden.</p>
+    </div>
+  } @else {
+    @for (group of groupedRows; track group.categoryName) {
+      <div class="category-group">
+        @if (showCategory) {
+          <div class="category-header">
+            <span class="category-name">{{ group.categoryName }}</span>
+            <span class="category-count">({{ group.rows.length }})</span>
+          </div>
+        }
+        
+        <table mat-table [dataSource]="group.rows" class="material-table">
+          <!-- Material Name Column -->
+          <ng-container matColumnDef="material">
+            <th mat-header-cell *matHeaderCellDef>Material</th>
+            <td mat-cell *matCellDef="let row">
+              <a [routerLink]="['/materials', row.materialId]" class="material-link">
+                {{ row.materialName }}
+              </a>
+            </td>
+          </ng-container>
+
+          <!-- Material Image Column -->
+          @if (showImage) {
+            <ng-container matColumnDef="image">
+              <th mat-header-cell *matHeaderCellDef>Bild</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.materialImageUrl) {
+                  <img [src]="row.materialImageUrl" [alt]="row.materialName" class="material-image">
+                } @else {
+                  <div class="no-image">
+                    <span class="no-image-icon">🖼️</span>
+                  </div>
+                }
+              </td>
+            </ng-container>
+          }
+
+          <!-- Custom Columns -->
+          @for (column of columns; track column.key) {
+            <ng-container [matColumnDef]="column.key">
+              <th mat-header-cell *matHeaderCellDef [style.width]="column.width">{{ column.header }}</th>
+              <td mat-cell *matCellDef="let row">
+                <ng-container *ngTemplateOutlet="customColumnTemplate || defaultCell; context: { $implicit: row, column: column }"></ng-container>
+              </td>
+            </ng-container>
+          }
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    }
+  }
+</div>
+
+<!-- Default cell template if no custom template provided -->
+<ng-template #defaultCell let-row let-column="column">
+  {{ row.data[column.key] }}
+</ng-template>

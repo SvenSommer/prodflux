@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import {
@@ -9,6 +10,7 @@ import {
 } from '../../models/planning/planning-result.models';
 import { Workshop } from '../../models/api/workshop.model';
 import { Material } from '../../models/api/material.model';
+import { MaterialTableComponent, MaterialTableRow, MaterialTableColumn } from '../../../../shared/components/material-table/material-table.component';
 
 interface TransferPlanRowVm {
   materialId: number;
@@ -25,7 +27,7 @@ interface TransferPlanRowVm {
 @Component({
   selector: 'app-transfer-plan-tab',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule],
+  imports: [CommonModule, RouterLink, MatTableModule, MatButtonModule, MaterialTableComponent],
   templateUrl: './transfer-plan-tab.component.html',
   styleUrl: './transfer-plan-tab.component.scss'
 })
@@ -41,6 +43,34 @@ export class TransferPlanTabComponent implements OnChanges {
   @Output() adoptTodos = new EventEmitter<void>();
 
   rows: TransferPlanRowVm[] = [];
+
+  get materialTableRows(): MaterialTableRow[] {
+    return this.rows.map(row => {
+      const material = this.materialById[row.materialId];
+      return {
+        materialId: row.materialId,
+        materialName: row.materialName,
+        materialImageUrl: material?.bild_url || null,
+        categoryName: material?.category?.name || 'Ohne Kategorie',
+        categoryOrder: material?.category?.order ?? 9999,
+        data: row
+      };
+    });
+  }
+
+  get workshopColumns(): MaterialTableColumn[] {
+    return this.workshopIds.map(id => ({
+      key: `workshop-${id}`,
+      header: this.getWorkshopName(id)
+    }));
+  }
+
+  get allColumns(): MaterialTableColumn[] {
+    return [
+      ...this.workshopColumns,
+      { key: 'solution', header: 'Lösungsvorschlag' }
+    ];
+  }
 
   ngOnChanges(): void {
     this.buildRows();
@@ -71,32 +101,38 @@ export class TransferPlanTabComponent implements OnChanges {
     });
 
     // Build rows
-    this.rows = this.materials.map(material => {
-      const materialCoverage = coverageByMaterial[material.materialId] || [];
-      const materialTransfers = transfersByMaterial[material.materialId] || [];
+    this.rows = this.materials
+      .map(material => {
+        const materialCoverage = coverageByMaterial[material.materialId] || [];
+        const materialTransfers = transfersByMaterial[material.materialId] || [];
 
-      const workshopData: Record<number, {
-        required: number;
-        availableAfter: number;
-        delta: number;
-      }> = {};
+        const workshopData: Record<number, {
+          required: number;
+          availableAfter: number;
+          delta: number;
+        }> = {};
 
-      materialCoverage.forEach(cov => {
-        workshopData[cov.workshopId] = {
-          required: cov.required,
-          availableAfter: cov.localStockAfterOrdersAndTransfers,
-          delta: cov.localStockAfterOrdersAndTransfers - cov.required
+        materialCoverage.forEach(cov => {
+          workshopData[cov.workshopId] = {
+            required: cov.required,
+            availableAfter: cov.localStockAfterOrdersAndTransfers,
+            delta: cov.localStockAfterOrdersAndTransfers - cov.required
+          };
+        });
+
+        return {
+          materialId: material.materialId,
+          materialName: this.materialById[material.materialId]?.bezeichnung || `Material ${material.materialId}`,
+          orderQty: material.suggestedOrderToCentral,
+          workshopData,
+          transfers: materialTransfers
         };
+      })
+      .filter(row => {
+        // Filter out materials where total required across all workshops is 0
+        const totalRequired = Object.values(row.workshopData).reduce((sum, ws) => sum + ws.required, 0);
+        return totalRequired > 0;
       });
-
-      return {
-        materialId: material.materialId,
-        materialName: this.materialById[material.materialId]?.bezeichnung || `Material ${material.materialId}`,
-        orderQty: material.suggestedOrderToCentral,
-        workshopData,
-        transfers: materialTransfers
-      };
-    });
   }
 
   getWorkshopName(workshopId: number): string {
@@ -114,6 +150,23 @@ export class TransferPlanTabComponent implements OnChanges {
       const qty = t.quantity.toFixed(2);
       return `${from} → ${to}: ${qty}`;
     }).join(', ');
+  }
+
+  get groupedRows(): { categoryName: string; categoryOrder: number; rows: TransferPlanRowVm[] }[] {
+    const groups = new Map<string, { categoryName: string; categoryOrder: number; rows: TransferPlanRowVm[] }>();
+
+    this.rows.forEach(row => {
+      const material = this.materialById[row.materialId];
+      const categoryName = material?.category?.name || 'Ohne Kategorie';
+      const categoryOrder = material?.category?.order ?? 9999;
+
+      if (!groups.has(categoryName)) {
+        groups.set(categoryName, { categoryName, categoryOrder, rows: [] });
+      }
+      groups.get(categoryName)!.rows.push(row);
+    });
+
+    return Array.from(groups.values()).sort((a, b) => a.categoryOrder - b.categoryOrder);
   }
 
   getDisplayedColumns(): string[] {

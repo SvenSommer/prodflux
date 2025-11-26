@@ -1,5 +1,51 @@
 .transfer-plan-container {
   padding: 1rem;
+
+  .workshop-data {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+
+    .delta-positive {
+      color: #2e7d32;
+    }
+
+    .delta-negative {
+      color: #d32f2f;
+      font-weight: 500;
+    }
+  }
+
+  .no-data {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .solution-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .order-suggestion {
+      color: #1976d2;
+      font-weight: 500;
+
+      .central-info {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .transfer-suggestion {
+      color: #f57c00;
+      font-size: 0.875rem;
+    }
+
+    .no-action {
+      color: rgba(0, 0, 0, 0.4);
+    }
+  }
 }
 
 .empty-state {
@@ -35,6 +81,23 @@
   max-width: 100%;
 }
 
+.category-section {
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.category-header {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1976d2;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #1976d2;
+}
+
 .transfer-table {
   width: 100%;
   min-width: 900px;
@@ -42,6 +105,23 @@
   th {
     font-weight: 600;
     background-color: #f5f5f5;
+  }
+
+  .material-link {
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-block;
+
+    &:hover {
+      color: #1565c0;
+      text-decoration: underline;
+    }
+
+    &:active {
+      color: #0d47a1;
+    }
   }
 
   .workshop-data {

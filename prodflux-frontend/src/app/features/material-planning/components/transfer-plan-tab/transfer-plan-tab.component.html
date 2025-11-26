@@ -15,63 +15,46 @@
       </div>
     }
 
-    <div class="table-container">
-      <table mat-table [dataSource]="rows" class="transfer-table">
-        <!-- Material Column -->
-        <ng-container matColumnDef="material">
-          <th mat-header-cell *matHeaderCellDef>Material</th>
-          <td mat-cell *matCellDef="let row">{{ row.materialName }}</td>
-        </ng-container>
-
-        <!-- Workshop Columns (dynamic based on workshopIds) -->
-        @for (workshopId of workshopIds; track workshopId) {
-          <ng-container [matColumnDef]="'workshop-' + workshopId">
-            <th mat-header-cell *matHeaderCellDef>{{ getWorkshopName(workshopId) }}</th>
-            <td mat-cell *matCellDef="let row">
-              @if (row.workshopData[workshopId]) {
-                <div class="workshop-data">
-                  <div>Bedarf: {{ row.workshopData[workshopId].required | number:'1.0-2' }}</div>
-                  <div>Verfügbar: {{ row.workshopData[workshopId].availableAfter | number:'1.0-2' }}</div>
-                  <div [class.delta-positive]="row.workshopData[workshopId].delta >= 0"
-                       [class.delta-negative]="row.workshopData[workshopId].delta < 0">
-                    Delta: {{ row.workshopData[workshopId].delta | number:'1.0-2' }}
-                  </div>
-                </div>
-              } @else {
-                <span class="no-data">—</span>
-              }
-            </td>
-          </ng-container>
-        }
-
-        <!-- Solution Column -->
-        <ng-container matColumnDef="solution">
-          <th mat-header-cell *matHeaderCellDef>Lösungsvorschlag</th>
-          <td mat-cell *matCellDef="let row">
-            <div class="solution-content">
-              @if (row.orderQty > 0) {
-                <div class="order-suggestion">
-                  Bestellung: {{ row.orderQty | number:'1.0-2' }}
-                  @if (centralWorkshopId) {
-                    <span class="central-info">(nach {{ getWorkshopName(centralWorkshopId) }})</span>
-                  }
-                </div>
-              }
-              @if (row.transfers.length > 0) {
-                <div class="transfer-suggestion">
-                  Transfer: {{ getTransferText(row.transfers) }}
-                </div>
-              }
-              @if (row.orderQty === 0 && row.transfers.length === 0) {
-                <span class="no-action">—</span>
-              }
+    <app-material-table 
+      [rows]="materialTableRows" 
+      [columns]="allColumns"
+      [showImage]="true"
+      [showCategory]="true">
+      <ng-template #customColumn let-row let-column="column">
+        @if (column.key.startsWith('workshop-')) {
+          @if (row.data.workshopData[+column.key.replace('workshop-', '')]; as wsData) {
+            <div class="workshop-data">
+              <div>Bedarf: {{ wsData.required | number:'1.0-2' }}</div>
+              <div>Verfügbar: {{ wsData.availableAfter | number:'1.0-2' }}</div>
+              <div [class.delta-positive]="wsData.delta >= 0"
+                   [class.delta-negative]="wsData.delta < 0">
+                Delta: {{ wsData.delta | number:'1.0-2' }}
+              </div>
             </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
-        <tr mat-row *matRowDef="let row; columns: getDisplayedColumns();"></tr>
-      </table>
-    </div>
+          } @else {
+            <span class="no-data">—</span>
+          }
+        } @else if (column.key === 'solution') {
+          <div class="solution-content">
+            @if (row.data.orderQty > 0) {
+              <div class="order-suggestion">
+                Bestellung: {{ row.data.orderQty | number:'1.0-2' }}
+                @if (centralWorkshopId) {
+                  <span class="central-info">(nach {{ getWorkshopName(centralWorkshopId) }})</span>
+                }
+              </div>
+            }
+            @if (row.data.transfers.length > 0) {
+              <div class="transfer-suggestion">
+                Transfer: {{ getTransferText(row.data.transfers) }}
+              </div>
+            }
+            @if (row.data.orderQty === 0 && row.data.transfers.length === 0) {
+              <span class="no-action">—</span>
+            }
+          </div>
+        }
+      </ng-template>
+    </app-material-table>
   }
 </div>

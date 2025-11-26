@@ -30,7 +30,7 @@ export class MaterialTableComponent {
   @Input({ required: true }) columns: MaterialTableColumn[] = [];
   @Input() showImage: boolean = true;
   @Input() showCategory: boolean = true;
-  
+
   @ContentChild('customColumn', { read: TemplateRef }) customColumnTemplate?: TemplateRef<any>;
 
   get groupedRows(): { categoryName: string; categoryOrder: number; rows: MaterialTableRow[] }[] {

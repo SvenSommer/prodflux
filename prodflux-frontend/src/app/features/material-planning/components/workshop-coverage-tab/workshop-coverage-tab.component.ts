@@ -89,7 +89,12 @@ export class WorkshopCoverageTabComponent implements OnChanges {
         materialName: this.materialById[materialId]?.bezeichnung || `Material ${materialId}`,
         byWorkshop
       };
-    }).sort((a, b) => a.materialName.localeCompare(b.materialName));
+    })
+    .filter(row => {
+      // Filter out materials with no required quantity in any workshop
+      return Object.values(row.byWorkshop).some(cov => cov.required > 0);
+    })
+    .sort((a, b) => a.materialName.localeCompare(b.materialName));
   }
 
   getWorkshopName(workshopId: number): string {

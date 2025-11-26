@@ -60,7 +60,8 @@
           <mat-tab label="Globaler Bedarf & Bestellungen">
             <app-global-demand-orders-tab
               [rows]="planningResult.materials"
-              [materialById]="planningData.lookups.materialById">
+              [materialById]="planningData.lookups.materialById"
+              (createOrder)="createOrderFromPlan()">
             </app-global-demand-orders-tab>
           </mat-tab>
 
@@ -141,9 +142,12 @@
           </table>
 
           <div class="backend-note">
-            <strong>Backend TODO:</strong> Langfristig: POST <code>/api/transfers/</code>
-            (wenn im Backend existiert) oder Movement-Endpunkte.
-            In Step 5: keine Persistenz, nur Frontend-State.
+            <strong>Backend Integration (Step 7):</strong>
+            <button mat-raised-button color="primary" type="button"
+                    (click)="createTransfersFromTodos()"
+                    [disabled]="isCreatingTransfers">
+              {{ isCreatingTransfers ? 'Erstelle Transfers...' : 'Alle offenen Transfers im Backend anlegen' }}
+            </button>
           </div>
         </mat-card-content>
       </mat-card>

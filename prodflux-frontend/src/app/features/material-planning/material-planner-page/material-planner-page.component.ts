@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MaterialPlannerTargetsFormComponent } from '../material-planner-targets-form/material-planner-targets-form.component';
 import { WorkshopProductTarget } from '../models/workshop-product-target';
 import { MaterialPlanningDataService, MaterialPlanningData } from '../services/material-planning-data.service';
+import { MaterialPlanningActionsService } from '../services/material-planning-actions.service';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { planGlobalMaterials } from '../engine/material-planning.engine';
@@ -18,6 +19,7 @@ import { TransferTodo, generateTodoId } from '../models/todos/transfer-todo';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 
 interface ProductOption {
@@ -53,12 +55,16 @@ interface WorkshopOption {
 })
 export class MaterialPlannerPageComponent implements OnInit {
   private dataService = inject(MaterialPlanningDataService);
+  private actionsService = inject(MaterialPlanningActionsService);
+  private snackBar = inject(MatSnackBar);
 
   targets: WorkshopProductTarget[] = [];
   planningData$!: Observable<MaterialPlanningData>;
   productsForForm$!: Observable<ProductOption[]>;
   workshopsForForm$!: Observable<WorkshopOption[]>;
   isLoading = true;
+  isCreatingOrder = false;
+  isCreatingTransfers = false;
 
   planningResult: GlobalPlanningResult | null = null;
   error: string | null = null;
@@ -117,7 +123,7 @@ export class MaterialPlannerPageComponent implements OnInit {
         {
           centralWorkshopId,
           workshopIds,
-          openOrdersByMaterialId: {} // Backend TODO: later from /orders + /deliveries
+          openOrdersByMaterialId: planningData.openOrdersByMaterialId
         }
       );
     } catch (err) {
@@ -174,5 +180,82 @@ export class MaterialPlannerPageComponent implements OnInit {
 
   deleteTodo(todoId: string): void {
     this.transferTodos = this.transferTodos.filter(t => t.id !== todoId);
+  }
+
+  createOrderFromPlan(): void {
+    if (!this.planningResult) {
+      this.snackBar.open('Kein Plan verfügbar', 'Schließen', { duration: 3000 });
+      return;
+    }
+
+    this.isCreatingOrder = true;
+    this.error = null;
+
+    this.actionsService.createOrderFromPlan(this.planningResult.materials).subscribe({
+      next: (order) => {
+        this.snackBar.open(
+          `Bestellung #${order.id} erfolgreich angelegt (${order.items.length} Positionen)`,
+          'Schließen',
+          { duration: 5000 }
+        );
+        this.isCreatingOrder = false;
+        // Reload data to refresh openOrders
+        this.reloadPlanningData();
+      },
+      error: (err) => {
+        this.error = `Fehler beim Anlegen der Bestellung: ${err.message || err}`;
+        this.snackBar.open(this.error, 'Schließen', { duration: 5000 });
+        this.isCreatingOrder = false;
+        console.error('Create order error:', err);
+      }
+    });
+  }
+
+  createTransfersFromTodos(): void {
+    const openTodos = this.transferTodos.filter(t => !t.done);
+
+    if (openTodos.length === 0) {
+      this.snackBar.open('Keine offenen Transfer-ToDos vorhanden', 'Schließen', { duration: 3000 });
+      return;
+    }
+
+    this.isCreatingTransfers = true;
+    this.error = null;
+
+    this.actionsService.createTransfersFromTodos(openTodos).subscribe({
+      next: (transfers) => {
+        // Mark todos as done and optionally store transfer IDs
+        openTodos.forEach((todo, index) => {
+          todo.done = true;
+          // Optionally: todo.backendTransferId = transfers[index]?.id;
+        });
+
+        this.snackBar.open(
+          `${transfers.length} Transfer(s) erfolgreich angelegt`,
+          'Schließen',
+          { duration: 5000 }
+        );
+        this.isCreatingTransfers = false;
+      },
+      error: (err) => {
+        this.error = `Fehler beim Anlegen der Transfers: ${err.message || err}`;
+        this.snackBar.open(this.error, 'Schließen', { duration: 5000 });
+        this.isCreatingTransfers = false;
+        console.error('Create transfers error:', err);
+      }
+    });
+  }
+
+  private reloadPlanningData(): void {
+    this.planningData$ = this.dataService.loadAll().pipe(
+      shareReplay(1)
+    );
+
+    // Optionally: recalculate plan automatically
+    this.planningData$.subscribe(data => {
+      if (this.targets.length > 0) {
+        this.calculatePlan(data);
+      }
+    });
   }
 }

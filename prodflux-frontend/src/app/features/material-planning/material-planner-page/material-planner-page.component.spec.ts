@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MaterialPlannerPageComponent } from './material-planner-page.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MaterialPlanningDataService, MaterialPlanningData } from '../services/material-planning-data.service';
 import { of } from 'rxjs';
 import { WorkshopProductTarget } from '../models/workshop-product-target';
@@ -26,6 +27,8 @@ describe('MaterialPlannerPageComponent', () => {
     bom: [
       { id: 1, product: 1, material: 1, quantity_per_unit: '2.5' }
     ],
+    orders: [],
+    openOrdersByMaterialId: {},
     lookups: {
       workshopById: {
         1: { id: 1, name: 'Workshop Rauen' },
@@ -54,7 +57,8 @@ describe('MaterialPlannerPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         MaterialPlannerPageComponent,
-        BrowserAnimationsModule
+        BrowserAnimationsModule,
+        HttpClientTestingModule
       ],
       providers: [
         { provide: MaterialPlanningDataService, useValue: mockDataService }

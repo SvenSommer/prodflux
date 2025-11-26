@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { MaterialPlanningDataService } from './material-planning-data.service';
+import { MaterialPlanningDataService, computeOpenOrdersByMaterialId } from './material-planning-data.service';
 import { environment } from '../../../../environments/environment';
 import { Workshop } from '../models/api/workshop.model';
 import { Product } from '../models/api/product.model';
 import { Material } from '../models/api/material.model';
 import { ProductMaterial } from '../models/api/product-material.model';
+import { Order } from '../models/api/order.model';
 
 describe('MaterialPlanningDataService', () => {
   let service: MaterialPlanningDataService;
@@ -50,6 +51,17 @@ describe('MaterialPlanningDataService', () => {
       { id: 2, product: 1, material: 2, quantity_per_unit: '1.0' }
     ];
 
+    const mockOrders: Order[] = [
+      {
+        id: 1,
+        bestellt_am: '2025-01-01',
+        angekommen_am: null,
+        items: [
+          { id: 1, material: 1, quantity: '100.00', preis_pro_stueck: '2.50' }
+        ]
+      }
+    ];
+
     const mockStockWorkshop1 = [
       {
         category_id: 1,
@@ -78,6 +90,7 @@ describe('MaterialPlanningDataService', () => {
       expect(data.products).toEqual(mockProducts);
       expect(data.materials).toEqual(mockMaterials);
       expect(data.bom).toEqual(mockBom);
+      expect(data.orders).toEqual(mockOrders);
 
       // Verify lookups
       expect(data.lookups.workshopById[1]).toEqual(mockWorkshops[0]);
@@ -89,6 +102,9 @@ describe('MaterialPlanningDataService', () => {
       expect(data.stockByWorkshopAndMaterial[1][2]).toBe(50);
       expect(data.stockByWorkshopAndMaterial[2][1]).toBe(75);
       expect(data.stockByWorkshopAndMaterial[2][2]).toBe(25);
+
+      // Verify openOrdersByMaterialId
+      expect(data.openOrdersByMaterialId[1]).toBe(100);
 
       done();
     });
@@ -104,11 +120,15 @@ describe('MaterialPlanningDataService', () => {
 
     const reqMaterials = httpMock.expectOne(`${baseUrl}/materials/`);
     expect(reqMaterials.request.method).toBe('GET');
-    reqMaterials.flush(mockMaterials);
+    reqMaterials.flush([{ category_id: 1, category_name: 'Cat', materials: mockMaterials }]);
 
     const reqBom = httpMock.expectOne(`${baseUrl}/product-materials/`);
     expect(reqBom.request.method).toBe('GET');
     reqBom.flush(mockBom);
+
+    const reqOrders = httpMock.expectOne(`${baseUrl}/orders/`);
+    expect(reqOrders.request.method).toBe('GET');
+    reqOrders.flush(mockOrders);
 
     // Respond to stock requests
     const reqStock1 = httpMock.expectOne(`${baseUrl}/workshops/1/material-stock/`);
@@ -152,8 +172,9 @@ describe('MaterialPlanningDataService', () => {
 
     httpMock.expectOne(`${baseUrl}/workshops/`).flush(mockWorkshops);
     httpMock.expectOne(`${baseUrl}/products/`).flush(mockProducts);
-    httpMock.expectOne(`${baseUrl}/materials/`).flush(mockMaterials);
+    httpMock.expectOne(`${baseUrl}/materials/`).flush([{ category_id: null, category_name: 'All', materials: mockMaterials }]);
     httpMock.expectOne(`${baseUrl}/product-materials/`).flush(mockBom);
+    httpMock.expectOne(`${baseUrl}/orders/`).flush([]);
 
     // Stock requests
     httpMock.expectOne(`${baseUrl}/workshops/10/material-stock/`).flush([]);
@@ -194,8 +215,9 @@ describe('MaterialPlanningDataService', () => {
 
     httpMock.expectOne(`${baseUrl}/workshops/`).flush(mockWorkshops);
     httpMock.expectOne(`${baseUrl}/products/`).flush(mockProducts);
-    httpMock.expectOne(`${baseUrl}/materials/`).flush(mockMaterials);
+    httpMock.expectOne(`${baseUrl}/materials/`).flush([]);
     httpMock.expectOne(`${baseUrl}/product-materials/`).flush(mockBom);
+    httpMock.expectOne(`${baseUrl}/orders/`).flush([]);
     httpMock.expectOne(`${baseUrl}/workshops/1/material-stock/`).flush(mockStock);
   });
 
@@ -230,8 +252,9 @@ describe('MaterialPlanningDataService', () => {
 
     httpMock.expectOne(`${baseUrl}/workshops/`).flush(mockWorkshops);
     httpMock.expectOne(`${baseUrl}/products/`).flush(mockProducts);
-    httpMock.expectOne(`${baseUrl}/materials/`).flush(mockMaterials);
+    httpMock.expectOne(`${baseUrl}/materials/`).flush([]);
     httpMock.expectOne(`${baseUrl}/product-materials/`).flush(mockBom);
+    httpMock.expectOne(`${baseUrl}/orders/`).flush([]);
 
     // Workshop 1 succeeds
     httpMock.expectOne(`${baseUrl}/workshops/1/material-stock/`).flush(mockStockWorkshop1);
@@ -255,7 +278,105 @@ describe('MaterialPlanningDataService', () => {
 
     httpMock.expectOne(`${baseUrl}/workshops/`).flush(mockWorkshops);
     httpMock.expectOne(`${baseUrl}/products/`).flush(mockProducts);
-    httpMock.expectOne(`${baseUrl}/materials/`).flush(mockMaterials);
+    httpMock.expectOne(`${baseUrl}/materials/`).flush([]);
     httpMock.expectOne(`${baseUrl}/product-materials/`).flush(mockBom);
+    httpMock.expectOne(`${baseUrl}/orders/`).flush([]);
+  });
+
+  describe('computeOpenOrdersByMaterialId', () => {
+    it('should compute open orders correctly', () => {
+      const orders: Order[] = [
+        {
+          id: 1,
+          bestellt_am: '2025-01-01',
+          angekommen_am: null, // Open
+          items: [
+            { id: 1, material: 10, quantity: '100.00', preis_pro_stueck: '2.50' },
+            { id: 2, material: 20, quantity: '50.50', preis_pro_stueck: '1.00' }
+          ]
+        },
+        {
+          id: 2,
+          bestellt_am: '2025-01-02',
+          angekommen_am: null, // Open
+          items: [
+            { id: 3, material: 10, quantity: '25.00', preis_pro_stueck: '2.50' }
+          ]
+        },
+        {
+          id: 3,
+          bestellt_am: '2025-01-03',
+          angekommen_am: '2025-01-10', // Closed - should be ignored
+          items: [
+            { id: 4, material: 10, quantity: '1000.00', preis_pro_stueck: '2.50' }
+          ]
+        }
+      ];
+
+      const result = computeOpenOrdersByMaterialId(orders);
+
+      expect(result[10]).toBe(125); // 100 + 25
+      expect(result[20]).toBe(50.5); // 50.50
+      expect(result[30]).toBeUndefined(); // No orders for material 30
+    });
+
+    it('should return empty object for empty orders', () => {
+      const result = computeOpenOrdersByMaterialId([]);
+      expect(result).toEqual({});
+    });
+
+    it('should ignore all closed orders', () => {
+      const orders: Order[] = [
+        {
+          id: 1,
+          bestellt_am: '2025-01-01',
+          angekommen_am: '2025-01-05', // Closed
+          items: [
+            { id: 1, material: 10, quantity: '100.00', preis_pro_stueck: '2.50' }
+          ]
+        }
+      ];
+
+      const result = computeOpenOrdersByMaterialId(orders);
+      expect(result).toEqual({});
+    });
+
+    it('should handle decimal strings correctly', () => {
+      const orders: Order[] = [
+        {
+          id: 1,
+          bestellt_am: '2025-01-01',
+          angekommen_am: null,
+          items: [
+            { id: 1, material: 10, quantity: '12.345', preis_pro_stueck: '1.00' },
+            { id: 2, material: 10, quantity: '7.655', preis_pro_stueck: '1.00' }
+          ]
+        }
+      ];
+
+      const result = computeOpenOrdersByMaterialId(orders);
+      expect(result[10]).toBeCloseTo(20, 2);
+    });
+  });
+
+  it('should handle orders loading failure gracefully', (done) => {
+    const mockWorkshops: Workshop[] = [];
+    const mockProducts: Product[] = [];
+    const mockMaterials: Material[] = [];
+    const mockBom: ProductMaterial[] = [];
+
+    service.loadAll().subscribe(data => {
+      expect(data.orders).toEqual([]);
+      expect(data.openOrdersByMaterialId).toEqual({});
+      done();
+    });
+
+    httpMock.expectOne(`${baseUrl}/workshops/`).flush(mockWorkshops);
+    httpMock.expectOne(`${baseUrl}/products/`).flush(mockProducts);
+    httpMock.expectOne(`${baseUrl}/materials/`).flush([]);
+    httpMock.expectOne(`${baseUrl}/product-materials/`).flush(mockBom);
+
+    const reqOrders = httpMock.expectOne(`${baseUrl}/orders/`);
+    reqOrders.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
   });
 });

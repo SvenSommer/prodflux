@@ -7,6 +7,7 @@ import { Workshop } from '../models/api/workshop.model';
 import { Product } from '../models/api/product.model';
 import { Material } from '../models/api/material.model';
 import { ProductMaterial } from '../models/api/product-material.model';
+import { Order } from '../models/api/order.model';
 
 export interface MaterialPlanningLookups {
   workshopById: Record<number, Workshop>;
@@ -24,6 +25,8 @@ export interface MaterialPlanningData {
   bom: ProductMaterial[];
   lookups: MaterialPlanningLookups;
   stockByWorkshopAndMaterial: StockByWorkshopAndMaterial;
+  orders: Order[];
+  openOrdersByMaterialId: Record<number, number>;
 }
 
 interface MaterialStockGroup {
@@ -55,7 +58,13 @@ export class MaterialPlanningDataService {
       workshops: this.http.get<Workshop[]>(`${this.baseUrl}/workshops/`),
       products: this.http.get<Product[]>(`${this.baseUrl}/products/`),
       materialsGrouped: this.http.get<MaterialCategoryResponse[]>(`${this.baseUrl}/materials/`),
-      bom: this.http.get<ProductMaterial[]>(`${this.baseUrl}/product-materials/`)
+      bom: this.http.get<ProductMaterial[]>(`${this.baseUrl}/product-materials/`),
+      orders: this.http.get<Order[]>(`${this.baseUrl}/orders/`).pipe(
+        catchError(error => {
+          console.warn('Failed to load orders:', error);
+          return of([]);
+        })
+      )
     }).pipe(
       // Flatten materials from grouped structure
       map(data => ({
@@ -97,14 +106,15 @@ export class MaterialPlanningDataService {
           })
         );
       }),
-      // 3. Baue Lookups
+      // 3. Baue Lookups + compute openOrdersByMaterialId
       map(data => ({
         ...data,
         lookups: {
           workshopById: this.toRecordById(data.workshops),
           productById: this.toRecordById(data.products),
           materialById: this.toRecordById(data.materials)
-        }
+        },
+        openOrdersByMaterialId: computeOpenOrdersByMaterialId(data.orders)
       }))
     );
   }
@@ -159,4 +169,43 @@ export class MaterialPlanningDataService {
     });
     return materials;
   }
+}
+
+/**
+ * Computes open orders by material ID
+ * Open orders are orders where angekommen_am is null
+ * Returns a map of materialId -> total open quantity
+ */
+export function computeOpenOrdersByMaterialId(orders: Order[]): Record<number, number> {
+  const result: Record<number, number> = {};
+
+  // Filter for open orders (angekommen_am === null)
+  const openOrders = orders.filter(order => order.angekommen_am === null);
+
+  // Sum up quantities per material
+  openOrders.forEach(order => {
+    order.items.forEach(item => {
+      const materialId = item.material;
+      const quantity = parseDecimal(item.quantity);
+
+      if (!result[materialId]) {
+        result[materialId] = 0;
+      }
+      result[materialId] += quantity;
+    });
+  });
+
+  return result;
+}
+
+/**
+ * Safely parses a decimal string to a number
+ * Returns 0 if parsing fails
+ */
+function parseDecimal(value: string | number): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? 0 : parsed;
 }

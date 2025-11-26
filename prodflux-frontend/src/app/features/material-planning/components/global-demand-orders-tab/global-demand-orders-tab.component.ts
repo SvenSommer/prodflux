@@ -1,19 +1,21 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
 import { GlobalMaterialRow } from '../../models/planning/planning-result.models';
 import { Material } from '../../models/api/material.model';
 
 @Component({
   selector: 'app-global-demand-orders-tab',
   standalone: true,
-  imports: [CommonModule, MatTableModule],
+  imports: [CommonModule, MatTableModule, MatButtonModule],
   templateUrl: './global-demand-orders-tab.component.html',
   styleUrl: './global-demand-orders-tab.component.scss'
 })
 export class GlobalDemandOrdersTabComponent {
   @Input({ required: true }) rows: GlobalMaterialRow[] = [];
   @Input({ required: true }) materialById: Record<number, Material> = {};
+  @Output() createOrder = new EventEmitter<void>();
 
   displayedColumns: string[] = [
     'material',
@@ -43,5 +45,9 @@ export class GlobalDemandOrdersTabComponent {
 
   get ordersToPlace(): GlobalMaterialRow[] {
     return this.rows.filter(row => row.suggestedOrderToCentral > 0);
+  }
+
+  onCreateOrder(): void {
+    this.createOrder.emit();
   }
 }

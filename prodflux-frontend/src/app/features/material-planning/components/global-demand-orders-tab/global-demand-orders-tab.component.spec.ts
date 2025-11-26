@@ -30,7 +30,7 @@ describe('GlobalDemandOrdersTabComponent', () => {
     expect(emptyState.textContent).toContain('Noch kein Plan berechnet');
   });
 
-  it('should render table with material rows', () => {
+  it('should render material table with material rows', () => {
     const mockMaterial: Material = {
       id: 1,
       bezeichnung: 'Schraube M8',
@@ -51,14 +51,10 @@ describe('GlobalDemandOrdersTabComponent', () => {
     component.materialById = { 1: mockMaterial };
     fixture.detectChanges();
 
-    const table = fixture.nativeElement.querySelector('table');
-    expect(table).toBeTruthy();
-
-    const materialName = fixture.nativeElement.querySelector('.material-name');
-    expect(materialName.textContent).toContain('Schraube M8');
-
-    const cells = fixture.nativeElement.querySelectorAll('td');
-    expect(cells.length).toBeGreaterThan(0);
+    const materialTable = fixture.nativeElement.querySelector('app-material-table');
+    expect(materialTable).toBeTruthy();
+    expect(component.materialTableRows.length).toBe(1);
+    expect(component.materialTableRows[0].materialName).toContain('Schraube M8');
   });
 
   it('should display material order number', () => {
@@ -82,16 +78,6 @@ describe('GlobalDemandOrdersTabComponent', () => {
     component.materialById = { 1: mockMaterial };
 
     expect(component.getMaterialOrderNumber(1)).toBe('—');
-  });
-
-  it('should toggle order proposal visibility', () => {
-    expect(component.showOrderProposal).toBe(false);
-
-    component.toggleOrderProposal();
-    expect(component.showOrderProposal).toBe(true);
-
-    component.toggleOrderProposal();
-    expect(component.showOrderProposal).toBe(false);
   });
 
   it('should filter orders to place (suggestedOrderToCentral > 0)', () => {

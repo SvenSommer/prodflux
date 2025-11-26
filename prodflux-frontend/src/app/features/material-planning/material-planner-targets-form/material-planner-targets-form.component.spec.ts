@@ -122,9 +122,8 @@ describe('MaterialPlannerTargetsFormComponent', () => {
     expect(emittedTargets[0]).toEqual({ workshopId: 1, productId: 1, quantity: 10 });
   });
 
-  it('should use dummy products when no products input is provided', () => {
-    expect(component.availableProducts.length).toBeGreaterThan(0);
-    expect(component.availableProducts[0].label).toContain('Produkt');
+  it('should use empty products array when no products input is provided', () => {
+    expect(component.availableProducts.length).toBe(0);
   });
 
   it('should use provided products when products input is set', () => {

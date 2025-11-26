@@ -129,8 +129,8 @@ describe('MaterialPlannerPageComponent', () => {
   it('should provide products to form component', (done) => {
     component.productsForForm$.subscribe(products => {
       expect(products.length).toBe(2);
-      expect(products[0]).toEqual({ id: 1, label: 'Produkt A (P001)' });
-      expect(products[1]).toEqual({ id: 2, label: 'Produkt B (P002)' });
+      expect(products[0]).toEqual({ id: 1, label: 'Produkt A (P001)', imageUrl: null });
+      expect(products[1]).toEqual({ id: 2, label: 'Produkt B (P002)', imageUrl: null });
       done();
     });
   });

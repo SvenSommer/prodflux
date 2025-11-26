@@ -179,7 +179,7 @@ describe('SuppliersService', () => {
   describe('delete', () => {
     it('should delete a supplier', () => {
       service.delete(1).subscribe(response => {
-        expect(response).toBeUndefined();
+        expect(response).toBeNull();
       });
 
       const req = httpMock.expectOne(`${baseUrl}1/`);

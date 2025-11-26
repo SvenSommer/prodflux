@@ -274,19 +274,27 @@ export class OrderFormComponent {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule
   ],
   template: `
     <h2 mat-dialog-title>Neuer Lieferant</h2>
     <mat-dialog-content>
+      <div *ngIf="errorMessage" class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Name</mat-label>
         <input matInput [(ngModel)]="supplierName" name="name" required autofocus />
+        <mat-error *ngIf="!supplierName">Name ist erforderlich</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>URL (optional)</mat-label>
-        <input matInput [(ngModel)]="supplierUrl" name="url" type="url" />
+        <input matInput [(ngModel)]="supplierUrl" name="url" placeholder="z.B. www.reichelt.de oder https://www.reichelt.de" />
+        <mat-hint>https:// wird automatisch hinzugefügt, falls nicht vorhanden</mat-hint>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full-width">
@@ -300,14 +308,30 @@ export class OrderFormComponent {
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">Abbrechen</button>
-      <button mat-raised-button color="primary" (click)="save()" [disabled]="!supplierName">Speichern</button>
+      <button mat-button (click)="cancel()" [disabled]="isSaving">Abbrechen</button>
+      <button mat-raised-button color="primary" (click)="save()" [disabled]="!supplierName || isSaving">
+        {{ isSaving ? 'Speichert...' : 'Speichern' }}
+      </button>
     </mat-dialog-actions>
   `,
   styles: [`
     .full-width {
       width: 100%;
       margin-bottom: 16px;
+    }
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      background-color: #ffebee;
+      border-left: 4px solid #f44336;
+      border-radius: 4px;
+      color: #c62828;
+    }
+    .error-message mat-icon {
+      color: #f44336;
     }
   `]
 })
@@ -319,24 +343,71 @@ export class NewSupplierDialogComponent {
   supplierUrl: string = '';
   kundenkonto: string = '';
   notes: string = '';
+  errorMessage: string = '';
+  isSaving: boolean = false;
 
   cancel() {
     this.dialogRef.close();
   }
 
+  private normalizeUrl(url: string): string {
+    if (!url || url.trim() === '') return '';
+
+    const trimmed = url.trim();
+
+    // Wenn URL bereits mit http:// oder https:// beginnt, unverändert zurückgeben
+    if (trimmed.match(/^https?:\/\//i)) {
+      return trimmed;
+    }
+
+    // Andernfalls https:// voranstellen
+    return `https://${trimmed}`;
+  }
+
   save() {
     if (!this.supplierName) return;
 
+    this.errorMessage = '';
+    this.isSaving = true;
+
+    const normalizedUrl = this.normalizeUrl(this.supplierUrl);
+
     const newSupplier = {
       name: this.supplierName,
-      url: this.supplierUrl,
+      url: normalizedUrl,
       kundenkonto: this.kundenkonto,
       notes: this.notes,
       is_active: true
     };
 
-    this.suppliersService.create(newSupplier).subscribe(result => {
-      this.dialogRef.close(result);
+    this.suppliersService.create(newSupplier).subscribe({
+      next: (result) => {
+        this.isSaving = false;
+        this.dialogRef.close(result);
+      },
+      error: (error) => {
+        this.isSaving = false;
+        console.error('[NewSupplierDialog] Error creating supplier:', error);
+
+        // Extrahiere Fehlermeldung
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            this.errorMessage = error.error;
+          } else if (error.error.detail) {
+            this.errorMessage = error.error.detail;
+          } else if (error.error.name) {
+            this.errorMessage = `Name: ${error.error.name.join(', ')}`;
+          } else if (error.error.url) {
+            this.errorMessage = `URL: ${error.error.url.join(', ')}`;
+          } else {
+            this.errorMessage = 'Beim Speichern ist ein Fehler aufgetreten.';
+          }
+        } else if (error.message) {
+          this.errorMessage = error.message;
+        } else {
+          this.errorMessage = 'Beim Speichern ist ein Fehler aufgetreten.';
+        }
+      }
     });
   }
 }

@@ -10,12 +10,14 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { WorkshopsService, Workshop } from './workshop.services';
 import { VersionsService, ProductVersion } from './versions.service';
 import { VariantsService, ProductVariant } from './variants.service';
 import { MaterialCategoriesService, MaterialCategory } from './material-categories.service';
 import { SuppliersService } from './suppliers.service';
 import { Supplier } from './models/supplier.model';
+import { SupplierDialogComponent, SupplierDialogData } from '../../shared/components/supplier-dialog/supplier-dialog.component';
 
 @Component({
   selector: 'app-settings',
@@ -42,6 +44,7 @@ export class SettingsComponent {
   private variantsService = inject(VariantsService);
   private materialCategoriesService = inject(MaterialCategoriesService);
   private suppliersService = inject(SuppliersService);
+  private dialog = inject(MatDialog);
 
   workshops: Workshop[] = [];
   newWorkshopName = '';
@@ -63,12 +66,6 @@ export class SettingsComponent {
   editingVariant: ProductVariant | null = null;
 
   suppliers: Supplier[] = [];
-  newSupplierName = '';
-  newSupplierUrl = '';
-  newSupplierKundenkonto = '';
-  newSupplierNotes = '';
-  newSupplierIsActive = true;
-  editingSupplier: Supplier | null = null;
 
   ngOnInit() {
     this.load();
@@ -198,41 +195,23 @@ export class SettingsComponent {
     }
   }
 
-  saveSupplier() {
-    if (this.newSupplierName.trim() === '') {
-      return;
-    }
-
-    const payload = {
-      name: this.newSupplierName,
-      url: this.newSupplierUrl,
-      kundenkonto: this.newSupplierKundenkonto,
-      notes: this.newSupplierNotes,
-      is_active: this.newSupplierIsActive,
+  openSupplierDialog(supplier?: Supplier) {
+    const dialogData: SupplierDialogData = {
+      supplier: supplier
     };
 
-    const request = this.editingSupplier
-      ? this.suppliersService.update(this.editingSupplier.id, payload)
-      : this.suppliersService.create(payload);
-
-    request.subscribe(() => {
-      this.newSupplierName = '';
-      this.newSupplierUrl = '';
-      this.newSupplierKundenkonto = '';
-      this.newSupplierNotes = '';
-      this.newSupplierIsActive = true;
-      this.editingSupplier = null;
-      this.load();
+    const dialogRef = this.dialog.open(SupplierDialogComponent, {
+      width: '600px',
+      data: dialogData,
+      disableClose: false
     });
-  }
 
-  editSupplier(s: Supplier) {
-    this.editingSupplier = s;
-    this.newSupplierName = s.name;
-    this.newSupplierUrl = s.url;
-    this.newSupplierKundenkonto = s.kundenkonto;
-    this.newSupplierNotes = s.notes || '';
-    this.newSupplierIsActive = s.is_active;
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Dialog wurde mit gespeichertem Lieferanten geschlossen
+        this.load();
+      }
+    });
   }
 
   deleteSupplier(id: number) {

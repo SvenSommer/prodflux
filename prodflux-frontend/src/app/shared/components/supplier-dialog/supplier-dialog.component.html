@@ -1,0 +1,98 @@
+<div class="supplier-dialog">
+  <div mat-dialog-title class="dialog-title">
+    <mat-icon>{{ isEdit ? 'edit' : 'add_business' }}</mat-icon>
+    <span>{{ dialogTitle }}</span>
+  </div>
+
+  <div mat-dialog-content class="dialog-content">
+    <div *ngIf="errorMessage" class="error-message">
+      <mat-icon>error</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <form #supplierForm="ngForm" class="supplier-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Name *</mat-label>
+        <input
+          matInput
+          [(ngModel)]="supplierData.name"
+          name="name"
+          required
+          placeholder="z.B. Muster GmbH"
+        />
+        <mat-icon matPrefix>business</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>URL</mat-label>
+        <input
+          matInput
+          [(ngModel)]="supplierData.url"
+          name="url"
+          type="url"
+          placeholder="https://www.beispiel.de"
+        />
+        <mat-icon matPrefix>link</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Kundenkonto</mat-label>
+        <input
+          matInput
+          [(ngModel)]="supplierData.kundenkonto"
+          name="kundenkonto"
+          placeholder="Ihre Kundennummer"
+        />
+        <mat-icon matPrefix>account_circle</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Notizen</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="supplierData.notes"
+          name="notes"
+          rows="3"
+          placeholder="Zusätzliche Informationen zum Lieferanten"
+        ></textarea>
+        <mat-icon matPrefix>note</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="supplierData.is_active" name="is_active">
+          <mat-option [value]="true">
+            <mat-icon class="status-icon active">check_circle</mat-icon>
+            Aktiv
+          </mat-option>
+          <mat-option [value]="false">
+            <mat-icon class="status-icon inactive">cancel</mat-icon>
+            Inaktiv
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>toggle_on</mat-icon>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <div mat-dialog-actions class="dialog-actions">
+    <button
+      mat-button
+      (click)="onCancel()"
+      [disabled]="isSubmitting"
+    >
+      Abbrechen
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="onSave()"
+      [disabled]="!supplierForm.form.valid || isSubmitting"
+      cdkFocusInitial
+    >
+      <mat-icon *ngIf="!isSubmitting">{{ isEdit ? 'save' : 'add' }}</mat-icon>
+      <mat-icon *ngIf="isSubmitting" class="spinning">sync</mat-icon>
+      {{ isEdit ? 'Speichern' : 'Anlegen' }}
+    </button>
+  </div>
+</div>

@@ -76,14 +76,28 @@
       <!-- Lieferanten -->
       <h3 class="section-title">Lieferanten</h3>
 
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Lieferanten (Mehrfachauswahl möglich)</mat-label>
-        <mat-select [(ngModel)]="selectedSupplierIds" name="suppliers" multiple panelClass="wide-dropdown">
-          <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
-            {{ supplier.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="supplier-section">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Lieferanten (Mehrfachauswahl möglich)</mat-label>
+          <mat-select [(ngModel)]="selectedSupplierIds" name="suppliers" multiple panelClass="wide-dropdown">
+            <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+              {{ supplier.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="accent"
+          type="button"
+          (click)="openSupplierDialog()"
+          class="add-supplier-button"
+          matTooltip="Neuen Lieferanten anlegen"
+        >
+          <mat-icon>add</mat-icon>
+          Neuer Lieferant
+        </button>
+      </div>
 
       <!-- Alternativen verwalten -->
       <h3 class="section-title">Alternativmaterialien</h3>

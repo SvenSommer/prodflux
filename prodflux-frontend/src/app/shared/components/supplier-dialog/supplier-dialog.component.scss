@@ -1,0 +1,115 @@
+.supplier-dialog {
+  min-width: 500px;
+  max-width: 600px;
+  padding: 0;
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 500;
+  padding: 24px;
+  margin: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #fafafa;
+}
+
+.dialog-title mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  color: #1976d2;
+}
+
+.dialog-content {
+  padding: 24px;
+  margin: 0;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.error-message mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.supplier-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  margin: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #fafafa;
+}
+
+.dialog-actions button {
+  min-width: 100px;
+  height: 40px;
+}
+
+.dialog-actions button mat-icon {
+  margin-right: 4px;
+}
+
+.status-icon {
+  vertical-align: middle;
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.status-icon.active {
+  color: #4caf50;
+}
+
+.status-icon.inactive {
+  color: #f44336;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Material Form Field Styling */
+::ng-deep .supplier-dialog {
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: white;
+    }
+  }
+
+  .mat-mdc-form-field-icon-prefix {
+    padding-right: 8px;
+    color: rgba(0, 0, 0, 0.54);
+  }
+}

@@ -10,8 +10,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MaterialCategoriesService, MaterialCategory } from '../settings/material-categories.service';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDialog } from '@angular/material/dialog';
 import { SuppliersService } from '../settings/suppliers.service';
 import { Supplier } from '../settings/models/supplier.model';
+import { SupplierDialogComponent } from '../../shared/components/supplier-dialog/supplier-dialog.component';
 
 @Component({
   selector: 'app-material-form',
@@ -36,6 +38,7 @@ export class MaterialFormComponent {
   private materialCategoriesService = inject(MaterialCategoriesService);
   private suppliersService = inject(SuppliersService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   materialId: number | null = null;
   currentImageUrl: string | null = null;
@@ -194,5 +197,26 @@ export class MaterialFormComponent {
 
   isAlreadyAlternative(id: number): boolean {
     return this.alternatives.some(a => a.id === id);
+  }
+
+  openSupplierDialog() {
+    const dialogRef = this.dialog.open(SupplierDialogComponent, {
+      width: '600px',
+      data: {},
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Neuer Lieferant wurde angelegt - lade Liste neu und wähle ihn aus
+        this.suppliersService.getAll().subscribe(suppliers => {
+          this.suppliers = suppliers;
+          // Füge den neuen Lieferanten zur Auswahl hinzu
+          if (!this.selectedSupplierIds.includes(result.id)) {
+            this.selectedSupplierIds.push(result.id);
+          }
+        });
+      }
+    });
   }
 }

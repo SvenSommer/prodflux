@@ -70,3 +70,23 @@
     color: #d32f2f; // kräftiges Rot
   }
 }
+
+.supplier-section {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  mat-form-field {
+    flex: 1;
+  }
+
+  .add-supplier-button {
+    margin-top: 8px;
+    white-space: nowrap;
+    height: 56px;
+
+    mat-icon {
+      margin-right: 4px;
+    }
+  }
+}

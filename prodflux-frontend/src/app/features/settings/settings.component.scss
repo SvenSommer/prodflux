@@ -8,6 +8,13 @@
     font-weight: 600;
     margin-bottom: 1.5rem;
     text-align: center;
+
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
   }
 
   .form-row {

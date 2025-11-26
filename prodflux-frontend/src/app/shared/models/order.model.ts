@@ -20,6 +20,7 @@ export interface Order {
   angekommen_am: string | null; // read-only, derived from deliveries
   versandkosten: number | null;
   notiz?: string;
+  is_historical: boolean;
   items: OrderItem[];
 }
 
@@ -29,6 +30,7 @@ export interface CreateOrUpdateOrder {
   bestellt_am: string;
   versandkosten: number | null;
   notiz?: string;
+  is_historical?: boolean;
   items: OrderItem[];
   // Note: angekommen_am is NOT sent (read-only in backend)
 }

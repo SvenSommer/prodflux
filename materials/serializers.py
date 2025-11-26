@@ -289,19 +289,27 @@ class DeliverySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         delivery = Delivery.objects.create(**validated_data)
+        
+        # Check if this delivery is linked to a historical order
+        is_historical = (
+            delivery.order and
+            delivery.order.is_historical
+        )
+        
         for item_data in items_data:
             DeliveryItem.objects.create(delivery=delivery, **item_data)
 
-            # MaterialMovement erstellen
-            MaterialMovement.objects.create(
-                workshop=delivery.workshop,
-                material=item_data['material'],
-                change_type='lieferung',
-                quantity=item_data['quantity'],
-                note=f"Lieferung #{delivery.id} - {item_data.get('note', '')}",
-                content_type=ContentType.objects.get_for_model(delivery),
-                object_id=delivery.id
-            )
+            # Only create MaterialMovement if not historical
+            if not is_historical:
+                MaterialMovement.objects.create(
+                    workshop=delivery.workshop,
+                    material=item_data['material'],
+                    change_type='lieferung',
+                    quantity=item_data['quantity'],
+                    note=f"Lieferung #{delivery.id} - {item_data.get('note', '')}",
+                    content_type=ContentType.objects.get_for_model(delivery),
+                    object_id=delivery.id
+                )
 
         return delivery
 
@@ -312,6 +320,12 @@ class DeliverySerializer(serializers.ModelSerializer):
         instance.workshop = validated_data.get('workshop', instance.workshop)
         instance.order = validated_data.get('order', instance.order)
         instance.save()
+
+        # Check if this delivery is linked to a historical order
+        is_historical = (
+            instance.order and
+            instance.order.is_historical
+        )
 
         # Alte Items und zugehörige Bewegungen löschen
         instance.items.all().delete()
@@ -324,15 +338,20 @@ class DeliverySerializer(serializers.ModelSerializer):
         for item_data in items_data:
             DeliveryItem.objects.create(delivery=instance, **item_data)
 
-            MaterialMovement.objects.create(
-                workshop=instance.workshop,
-                material=item_data['material'],
-                change_type='lieferung',
-                quantity=item_data['quantity'],
-                note=f"Lieferung #{instance.id} - {item_data.get('note', '')}",
-                content_type=ContentType.objects.get_for_model(instance),
-                object_id=instance.id
-            )
+            # Only create MaterialMovement if not historical
+            if not is_historical:
+                MaterialMovement.objects.create(
+                    workshop=instance.workshop,
+                    material=item_data['material'],
+                    change_type='lieferung',
+                    quantity=item_data['quantity'],
+                    note=(
+                        f"Lieferung #{instance.id} - "
+                        f"{item_data.get('note', '')}"
+                    ),
+                    content_type=ContentType.objects.get_for_model(instance),
+                    object_id=instance.id
+                )
 
         return instance
 
@@ -357,7 +376,8 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'supplier', 'order_number', 'bestellt_am',
-            'angekommen_am', 'versandkosten', 'notiz', 'items'
+            'angekommen_am', 'versandkosten', 'notiz', 'is_historical',
+            'items'
         ]
 
     def create(self, validated_data):

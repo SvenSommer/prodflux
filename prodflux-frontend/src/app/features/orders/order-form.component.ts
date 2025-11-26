@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MaterialTableComponent, MaterialTableColumn, MaterialTableRow } from '../../shared/components/material-table/material-table.component';
 
 @Component({
@@ -31,6 +32,7 @@ import { MaterialTableComponent, MaterialTableColumn, MaterialTableRow } from '.
     MatTableModule,
     MatCardModule,
     MatIconModule,
+    MatCheckboxModule,
     MaterialTableComponent
   ]
 })
@@ -47,6 +49,7 @@ export class OrderFormComponent {
   bestellt_am: string = '';
   versandkosten: number = 0;
   notiz: string = '';
+  is_historical: boolean = false;
 
   suppliers: Supplier[] = [];
   materialGroups: MaterialCategoryGroup[] = [];
@@ -113,6 +116,7 @@ export class OrderFormComponent {
           this.bestellt_am = order.bestellt_am;
           this.versandkosten = order.versandkosten ?? 0;
           this.notiz = order.notiz || '';
+          this.is_historical = order.is_historical || false;
 
           order.items.forEach(item => {
             if (!this.materialAssignments[item.material]) {
@@ -156,6 +160,7 @@ export class OrderFormComponent {
       bestellt_am: this.bestellt_am,
       versandkosten: this.versandkosten,
       notiz: this.notiz,
+      is_historical: this.is_historical,
       items
       // Note: angekommen_am is NOT sent (read-only in backend)
     };

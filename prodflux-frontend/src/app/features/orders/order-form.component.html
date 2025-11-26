@@ -32,6 +32,12 @@
         <textarea matInput [(ngModel)]="notiz" name="notiz"></textarea>
       </mat-form-field>
 
+      <div class="checkbox-container">
+        <mat-checkbox [(ngModel)]="is_historical" name="is_historical">
+          Historische Bestellung (keine Auswirkung auf Materialbestand)
+        </mat-checkbox>
+      </div>
+
       <!-- Materialien -->
       <div class="mt-4">
         <div class="header-row">

@@ -101,6 +101,13 @@ class Order(models.Model):
     bestellt_am = models.DateField()
     versandkosten = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     notiz = models.TextField(blank=True)
+    is_historical = models.BooleanField(
+        default=False,
+        help_text=(
+            'Historische Bestellungen haben keine Auswirkung '
+            'auf den Materialbestand'
+        )
+    )
     
     @property
     def delivered_at(self):

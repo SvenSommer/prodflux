@@ -24,6 +24,10 @@
       <strong>Versandkosten:</strong> {{ formatCurrency(order.versandkosten) }}
     </p>
     <p><strong>Notiz:</strong> {{ order.notiz || "—" }}</p>
+    <p *ngIf="order.is_historical" class="historical-notice">
+      <mat-icon class="historical-icon">history</mat-icon>
+      <strong>Historische Bestellung</strong> - Diese Bestellung hat keine Auswirkung auf den Materialbestand
+    </p>
 
     <div class="mt-4">
       <h3>Bestellte Materialien</h3>

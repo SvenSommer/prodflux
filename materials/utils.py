@@ -4,6 +4,7 @@ from collections import defaultdict
 from materials.models import MaterialCategory
 from materials.serializers import MaterialSerializer
 
+
 def group_materials_by_category(materials_queryset, request):
     materials_queryset = sorted(
         materials_queryset,

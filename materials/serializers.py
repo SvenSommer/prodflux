@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from core.models import Workshop
 from .models import Material, MaterialCategory, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem
+from .validators import validate_stock_movement
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum
 
@@ -113,6 +114,26 @@ class MaterialTransferSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
+        
+        # Validiere alle Transfers BEVOR der Transfer erstellt wird
+        for item_data in items_data:
+            material = item_data['material']
+            quantity = item_data['quantity']
+            
+            # Prüfe ob genug Material in der Quellwerkstatt vorhanden ist
+            is_valid, current_stock, message = validate_stock_movement(
+                material.id,
+                validated_data['source_workshop'].id,
+                -quantity  # Negativ, weil Abgang
+            )
+            
+            if not is_valid:
+                raise serializers.ValidationError({
+                    'items': f"Material '{material.bezeichnung}' in "
+                    f"'{validated_data['source_workshop'].name}': {message}"
+                })
+        
+        # Alle Validierungen erfolgreich - Transfer erstellen
         transfer = MaterialTransfer.objects.create(**validated_data)
         for item_data in items_data:
             MaterialTransferItem.objects.create(transfer=transfer, **item_data)
@@ -122,11 +143,11 @@ class MaterialTransferSerializer(serializers.ModelSerializer):
             quantity = item_data['quantity']
             note = item_data.get('note', '')
 
-           # Verbrauch im Quell-Workshop (change_type = 'transfer')
+            # Verbrauch im Quell-Workshop (change_type = 'transfer')
             MaterialMovement.objects.create(
                 workshop=transfer.source_workshop,
                 material=material,
-                change_type='transfer', 
+                change_type='transfer',
                 quantity=-quantity,  # <<< Abgang = negatives Lager
                 note=f"Transfer #{transfer.id} - {note}",
                 content_type=ContentType.objects.get_for_model(transfer),
@@ -148,9 +169,31 @@ class MaterialTransferSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items', [])
 
+        # Validiere alle Transfers BEVOR die Bewegungen erstellt werden
+        for item_data in items_data:
+            material = item_data['material']
+            quantity = item_data['quantity']
+            
+            # Prüfe ob genug Material in der Quellwerkstatt vorhanden ist
+            # Berücksichtige dabei die alten Bewegungen, die gelöscht werden
+            is_valid, current_stock, message = validate_stock_movement(
+                material.id,
+                validated_data.get('source_workshop', instance.source_workshop).id,
+                -quantity  # Negativ, weil Abgang
+            )
+            
+            if not is_valid:
+                raise serializers.ValidationError({
+                    'items': f"Material '{material.bezeichnung}': {message}"
+                })
+
         # Update Basisdaten
-        instance.source_workshop = validated_data.get('source_workshop', instance.source_workshop)
-        instance.target_workshop = validated_data.get('target_workshop', instance.target_workshop)
+        instance.source_workshop = validated_data.get(
+            'source_workshop', instance.source_workshop
+        )
+        instance.target_workshop = validated_data.get(
+            'target_workshop', instance.target_workshop
+        )
         instance.note = validated_data.get('note', instance.note)
         instance.save()
 

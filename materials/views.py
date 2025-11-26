@@ -9,6 +9,7 @@ from rest_framework import status
 from collections import defaultdict
 from rest_framework.exceptions import ValidationError  
 from .utils import group_materials_by_category
+from .validators import validate_stock_movement
 
 
 class MaterialListCreateView(generics.ListCreateAPIView):
@@ -317,6 +318,19 @@ def material_inventory_correction_view(request, material_id):
     correction_quantity = inventory_count - current_stock
     
     if correction_quantity != 0:
+        # Validiere, ob die Korrektur den Bestand nicht negativ machen würde
+        is_valid, _, message = validate_stock_movement(
+            material.id,
+            workshop_id,
+            correction_quantity
+        )
+        
+        if not is_valid:
+            return Response({
+                'success': False,
+                'error': f"Korrektur würde negativen Bestand verursachen: {message}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
         # MaterialMovement für Korrektur erstellen
         correction_movement = MaterialMovement.objects.create(
             workshop_id=workshop_id,

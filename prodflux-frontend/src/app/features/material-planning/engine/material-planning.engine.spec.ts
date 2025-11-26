@@ -528,4 +528,129 @@ describe('Material Planning Engine', () => {
       });
     });
   });
+
+  describe('Bug Report: SD-TY9X-E Transfer Calculation', () => {
+    it('should correctly handle transfer when central workshop has initial stock', () => {
+      // Bug scenario:
+      // - 100 SD-TY9X-E adapters needed in Potsdam
+      // - Each adapter needs 1x Gehäuse Unterteil and 1x Gehäuse Oberteil
+      // - Rauen (central) has initial stock of 2 for each part
+      // - Expected: Order 98, then transfer all 100 (2 existing + 98 ordered) to Potsdam
+      // - Actual Bug: Transfer shows only 90
+
+      const GEHAUSE_UNTERTEIL = 101;
+      const GEHAUSE_OBERTEIL = 102;
+      const SD_TY9X_E = 1;
+
+      const targets: WorkshopProductTarget[] = [
+        {
+          productId: SD_TY9X_E,
+          workshopId: WORKSHOP_POTSDAM,
+          quantity: 100
+        }
+      ];
+
+      const bom: ProductMaterial[] = [
+        {
+          id: 1,
+          product: SD_TY9X_E,
+          material: GEHAUSE_UNTERTEIL,
+          quantity_per_unit: '1'
+        },
+        {
+          id: 2,
+          product: SD_TY9X_E,
+          material: GEHAUSE_OBERTEIL,
+          quantity_per_unit: '1'
+        }
+      ];
+
+      const stock: StockByWorkshopAndMaterial = {
+        [WORKSHOP_POTSDAM]: {
+          [GEHAUSE_UNTERTEIL]: 0,
+          [GEHAUSE_OBERTEIL]: 0
+        },
+        [WORKSHOP_RAUEN]: {
+          [GEHAUSE_UNTERTEIL]: 2,
+          [GEHAUSE_OBERTEIL]: 2
+        }
+      };
+
+      const options: PlanOptions = {
+        centralWorkshopId: WORKSHOP_RAUEN,
+        workshopIds: [WORKSHOP_POTSDAM, WORKSHOP_RAUEN]
+      };
+
+      const result = planGlobalMaterials(targets, bom, stock, options);
+
+      console.log('\n=== BUG TEST: SD-TY9X-E Transfer Calculation ===');
+
+      // Check Global Demand (Tab 1)
+      const unterteil = result.materials.find(m => m.materialId === GEHAUSE_UNTERTEIL);
+      const oberteil = result.materials.find(m => m.materialId === GEHAUSE_OBERTEIL);
+
+      console.log('\nGlobal Demand - Gehäuse Unterteil:', unterteil);
+      console.log('Global Demand - Gehäuse Oberteil:', oberteil);
+
+      expect(unterteil).toBeDefined();
+      expect(oberteil).toBeDefined();
+
+      // Should correctly identify need for 98 units
+      expect(unterteil!.totalRequired).toBe(100);
+      expect(unterteil!.totalStock).toBe(2);
+      expect(unterteil!.shortage).toBe(98);
+      expect(unterteil!.suggestedOrderToCentral).toBe(98);
+
+      expect(oberteil!.totalRequired).toBe(100);
+      expect(oberteil!.totalStock).toBe(2);
+      expect(oberteil!.shortage).toBe(98);
+      expect(oberteil!.suggestedOrderToCentral).toBe(98);
+
+      // Check Transfer Suggestions (Tab 2)
+      const unterteilTransfer = result.transferSuggestions.find(t => t.materialId === GEHAUSE_UNTERTEIL);
+      const oberteilTransfer = result.transferSuggestions.find(t => t.materialId === GEHAUSE_OBERTEIL);
+
+      console.log('\nTransfer - Gehäuse Unterteil:', unterteilTransfer);
+      console.log('Transfer - Gehäuse Oberteil:', oberteilTransfer);
+
+      expect(unterteilTransfer).toBeDefined();
+      expect(oberteilTransfer).toBeDefined();
+
+      // BUG FIX ASSERTION: Should transfer all 100 units (2 initial + 98 ordered)
+      expect(unterteilTransfer!.fromWorkshopId).toBe(WORKSHOP_RAUEN);
+      expect(unterteilTransfer!.toWorkshopId).toBe(WORKSHOP_POTSDAM);
+      expect(unterteilTransfer!.quantity).toBe(100); // Currently failing with 90
+
+      expect(oberteilTransfer!.fromWorkshopId).toBe(WORKSHOP_RAUEN);
+      expect(oberteilTransfer!.toWorkshopId).toBe(WORKSHOP_POTSDAM);
+      expect(oberteilTransfer!.quantity).toBe(100); // Currently failing with 90
+
+      // Check Workshop Coverage (Tab 3)
+      const potsdamUnterteil = result.workshopCoverage.find(
+        c => c.workshopId === WORKSHOP_POTSDAM && c.materialId === GEHAUSE_UNTERTEIL
+      );
+      const rauenUnterteil = result.workshopCoverage.find(
+        c => c.workshopId === WORKSHOP_RAUEN && c.materialId === GEHAUSE_UNTERTEIL
+      );
+
+      console.log('\nCoverage Potsdam - Gehäuse Unterteil:', potsdamUnterteil);
+      console.log('Coverage Rauen - Gehäuse Unterteil:', rauenUnterteil);
+
+      // Potsdam: needs 100, gets 0 local, should get 100 from transfer
+      expect(potsdamUnterteil!.required).toBe(100);
+      expect(potsdamUnterteil!.coveredLocal).toBe(0);
+      expect(potsdamUnterteil!.coveredByTransfers).toBe(100);
+      expect(potsdamUnterteil!.remainingShortage).toBe(0);
+      expect(potsdamUnterteil!.localStockBeforeOrders).toBe(0);
+      expect(potsdamUnterteil!.localStockAfterOrdersAndTransfers).toBe(100);
+
+      // Rauen: needs 0 (no production), has 2 initial, gets 98 order, transfers 100 out
+      expect(rauenUnterteil!.required).toBe(0);
+      expect(rauenUnterteil!.localStockBeforeOrders).toBe(2); // BUG: Currently shows 0?
+      expect(rauenUnterteil!.localStockAfterOrdersAndTransfers).toBe(0); // 2 + 98 - 100 = 0
+
+      console.log('\n=== END BUG TEST ===\n');
+    });
+  });
 });
+

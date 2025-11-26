@@ -184,10 +184,18 @@ export function planGlobalMaterials(
     const delta1 = stockAfter1 - required1;
     const delta2 = stockAfter2 - required2;
 
+    // DEBUG for Material 74 and 75
+    if (materialId === 74 || materialId === 75) {
+      console.log(`\n[DEBUG] Material ${materialId}:`);
+      console.log(`  WS${wId1}: required=${required1}, stockAfter=${stockAfter1}, delta=${delta1}`);
+      console.log(`  WS${wId2}: required=${required2}, stockAfter=${stockAfter2}, delta=${delta2}`);
+    }
+
     // Workshop 1 has surplus, Workshop 2 needs material
     if (delta1 > 0 && delta2 < 0) {
       const transferQty = Math.min(delta1, Math.abs(delta2));
       if (transferQty > 0) {
+        console.log(`Transfer ${transferQty} from ${wId1} to ${wId2}`);
         transferSuggestions.push({
           materialId,
           fromWorkshopId: wId1,
@@ -200,6 +208,7 @@ export function planGlobalMaterials(
     else if (delta2 > 0 && delta1 < 0) {
       const transferQty = Math.min(delta2, Math.abs(delta1));
       if (transferQty > 0) {
+        console.log(`Transfer Material ${materialId}: ${transferQty} from WS${wId2} to WS${wId1} (delta2=${delta2}, abs(delta1)=${Math.abs(delta1)})`);
         transferSuggestions.push({
           materialId,
           fromWorkshopId: wId2,

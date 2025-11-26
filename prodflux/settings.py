@@ -79,7 +79,20 @@ WSGI_APPLICATION = 'prodflux.wsgi.application'
 
 # Datenbank
 DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
+
+# Test-Umgebung: Immer SQLite für Tests verwenden
+import sys
+TESTING = 'test' in sys.argv
+
+if TESTING:
+    # Für Tests IMMER SQLite verwenden, nie die produktive Datenbank!
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',  # In-Memory-Datenbank für schnelle Tests
+        }
+    }
+elif DATABASE_URL:
     # Use DATABASE_URL if set (production or local PostgreSQL)
     import dj_database_url
     DATABASES = {

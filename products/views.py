@@ -399,12 +399,10 @@ def aggregated_material_requirements_view(request):
         required_total = info["required_quantity"]
 
         if not material:
-            continue  # Sicherheit, sollte aber eigentlich nicht vorkommen
+            continue
 
-        # IDs von Material und Alternativen
         material_ids = [material.id] + list(material.alternatives.values_list('id', flat=True))
 
-        # Lagerbestand
         movements = MaterialMovement.objects.filter(
             material_id__in=material_ids,
             workshop_id=workshop_id
@@ -417,15 +415,12 @@ def aggregated_material_requirements_view(request):
             elif m.change_type in ['verbrauch', 'verlust']:
                 available_quantity -= m.quantity
 
-        # Bestellte Menge
         ordered_quantity = OrderItem.objects.filter(
             material_id__in=material_ids
         ).aggregate(total=Sum("quantity"))["total"] or Decimal(0)
 
-        # Fehlmenge
         missing_quantity = max(Decimal(0), required_total - (available_quantity + ordered_quantity))
 
-        # Bild-URL für Alternative holen
         bild_url = None
         if material.bild:
             request_context = request if request else None
@@ -457,11 +452,7 @@ def product_lifecycle_overview(request):
     result = []
     products = Product.objects.all()
 
-    logger.info(f"🔄 Starte Lifecycle-Auswertung für Werkstatt {workshop_id}")
-
     for product in products:
-        logger.info(f"➡️ Produkt: {product.bezeichnung} (ID: {product.id})")
-
         bestellung_limits = []
         lager_limits = []
 
@@ -469,17 +460,10 @@ def product_lifecycle_overview(request):
             material = req.material
             bedarf_pro_einheit = req.quantity_per_unit
 
-            logger.info(f"  📦 Material: {material.bezeichnung} (ID: {material.id})")
-            logger.info(f"    Bedarf pro Einheit: {bedarf_pro_einheit}")
-
-            # 🔹 Gesamtmenge aus allen Bestellungen
             gesamt_bestellt = OrderItem.objects.filter(
                 material=material
             ).aggregate(total=Sum("quantity"))["total"] or Decimal(0)
 
-            logger.info(f"    Bestellt insgesamt: {gesamt_bestellt}")
-
-            # 🔹 Lagerbestand berechnen
             bewegungen = MaterialMovement.objects.filter(
                 material=material,
                 workshop_id=workshop_id
@@ -490,15 +474,10 @@ def product_lifecycle_overview(request):
                 for m in bewegungen
             ])
 
-            logger.info(f"    Lagerbestand: {lager}")
-
-            # 🔹 Einheiten berechnen
             if bedarf_pro_einheit > 0:
                 if lager == 0 and gesamt_bestellt == 0:
-                    # Wirklich limitiert – kein Lager, keine Bestellung
                     limit_bestellung = 0
                 else:
-                    # Bestellung oder Lager vorhanden – berücksichtige beide
                     limit_bestellung = (lager + gesamt_bestellt) // bedarf_pro_einheit
 
                 limit_lager = lager // bedarf_pro_einheit
@@ -506,13 +485,9 @@ def product_lifecycle_overview(request):
                 limit_bestellung = 0
                 limit_lager = 0
 
-            logger.info(f"    => bestellungen_moeglich: {limit_bestellung}")
-            logger.info(f"    => lager_fertigung_moeglich: {limit_lager}")
-
             bestellung_limits.append(limit_bestellung)
             lager_limits.append(limit_lager)
 
-        # 🔹 Minimum über alle benötigten Materialien
         bestellungen_moeglich = int(min(bestellung_limits)) if bestellung_limits else 0
         lager_fertigung_moeglich = int(min(lager_limits)) if lager_limits else 0
 
@@ -521,18 +496,13 @@ def product_lifecycle_overview(request):
         except ProductStock.DoesNotExist:
             bestand = Decimal(0)
 
-        logger.info(f"✅ Ergebnis für {product.bezeichnung}:")
-        logger.info(f"    bestellungen_moeglich: {bestellungen_moeglich}")
-        logger.info(f"    lager_fertigung_moeglich: {lager_fertigung_moeglich}")
-        logger.info(f"    bestand_fertig: {bestand}")
-
         result.append({
             "product_id": product.id,
             "product": product.bezeichnung,
             "bestellungen_moeglich": bestellungen_moeglich,
             "lager_fertigung_moeglich": lager_fertigung_moeglich,
             "bestand_fertig": float(bestand),
-            "verkauft": 0  # kann später ergänzt werden
+            "verkauft": 0
         })
 
     return Response(result)

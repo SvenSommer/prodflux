@@ -149,7 +149,7 @@ export class DeliveryFormComponent {
           if (this.materialAssignments[item.material]) {
             this.materialAssignments[item.material] = {
               quantity: Number(item.quantity),
-              note: item.quelle || '',
+              note: item.artikelnummer || '',
             };
           }
         });

@@ -95,9 +95,9 @@
               </td>
             </ng-container>
 
-            <ng-container matColumnDef="quelle">
-              <th mat-header-cell *matHeaderCellDef>Quelle</th>
-              <td mat-cell *matCellDef="let m">{{ m.quelle }}</td>
+            <ng-container matColumnDef="artikelnummer">
+              <th mat-header-cell *matHeaderCellDef>Artikelnummer</th>
+              <td mat-cell *matCellDef="let m">{{ m.artikelnummer || '—' }}</td>
             </ng-container>
 
             <tr
@@ -109,14 +109,14 @@
                 'preis',
                 'mwst',
                 'brutto',
-                'quelle'
+                'artikelnummer'
               ]"
             ></tr>
             <tr
               mat-row
               *matRowDef="
                 let row;
-                columns: ['nr', 'material', 'quantity', 'preis', 'mwst', 'brutto', 'quelle']
+                columns: ['nr', 'material', 'quantity', 'preis', 'mwst', 'brutto', 'artikelnummer']
               "
             ></tr>
           </table>

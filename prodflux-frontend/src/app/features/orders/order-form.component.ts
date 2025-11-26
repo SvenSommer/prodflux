@@ -70,7 +70,7 @@ export class OrderFormComponent {
 
   materialsList: Material[] = [];
   materialAssignments: {
-    [materialId: number]: { quantity: number; price: PriceData; quelle: string };
+    [materialId: number]: { quantity: number; price: PriceData; artikelnummer: string };
   } = {};
 
   // For MaterialTableComponent
@@ -78,7 +78,8 @@ export class OrderFormComponent {
   tableColumns: MaterialTableColumn[] = [
     { key: 'quantity', header: 'Menge', width: '120px' },
     { key: 'price', header: 'Preis/Stk. (Netto/MwSt.)', width: '350px' },
-    { key: 'quelle', header: 'Quelle', width: '200px' }
+    { key: 'total', header: 'Gesamt (netto)', width: '150px' },
+    { key: 'artikelnummer', header: 'Artikelnummer', width: '200px' }
   ];
 
   ngOnInit() {
@@ -119,7 +120,7 @@ export class OrderFormComponent {
         this.materialAssignments[mat.id] = {
           quantity: 0,
           price: { netto: 0, mwst_satz: 19 },
-          quelle: ''
+          artikelnummer: ''
         };
 
         // Find category for this material
@@ -165,7 +166,7 @@ export class OrderFormComponent {
                   netto: item.preis_pro_stueck,
                   mwst_satz: item.mwst_satz || 19
                 },
-                quelle: item.quelle || ''
+                artikelnummer: item.artikelnummer || ''
               };
             } else {
               this.materialAssignments[item.material].quantity = item.quantity;
@@ -173,7 +174,7 @@ export class OrderFormComponent {
                 netto: item.preis_pro_stueck,
                 mwst_satz: item.mwst_satz || 19
               };
-              this.materialAssignments[item.material].quelle = item.quelle || '';
+              this.materialAssignments[item.material].artikelnummer = item.artikelnummer || '';
             }
           });
 
@@ -196,7 +197,7 @@ export class OrderFormComponent {
         quantity: Number(v.quantity),
         preis_pro_stueck: Number(v.price.netto),
         mwst_satz: Number(v.price.mwst_satz),
-        quelle: v.quelle || ''
+        artikelnummer: v.artikelnummer || ''
       }));
 
     const payload = {
@@ -285,6 +286,14 @@ export class OrderFormComponent {
 
   onSupplierSelected(supplier: Supplier) {
     this.supplier = supplier.id;
+  }
+
+  calculateTotalPrice(assignment: { quantity: number; price: PriceData; artikelnummer: string }): string {
+    if (!assignment.quantity || !assignment.price.netto) {
+      return '—';
+    }
+    const netto = Number(assignment.quantity) * Number(assignment.price.netto);
+    return `${netto.toFixed(5).replace(/\.?0+$/, '')} €`;
   }
 
   openNewSupplierDialog() {

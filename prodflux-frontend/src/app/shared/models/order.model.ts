@@ -10,7 +10,7 @@ export interface OrderItem {
   preis_pro_stueck: number;
   mwst_satz?: number;  // MwSt.-Satz in Prozent (default: 19)
   preis_pro_stueck_mit_versand?: number | null;
-  quelle?: string;
+  artikelnummer?: string;
 }
 
 export interface Order {

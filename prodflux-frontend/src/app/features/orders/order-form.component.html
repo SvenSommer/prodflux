@@ -94,13 +94,18 @@
                 [label]="''"
                 class="compact-price-input">
               </app-price-input>
-            } @else if (column.key === 'quelle') {
+            } @else if (column.key === 'total') {
+              <div class="total-price">
+                {{ calculateTotalPrice(materialAssignments[row.materialId]) }}
+              </div>
+            } @else if (column.key === 'artikelnummer') {
               <input
                 matInput
                 type="text"
-                [(ngModel)]="materialAssignments[row.materialId].quelle"
-                [name]="'quelle_' + row.materialId"
+                [(ngModel)]="materialAssignments[row.materialId].artikelnummer"
+                [name]="'artikelnummer_' + row.materialId"
                 class="table-input"
+                placeholder="Art.-Nr."
               />
             }
           </ng-template>

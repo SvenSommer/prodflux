@@ -152,7 +152,12 @@ class OrderItem(models.Model):
         null=True,
         blank=True
     )
-    quelle = models.CharField(max_length=255, blank=True)
+    artikelnummer = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='Artikelnummer',
+        help_text='Artikelnummer des Lieferanten'
+    )
 
     def berechne_versandanteil(self):
         if not self.order.versandkosten or self.order.versandkosten == 0:

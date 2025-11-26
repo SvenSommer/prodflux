@@ -20,6 +20,21 @@
   width: 100%;
 }
 
+.supplier-field-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .supplier-field {
+    flex: 1;
+  }
+
+  .add-supplier-button {
+    margin-top: 8px;
+  }
+}
+
 .versand-label {
   display: block;
   font-size: 0.875rem;

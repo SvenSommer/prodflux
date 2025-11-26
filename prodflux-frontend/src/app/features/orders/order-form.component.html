@@ -3,14 +3,37 @@
     <mat-card-title>{{ orderId ? 'Bestellung bearbeiten' : 'Neue Bestellung anlegen' }}</mat-card-title>
 
     <form (ngSubmit)="save()">
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Lieferant</mat-label>
-        <mat-select [(ngModel)]="supplier" name="supplier" required>
-          <mat-option *ngFor="let s of suppliers" [value]="s.id">
-            {{ s.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="supplier-field-container">
+        <mat-form-field appearance="fill" class="supplier-field">
+          <mat-label>Lieferant</mat-label>
+          <input
+            type="text"
+            matInput
+            [formControl]="supplierControl"
+            [matAutocomplete]="auto"
+            required
+          />
+          <mat-autocomplete
+            #auto="matAutocomplete"
+            [displayWith]="displaySupplierFn"
+            (optionSelected)="onSupplierSelected($event.option.value)"
+          >
+            <mat-option *ngFor="let s of filteredSuppliers | async" [value]="s">
+              {{ s.name }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+        <button
+          type="button"
+          mat-mini-fab
+          color="primary"
+          class="add-supplier-button"
+          (click)="openNewSupplierDialog()"
+          matTooltip="Neuen Lieferanten anlegen"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
 
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Bestellnummer</mat-label>

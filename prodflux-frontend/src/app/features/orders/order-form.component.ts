@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { OrdersService, OrderItem } from './orders.service';
 import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
@@ -14,8 +14,13 @@ import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MaterialTableComponent, MaterialTableColumn, MaterialTableRow } from '../../shared/components/material-table/material-table.component';
 import { PriceInputComponent, PriceData } from '../../shared/components/price-input/price-input.component';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-order-form',
@@ -25,6 +30,7 @@ import { PriceInputComponent, PriceData } from '../../shared/components/price-in
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     RouterModule,
     MatFormFieldModule,
     MatInputModule,
@@ -34,11 +40,15 @@ import { PriceInputComponent, PriceData } from '../../shared/components/price-in
     MatCardModule,
     MatIconModule,
     MatCheckboxModule,
+    MatAutocompleteModule,
+    MatDialogModule,
+    MatTooltipModule,
     MaterialTableComponent,
     PriceInputComponent
   ]
 })
 export class OrderFormComponent {
+  private dialog = inject(MatDialog);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ordersService = inject(OrdersService);
@@ -54,6 +64,8 @@ export class OrderFormComponent {
   is_historical: boolean = false;
 
   suppliers: Supplier[] = [];
+  supplierControl = new FormControl<string | Supplier>('');
+  filteredSuppliers!: Observable<Supplier[]>;
   materialGroups: MaterialCategoryGroup[] = [];
 
   materialsList: Material[] = [];
@@ -73,12 +85,26 @@ export class OrderFormComponent {
     console.log('[OrderForm] Init');
     this.orderId = Number(this.route.snapshot.paramMap.get('id')) || null;
 
-    // Load suppliers (active only)
+    // Setup autocomplete filtering
+    this.filteredSuppliers = this.supplierControl.valueChanges.pipe(
+      startWith(''),
+      map(value => {
+        const name = typeof value === 'string' ? value : value?.name;
+        return name ? this._filterSuppliers(name as string) : this.suppliers.slice();
+      })
+    );
+
+    // Load suppliers first
     this.suppliersService.getAll().subscribe(suppliers => {
       this.suppliers = suppliers.filter(s => s.is_active);
       console.log('[OrderForm] Active suppliers loaded:', this.suppliers.length);
-    });
 
+      // Then load materials and potentially the order
+      this.loadMaterialsAndOrder();
+    });
+  }
+
+  loadMaterialsAndOrder() {
     this.materialsService.getMaterialsGrouped().subscribe(groups => {
       this.materialGroups = groups;
 
@@ -114,6 +140,13 @@ export class OrderFormComponent {
           console.log('[OrderForm] fetched order:', order);
 
           this.supplier = order.supplier;
+
+          // Set supplier in autocomplete
+          const selectedSupplier = this.suppliers.find(s => s.id === order.supplier);
+          if (selectedSupplier) {
+            this.supplierControl.setValue(selectedSupplier);
+          }
+
           this.order_number = order.order_number || '';
           this.bestellt_am = order.bestellt_am;
           this.versandkosten = {
@@ -189,4 +222,122 @@ export class OrderFormComponent {
       this.router.navigate(['/orders']);
     });
   }
+
+  loadSuppliers() {
+    this.suppliersService.getAll().subscribe(suppliers => {
+      this.suppliers = suppliers.filter(s => s.is_active);
+      console.log('[OrderForm] Active suppliers loaded:', this.suppliers.length);
+    });
+  }
+
+  private _filterSuppliers(value: string): Supplier[] {
+    const filterValue = value.toLowerCase();
+    return this.suppliers.filter(s => s.name.toLowerCase().includes(filterValue));
+  }
+
+  displaySupplierFn(supplier: Supplier): string {
+    return supplier && supplier.name ? supplier.name : '';
+  }
+
+  onSupplierSelected(supplier: Supplier) {
+    this.supplier = supplier.id;
+  }
+
+  openNewSupplierDialog() {
+    const dialogRef = this.dialog.open(NewSupplierDialogComponent, {
+      width: '500px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Reload suppliers and select the new one
+        this.suppliersService.getAll().subscribe(suppliers => {
+          this.suppliers = suppliers.filter(s => s.is_active);
+          const newSupplier = suppliers.find(s => s.id === result.id);
+          if (newSupplier) {
+            this.supplier = newSupplier.id;
+            this.supplierControl.setValue(newSupplier);
+          }
+        });
+      }
+    });
+  }
 }
+
+// Dialog Component for creating new supplier
+@Component({
+  selector: 'app-new-supplier-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule
+  ],
+  template: `
+    <h2 mat-dialog-title>Neuer Lieferant</h2>
+    <mat-dialog-content>
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Name</mat-label>
+        <input matInput [(ngModel)]="supplierName" name="name" required autofocus />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>URL (optional)</mat-label>
+        <input matInput [(ngModel)]="supplierUrl" name="url" type="url" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Kundenkonto (optional)</mat-label>
+        <input matInput [(ngModel)]="kundenkonto" name="kundenkonto" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Notizen (optional)</mat-label>
+        <textarea matInput [(ngModel)]="notes" name="notes" rows="3"></textarea>
+      </mat-form-field>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="cancel()">Abbrechen</button>
+      <button mat-raised-button color="primary" (click)="save()" [disabled]="!supplierName">Speichern</button>
+    </mat-dialog-actions>
+  `,
+  styles: [`
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+  `]
+})
+export class NewSupplierDialogComponent {
+  private dialogRef = inject(MatDialogRef<NewSupplierDialogComponent>);
+  private suppliersService = inject(SuppliersService);
+
+  supplierName: string = '';
+  supplierUrl: string = '';
+  kundenkonto: string = '';
+  notes: string = '';
+
+  cancel() {
+    this.dialogRef.close();
+  }
+
+  save() {
+    if (!this.supplierName) return;
+
+    const newSupplier = {
+      name: this.supplierName,
+      url: this.supplierUrl,
+      kundenkonto: this.kundenkonto,
+      notes: this.notes,
+      is_active: true
+    };
+
+    this.suppliersService.create(newSupplier).subscribe(result => {
+      this.dialogRef.close(result);
+    });
+  }
+}
+

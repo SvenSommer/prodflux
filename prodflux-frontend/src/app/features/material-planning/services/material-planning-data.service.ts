@@ -35,6 +35,12 @@ interface MaterialStockGroup {
   }[];
 }
 
+interface MaterialCategoryResponse {
+  category_id: number | null;
+  category_name: string;
+  materials: Material[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class MaterialPlanningDataService {
   private http = inject(HttpClient);
@@ -48,9 +54,14 @@ export class MaterialPlanningDataService {
     return forkJoin({
       workshops: this.http.get<Workshop[]>(`${this.baseUrl}/workshops/`),
       products: this.http.get<Product[]>(`${this.baseUrl}/products/`),
-      materials: this.http.get<Material[]>(`${this.baseUrl}/materials/`),
+      materialsGrouped: this.http.get<MaterialCategoryResponse[]>(`${this.baseUrl}/materials/`),
       bom: this.http.get<ProductMaterial[]>(`${this.baseUrl}/product-materials/`)
     }).pipe(
+      // Flatten materials from grouped structure
+      map(data => ({
+        ...data,
+        materials: this.flattenMaterialsFromGroups(data.materialsGrouped)
+      })),
       // 2. Lade Material-Stocks für alle Workshops
       switchMap(baseData => {
         // Stock-Requests für jeden Workshop
@@ -136,5 +147,16 @@ export class MaterialPlanningDataService {
       record[item.id] = item;
     });
     return record;
+  }
+
+  /**
+   * Helper: Extrahiert Materialien aus der gruppierten API-Response
+   */
+  private flattenMaterialsFromGroups(groups: MaterialCategoryResponse[]): Material[] {
+    const materials: Material[] = [];
+    groups.forEach(group => {
+      materials.push(...group.materials);
+    });
+    return materials;
   }
 }

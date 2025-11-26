@@ -70,6 +70,16 @@
                 <span class="label">Hersteller:</span>
                 <span class="value">{{ material.hersteller_bezeichnung }}</span>
               </div>
+
+              <!-- Lieferanten anzeigen -->
+              <div class="info-row" *ngIf="material.supplier_details && material.supplier_details.length > 0">
+                <span class="label">Lieferanten:</span>
+                <span class="value">
+                  <span *ngFor="let supplier of material.supplier_details; let last = last">
+                    {{ supplier.name }}<span *ngIf="!last">, </span>
+                  </span>
+                </span>
+              </div>
               <!-- Hier können weitere Stammdaten hinzugefügt werden -->
             </div>
 
@@ -250,12 +260,12 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Rechte Spalte: Lagerbestand -->
+    <!-- Rechte Spalte: Materialbestand -->
     <mat-card class="section-card stock-card">
       <mat-card-header>
         <mat-card-title class="section-title">
           <mat-icon>inventory</mat-icon>
-          Lagerbestand
+          Materialbestand
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>

@@ -8,6 +8,11 @@ export interface Material {
     name: string;
     order: number;
   } | null;
+  suppliers?: number[];
+  supplier_details?: {
+    id: number;
+    name: string;
+  }[];
   // optional:
   deprecated?: boolean;
 }

@@ -10,6 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MaterialCategoriesService, MaterialCategory } from '../settings/material-categories.service';
 import { MatSelectModule } from '@angular/material/select';
+import { SuppliersService } from '../settings/suppliers.service';
+import { Supplier } from '../settings/models/supplier.model';
 
 @Component({
   selector: 'app-material-form',
@@ -32,6 +34,7 @@ export class MaterialFormComponent {
   private route = inject(ActivatedRoute);
   private materialsService = inject(MaterialsService);
   private materialCategoriesService = inject(MaterialCategoriesService);
+  private suppliersService = inject(SuppliersService);
   private router = inject(Router);
 
   materialId: number | null = null;
@@ -53,6 +56,9 @@ export class MaterialFormComponent {
   categories: MaterialCategory[] = [];
   selectedCategoryId: number | null = null;
 
+  suppliers: Supplier[] = [];
+  selectedSupplierIds: number[] = [];
+
   alternatives: Material[] = [];
   allMaterials: Material[] = [];
   newAlternativeId: number | null = null;
@@ -61,6 +67,7 @@ export class MaterialFormComponent {
     const idParam = this.route.snapshot.paramMap.get('id');
 
     this.materialCategoriesService.getAll().subscribe(cats => this.categories = cats);
+    this.suppliersService.getAll().subscribe(suppliers => this.suppliers = suppliers);
 
     this.materialsService.getMaterialsGrouped().subscribe(groups => {
       this.groupedMaterials = groups;
@@ -74,6 +81,7 @@ export class MaterialFormComponent {
         this.material.hersteller_bezeichnung = data.hersteller_bezeichnung;
         this.currentImageUrl = data.bild_url || null;
         this.selectedCategoryId = data.category?.id || null;
+        this.selectedSupplierIds = data.suppliers || [];
         this.newImagePreview = null;
         this.material.bild = null;
         this.updateAvailableAlternatives(); // nach Material-Load neu filtern
@@ -109,6 +117,11 @@ export class MaterialFormComponent {
     if (this.selectedCategoryId !== null) {
       formData.append('category_id', this.selectedCategoryId.toString());
     }
+    
+    // Add suppliers
+    this.selectedSupplierIds.forEach((supplierId, index) => {
+      formData.append(`suppliers[${index}]`, supplierId.toString());
+    });
 
     const request = this.materialId
       ? this.materialsService.updateMaterialFormData(this.materialId, formData)

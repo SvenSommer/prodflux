@@ -16,6 +16,11 @@ export interface Material {
     order: number;
   };
   alternatives: number[];
+  suppliers?: number[];
+  supplier_details?: {
+    id: number;
+    name: string;
+  }[];
   deprecated?: boolean;
   required_quantity_per_unit?: number;
   product_material_id?: number; // Added to store product material ID

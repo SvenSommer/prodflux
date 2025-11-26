@@ -35,7 +35,7 @@ urlpatterns = [
     path("deliveries/<int:pk>/", DeliveryDetailView.as_view(), name="delivery-detail"),
     path("orders/", OrderListCreateView.as_view(), name="order-list-create"),
     path("orders/<int:pk>/", OrderDetailView.as_view(), name="order-detail"),
-    path("materials/<int:material_id>/stock", material_stock_view, name="material-stock"),
+    path("materials/<int:material_id>/stock/", material_stock_view, name="material-stock"),
     path("workshops/<int:workshop_id>/material-stock/", 
          all_materials_stock_by_workshop, 
          name="workshop-material-stock"),

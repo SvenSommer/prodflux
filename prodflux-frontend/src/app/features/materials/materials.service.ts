@@ -58,6 +58,7 @@ export interface MaterialStock {
     bild?: string;
     bild_url?: string;
     current_stock: number;
+    deprecated?: boolean;
   }[];
 }
 

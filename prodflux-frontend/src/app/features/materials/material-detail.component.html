@@ -1,4 +1,7 @@
 <div class="material-detail-container">
+  <!-- Breadcrumb Navigation -->
+  <app-breadcrumb [links]="getBreadcrumbLinks()"></app-breadcrumb>
+
   <div *ngIf="errorMessage" class="error-message">
     {{ errorMessage }}
   </div>
@@ -10,7 +13,16 @@
       <mat-card-content>
         <div class="material-header">
           <div class="title-section">
-            <h1 class="material-title">{{ material?.bezeichnung }}</h1>
+            <button mat-icon-button (click)="goBack()" matTooltip="Zurück zur Übersicht" class="back-button">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
+            <div class="title-with-category">
+              <h1 class="material-title">{{ material?.bezeichnung }}</h1>
+              <div class="category-badge" *ngIf="material?.category">
+                <mat-icon>category</mat-icon>
+                {{ material?.category?.name }}
+              </div>
+            </div>
             <!-- Deprecated Status Chip -->
             <div *ngIf="material?.deprecated" class="deprecated-chip">
               <mat-icon>archive</mat-icon>
@@ -61,23 +73,7 @@
               <!-- Hier können weitere Stammdaten hinzugefügt werden -->
             </div>
 
-            <!-- Lagerbestand in Stammdaten integriert -->
-            <div class="stock-section">
-              <h3>Lagerbestand</h3>
-              <mat-form-field appearance="outline" class="workshop-select">
-                <mat-label>Werkstatt wählen</mat-label>
-                <mat-select [(ngModel)]="selectedWorkshopId" (selectionChange)="onWorkshopChange()">
-                  <mat-option *ngFor="let w of workshops" [value]="w.id">{{ w.name }}</mat-option>
-                </mat-select>
-              </mat-form-field>
 
-              <div *ngIf="stockInfo" class="stock-info">
-                <div class="current-stock">
-                  <span class="stock-label">Aktuell in {{ getWorkshopNameById(selectedWorkshopId) }} vorhanden:</span>
-                  <span class="stock-value">{{ stockInfo.current_stock }} Stück</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </mat-card-content>
@@ -108,7 +104,12 @@
                 </div>
               </div>
               <div class="alternative-info">
-                <div class="alternative-name">{{ alt.bezeichnung }}</div>
+                <div class="alternative-name">
+                  {{ alt.bezeichnung }}
+                  <span *ngIf="alt.deprecated" class="deprecated-badge-small">
+                    <mat-icon>archive</mat-icon>
+                  </span>
+                </div>
                 <div class="alternative-manufacturer" *ngIf="alt.hersteller_bezeichnung">
                   {{ alt.hersteller_bezeichnung }}
                 </div>
@@ -121,15 +122,25 @@
     </div>
   </div>
 
-  <!-- Bewegungshistorie Sektion -->
-  <mat-card class="section-card">
-    <mat-card-header>
-      <mat-card-title class="section-title">
-        <mat-icon>history</mat-icon>
-        Bewegungshistorie
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+  <!-- Bewegungshistorie und Lagerbestand Sektion -->
+  <div class="bottom-section">
+    <!-- Linke Spalte: Bewegungshistorie -->
+    <mat-card class="section-card movements-card">
+      <mat-card-header>
+        <mat-card-title class="section-title">
+          <mat-icon>history</mat-icon>
+          Bewegungshistorie
+        </mat-card-title>
+        <div class="header-actions">
+          <mat-form-field appearance="outline" class="workshop-select-header">
+            <mat-label>Werkstatt wählen</mat-label>
+            <mat-select [(ngModel)]="selectedWorkshopId" (selectionChange)="onWorkshopChange()">
+              <mat-option *ngFor="let w of workshops" [value]="w.id">{{ w.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
       <!-- Tabelle -->
       <table mat-table [dataSource]="movements" class="mat-elevation-z1 full-width-table">
       <ng-container matColumnDef="type">
@@ -236,6 +247,30 @@
           </div>
         </form>
       </div>
-    </mat-card-content>
-  </mat-card>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Rechte Spalte: Lagerbestand -->
+    <mat-card class="section-card stock-card">
+      <mat-card-header>
+        <mat-card-title class="section-title">
+          <mat-icon>inventory</mat-icon>
+          Lagerbestand
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stock-overview">
+          <div class="stock-item" *ngFor="let workshop of workshops">
+            <div class="stock-item-header">
+              <span class="workshop-name">{{ workshop.name }}</span>
+            </div>
+            <div class="stock-item-value">
+              <span class="stock-number">{{ getWorkshopStock(workshop.id) }}</span>
+              <span class="stock-unit">Stück</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

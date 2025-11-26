@@ -17,6 +17,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialUsageComponent } from '../../shared/components/material-usage/material-usage.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-material-detail',
@@ -35,7 +37,8 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/componen
     MatInputModule,
     MatButtonModule,
     MatTooltipModule,
-    MaterialUsageComponent
+    MaterialUsageComponent,
+    BreadcrumbComponent
   ]
 })
 export class MaterialDetailComponent {
@@ -44,6 +47,7 @@ export class MaterialDetailComponent {
   private workshopsService = inject(WorkshopsService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
   materialId: number = Number(this.route.snapshot.paramMap.get('id'));
   material: Material | null = null;
@@ -51,6 +55,7 @@ export class MaterialDetailComponent {
   workshops: Workshop[] = [];
   selectedWorkshopId: number | null = null;
   stockInfo: MaterialStock | null = null;
+  workshopStocks: Map<number, MaterialStock> = new Map();
 
   editMovementId: number | null = null;
   editedMovement: Partial<MaterialMovement> = {};
@@ -65,7 +70,17 @@ export class MaterialDetailComponent {
         this.selectedWorkshopId = ws[0].id;
         this.loadMovements();
         this.loadStock();
+        // Lade Bestände für alle Werkstätten
+        this.loadAllWorkshopStocks();
       }
+    });
+  }
+
+  loadAllWorkshopStocks() {
+    this.workshops.forEach(workshop => {
+      this.materialsService.getMaterialStock(this.materialId, workshop.id).subscribe(stock => {
+        this.workshopStocks.set(workshop.id, stock);
+      });
     });
   }
 
@@ -73,7 +88,10 @@ export class MaterialDetailComponent {
     if (!this.selectedWorkshopId) return;
     this.materialsService.getMaterialMovements(this.materialId, this.selectedWorkshopId)
       .subscribe(movs => {
-        this.movements = movs.map(m => ({ ...m, quantity: Number(m.quantity) }));
+        // Nach Datum absteigend sortieren (neueste zuerst)
+        this.movements = movs
+          .map(m => ({ ...m, quantity: Number(m.quantity) }))
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       });
   }
 
@@ -82,6 +100,11 @@ export class MaterialDetailComponent {
     this.materialsService.getMaterialStock(this.materialId, this.selectedWorkshopId).subscribe(stock => {
       this.stockInfo = stock;
     });
+  }
+
+  getWorkshopStock(workshopId: number): number {
+    const stock = this.workshopStocks.get(workshopId);
+    return stock ? stock.current_stock : 0;
   }
 
   onWorkshopChange() {
@@ -237,5 +260,16 @@ export class MaterialDetailComponent {
         });
       }
     });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/materials']);
+  }
+
+  getBreadcrumbLinks() {
+    return [
+      { label: 'Materialien', url: '/materials' },
+      { label: this.material?.bezeichnung || 'Material' }
+    ];
   }
 }

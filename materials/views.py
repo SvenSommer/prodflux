@@ -220,7 +220,8 @@ def material_stock_view(request, material_id):
             "category": MaterialCategorySerializer(alt_material.category).data if alt_material.category else None,
             "bild": alt_material.bild.url if alt_material.bild else None,
             "bild_url": bild_url,
-            "current_stock": float(alt_total)
+            "current_stock": float(alt_total),
+            "deprecated": alt_material.deprecated
         })
 
     return Response({

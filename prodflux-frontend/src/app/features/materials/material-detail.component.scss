@@ -3,6 +3,12 @@
   margin: 0 auto;
   padding: 2rem;
 
+  // Breadcrumb spacing
+  app-breadcrumb {
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+
   // Zweispaltiges Hauptlayout
   .main-layout {
     display: grid;
@@ -35,11 +41,46 @@
         align-items: center;
         gap: 1rem;
 
+        .back-button {
+          color: #666;
+          transition: all 0.2s ease;
+
+          &:hover {
+            color: #2196F3;
+            background-color: rgba(33, 150, 243, 0.1);
+          }
+        }
+
+        .title-with-category {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
         .material-title {
           font-size: 2rem;
           font-weight: 600;
           color: #333;
           margin: 0;
+        }
+
+        .category-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #e3f2fd;
+          color: #1976d2;
+          padding: 0.375rem 0.75rem;
+          border-radius: 12px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          width: fit-content;
+
+          mat-icon {
+            font-size: 1rem;
+            width: 1rem;
+            height: 1rem;
+          }
         }
 
         .deprecated-chip {
@@ -167,43 +208,6 @@
             }
           }
         }
-
-        .stock-section {
-          h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #333;
-            margin: 0 0 1rem 0;
-          }
-
-          .workshop-select {
-            width: 100%;
-            margin-bottom: 1rem;
-          }
-
-          .stock-info {
-            .current-stock {
-              display: flex;
-              align-items: center;
-              gap: 1rem;
-              padding: 1rem;
-              background: #f8f9fa;
-              border-radius: 8px;
-
-              .stock-label {
-                color: #666;
-                font-weight: 500;
-                font-size: 0.875rem;
-              }
-
-              .stock-value {
-                font-size: 1.125rem;
-                font-weight: 600;
-                color: #2196F3;
-              }
-            }
-          }
-        }
       }
     }
   }
@@ -302,6 +306,25 @@
             color: #333;
             margin-bottom: 0.25rem;
             font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            .deprecated-badge-small {
+              display: inline-flex;
+              align-items: center;
+              background: #ffecb3;
+              color: #f57c00;
+              padding: 0.125rem 0.375rem;
+              border-radius: 8px;
+              font-size: 0.75rem;
+
+              mat-icon {
+                font-size: 0.875rem;
+                width: 0.875rem;
+                height: 0.875rem;
+              }
+            }
           }
 
           .alternative-manufacturer {
@@ -348,7 +371,87 @@
     .right-column {
       gap: 1rem; // Kleinerer Gap auf mobile
     }
-  }  // Bestehende Tabellen-Styles für Movement-Tabelle
+  }
+
+  // Bottom Section: Bewegungshistorie und Lagerbestand nebeneinander
+  .bottom-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  // Bottom Section: Bewegungshistorie und Lagerbestand nebeneinander
+  .bottom-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  // Stock Card Styles
+  .stock-card {
+    .workshop-select {
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+
+    .stock-overview {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .stock-item {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #2196F3;
+
+        .stock-item-header {
+          margin-bottom: 0.5rem;
+
+          .workshop-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
+
+        .stock-item-value {
+          display: flex;
+          align-items: baseline;
+          gap: 0.5rem;
+
+          .stock-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2196F3;
+            line-height: 1;
+          }
+
+          .stock-unit {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+          }
+        }
+      }
+    }
+  }
+
+  // Bestehende Tabellen-Styles für Movement-Tabelle
   .full-width-table {
     width: 100%;
     border-collapse: collapse;
@@ -383,6 +486,23 @@
     }
   }
 
+  // Mat-card-header mit Workshop-Dropdown
+  .movements-card {
+    mat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+
+      .header-actions {
+        .workshop-select-header {
+          width: 250px;
+          margin-bottom: -1.25em;
+        }
+      }
+    }
+  }
+
   // Bewegungsformular
   .movement-form-section {
     margin-top: 2rem;
@@ -410,6 +530,53 @@
         button {
           height: 56px;
           padding: 0 2rem;
+        }
+      }
+    }
+  }
+
+  // Stock Card Styles (duplicate - remove workshop-select)
+  .stock-card {
+    .stock-overview {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .stock-item {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #2196F3;
+
+        .stock-item-header {
+          margin-bottom: 0.5rem;
+
+          .workshop-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
+
+        .stock-item-value {
+          display: flex;
+          align-items: baseline;
+          gap: 0.5rem;
+
+          .stock-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2196F3;
+            line-height: 1;
+          }
+
+          .stock-unit {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+          }
         }
       }
     }

@@ -54,15 +54,24 @@ export class DeliveryFormComponent {
   orders: Order[] = [];  // NEW: for order dropdown
   materialGroups: MaterialCategoryGroup[] = [];
   materialAssignments: Record<number, { quantity: number; note: string }> = {};
+  filteredMaterialGroups: MaterialCategoryGroup[] = [];
+  isOrderBased = false;
 
   editMode = true;
 
   ngOnInit(): void {
     this.deliveryId = Number(this.route.snapshot.paramMap.get('id')) || null;
+    const orderId = this.route.snapshot.queryParamMap.get('orderId');
 
     this.loadWorkshops();
     this.loadOrders();  // NEW: load orders for dropdown
-    this.loadMaterialsAndDelivery();
+    
+    if (orderId) {
+      // Load materials first, then prefill from order
+      this.loadMaterialsAndPrefillFromOrder(Number(orderId));
+    } else {
+      this.loadMaterialsAndDelivery();
+    }
   }
 
   private loadWorkshops(): void {
@@ -83,6 +92,8 @@ export class DeliveryFormComponent {
   private loadMaterialsAndDelivery(): void {
     this.materialsService.getMaterialsGrouped().subscribe(groups => {
       this.materialGroups = groups;
+      this.filteredMaterialGroups = groups;
+      this.isOrderBased = false;
 
       // Materialien initialisieren
       const allMaterials = groups.flatMap(group => group.materials);
@@ -108,6 +119,47 @@ export class DeliveryFormComponent {
           });
         });
       }
+    });
+  }
+
+  private loadMaterialsAndPrefillFromOrder(orderId: number): void {
+    this.materialsService.getMaterialsGrouped().subscribe(groups => {
+      this.materialGroups = groups;
+      this.isOrderBased = true;
+
+      // Materialien initialisieren
+      const allMaterials = groups.flatMap(group => group.materials);
+      allMaterials.forEach(mat => {
+        this.materialAssignments[mat.id] = { quantity: 0, note: '' };
+      });
+
+      // Load order and prefill delivery
+      this.ordersService.get(orderId).subscribe(order => {
+        this.order = order.id;
+        this.note = `Lieferung zu Bestellung ${order.order_number || '#' + order.id}`;
+        this.is_historical = order.is_historical || false;
+        
+        // Set today's date as default delivery date
+        const today = new Date();
+        this.delivered_at = today.toISOString().split('T')[0];
+
+        // Prefill material quantities from order
+        const orderMaterialIds = new Set(order.items.map(item => item.material));
+        order.items.forEach(item => {
+          if (this.materialAssignments[item.material]) {
+            this.materialAssignments[item.material] = {
+              quantity: Number(item.quantity),
+              note: item.quelle || '',
+            };
+          }
+        });
+
+        // Filter material groups to show only materials from the order
+        this.filteredMaterialGroups = groups.map(group => ({
+          ...group,
+          materials: group.materials.filter(mat => orderMaterialIds.has(mat.id))
+        })).filter(group => group.materials.length > 0);
+      });
     });
   }
 

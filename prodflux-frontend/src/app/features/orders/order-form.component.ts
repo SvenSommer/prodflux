@@ -15,6 +15,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MaterialTableComponent, MaterialTableColumn, MaterialTableRow } from '../../shared/components/material-table/material-table.component';
+import { PriceInputComponent, PriceData } from '../../shared/components/price-input/price-input.component';
 
 @Component({
   selector: 'app-order-form',
@@ -33,7 +34,8 @@ import { MaterialTableComponent, MaterialTableColumn, MaterialTableRow } from '.
     MatCardModule,
     MatIconModule,
     MatCheckboxModule,
-    MaterialTableComponent
+    MaterialTableComponent,
+    PriceInputComponent
   ]
 })
 export class OrderFormComponent {
@@ -56,14 +58,14 @@ export class OrderFormComponent {
 
   materialsList: Material[] = [];
   materialAssignments: {
-    [materialId: number]: { quantity: number; preis: number; quelle: string };
+    [materialId: number]: { quantity: number; price: PriceData; quelle: string };
   } = {};
 
   // For MaterialTableComponent
   materialTableRows: MaterialTableRow[] = [];
   tableColumns: MaterialTableColumn[] = [
     { key: 'quantity', header: 'Menge', width: '120px' },
-    { key: 'preis', header: 'Preis/Stk. (€)', width: '150px' },
+    { key: 'price', header: 'Preis/Stk. (Netto/MwSt.)', width: '350px' },
     { key: 'quelle', header: 'Quelle', width: '200px' }
   ];
 
@@ -90,7 +92,7 @@ export class OrderFormComponent {
       for (const mat of allMaterials) {
         this.materialAssignments[mat.id] = {
           quantity: 0,
-          preis: 0,
+          price: { netto: 0, mwst_satz: 19 },
           quelle: ''
         };
 
@@ -123,12 +125,18 @@ export class OrderFormComponent {
               console.warn('[OrderForm] WARN: material id not found in materialAssignments:', item.material);
               this.materialAssignments[item.material] = {
                 quantity: item.quantity,
-                preis: item.preis_pro_stueck,
+                price: {
+                  netto: item.preis_pro_stueck,
+                  mwst_satz: item.mwst_satz || 19
+                },
                 quelle: item.quelle || ''
               };
             } else {
               this.materialAssignments[item.material].quantity = item.quantity;
-              this.materialAssignments[item.material].preis = item.preis_pro_stueck;
+              this.materialAssignments[item.material].price = {
+                netto: item.preis_pro_stueck,
+                mwst_satz: item.mwst_satz || 19
+              };
               this.materialAssignments[item.material].quelle = item.quelle || '';
             }
           });
@@ -150,7 +158,8 @@ export class OrderFormComponent {
       .map(([materialId, v]) => ({
         material: +materialId,
         quantity: v.quantity,
-        preis_pro_stueck: v.preis,
+        preis_pro_stueck: v.price.netto,
+        mwst_satz: v.price.mwst_satz,
         quelle: v.quelle || ''
       }));
 

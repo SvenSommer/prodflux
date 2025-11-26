@@ -41,9 +41,12 @@
       <div class="mt-4">
         <div class="header-row">
           <h3>Material-Zuordnung</h3>
+          <span *ngIf="isOrderBased" class="info-badge">
+            Nur Materialien aus der Bestellung werden angezeigt
+          </span>
         </div>
 
-        <ng-container *ngFor="let group of materialGroups">
+        <ng-container *ngFor="let group of filteredMaterialGroups">
           <h4 class="category-heading">{{ group.category_name }}</h4>
 
           <table mat-table [dataSource]="group.materials" class="mat-elevation-z1 full-width-table mb-6">

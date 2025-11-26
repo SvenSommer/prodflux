@@ -122,11 +122,28 @@ class Order(models.Model):
         return earliest.date() if earliest else None
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    order = models.ForeignKey(
+        Order, related_name='items', on_delete=models.CASCADE
+    )
     material = models.ForeignKey(Material, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    preis_pro_stueck = models.DecimalField(max_digits=10, decimal_places=2)
-    preis_pro_stueck_mit_versand = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    preis_pro_stueck = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text='Netto-Preis pro Stück'
+    )
+    mwst_satz = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=19.00,
+        help_text='MwSt.-Satz in Prozent (z.B. 19.00 für 19%)'
+    )
+    preis_pro_stueck_mit_versand = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
     quelle = models.CharField(max_length=255, blank=True)
 
     def berechne_versandanteil(self):

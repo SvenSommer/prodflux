@@ -61,16 +61,13 @@
                 [name]="'qty_' + row.materialId"
                 class="table-input"
               />
-            } @else if (column.key === 'preis') {
-              <input
-                matInput
-                type="number"
-                step="0.01"
-                min="0"
-                [(ngModel)]="materialAssignments[row.materialId].preis"
-                [name]="'preis_' + row.materialId"
-                class="table-input"
-              />
+            } @else if (column.key === 'price') {
+              <app-price-input
+                [(ngModel)]="materialAssignments[row.materialId].price"
+                [name]="'price_' + row.materialId"
+                [label]="''"
+                class="compact-price-input">
+              </app-price-input>
             } @else if (column.key === 'quelle') {
               <input
                 matInput

@@ -1,0 +1,79 @@
+.price-input-container {
+  margin: 8px 0;
+}
+
+.price-input-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.netto-field {
+  flex: 2;
+  min-width: 150px;
+}
+
+.mwst-field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.price-summary {
+  background-color: #f5f5f5;
+  border-left: 4px solid #1976d2;
+  padding: 12px 16px;
+  margin-top: 8px;
+  border-radius: 4px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.summary-label {
+  color: #666;
+  font-weight: 400;
+}
+
+.summary-value {
+  font-weight: 500;
+  color: #333;
+}
+
+.summary-total {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #ddd;
+  font-size: 1rem;
+
+  .summary-label {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .summary-value {
+    font-weight: 700;
+    color: #1976d2;
+    font-size: 1.1rem;
+  }
+}
+
+// Responsive: Stack auf kleinen Bildschirmen
+@media (max-width: 600px) {
+  .price-input-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .netto-field,
+  .mwst-field {
+    width: 100%;
+  }
+}

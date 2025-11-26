@@ -364,7 +364,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = [
             'id', 'material', 'quantity',
-            'preis_pro_stueck', 'preis_pro_stueck_mit_versand', 'quelle'
+            'preis_pro_stueck', 'mwst_satz',
+            'preis_pro_stueck_mit_versand', 'quelle'
         ]
 
 

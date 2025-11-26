@@ -1,0 +1,49 @@
+<div class="price-input-container">
+  <div class="price-input-row">
+    <!-- Netto Preis -->
+    <mat-form-field appearance="fill" class="netto-field">
+      <mat-label>{{ label }} (Netto)</mat-label>
+      <input
+        matInput
+        type="number"
+        step="0.01"
+        min="0"
+        [(ngModel)]="netto"
+        (ngModelChange)="onNettoChange()"
+        [required]="required"
+        [disabled]="disabled"
+      />
+      <span matSuffix>€</span>
+    </mat-form-field>
+
+    <!-- MwSt.-Satz -->
+    <mat-form-field appearance="fill" class="mwst-field">
+      <mat-label>MwSt.</mat-label>
+      <mat-select
+        [(ngModel)]="mwst_satz"
+        (ngModelChange)="onMwstSatzChange()"
+        [disabled]="disabled"
+      >
+        <mat-option *ngFor="let option of mwstOptions" [value]="option.value">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Brutto-Anzeige -->
+  <div class="price-summary" *ngIf="netto > 0">
+    <div class="summary-row">
+      <span class="summary-label">Netto:</span>
+      <span class="summary-value">{{ netto | number:'1.2-2' }} €</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">+ MwSt. ({{ mwst_satz }}%):</span>
+      <span class="summary-value">{{ mwstBetrag | number:'1.2-2' }} €</span>
+    </div>
+    <div class="summary-row summary-total">
+      <span class="summary-label">= Brutto:</span>
+      <span class="summary-value">{{ brutto | number:'1.2-2' }} €</span>
+    </div>
+  </div>
+</div>

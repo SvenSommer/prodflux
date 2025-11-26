@@ -60,6 +60,11 @@ export class OrderDetailComponent {
     return `${num.toFixed(2)} €`;
   }
 
+  calculateBrutto(netto: number, mwstSatz?: number): number {
+    const satz = mwstSatz ?? 19;
+    return netto * (1 + satz / 100);
+  }
+
   formatDate(dateStr: string | null): string {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString();

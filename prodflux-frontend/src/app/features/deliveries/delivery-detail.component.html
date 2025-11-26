@@ -22,6 +22,16 @@
     </div>
 
     <p><strong>Werkstatt:</strong> {{ getWorkshopName(delivery.workshop) }}</p>
+    <p *ngIf="delivery.order_detail">
+      <strong>Bestellung:</strong>
+      <a [routerLink]="['/orders', delivery.order_detail.id]">
+        {{ delivery.order_detail.order_number }}
+      </a>
+      (Lieferant: {{ delivery.order_detail.supplier_name }})
+    </p>
+    <p *ngIf="!delivery.order_detail && delivery.order">
+      <strong>Bestellung:</strong> #{{ delivery.order }}
+    </p>
     <p><strong>Notiz:</strong> {{ delivery.note || "—" }}</p>
 
     <div class="mt-4">

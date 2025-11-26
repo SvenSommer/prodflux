@@ -66,7 +66,8 @@ export class OrdersListComponent {
     return items.map(i => `${i.quantity}x ${this.getMaterialName(i.material)}`).join(', ');
   }
 
-  formatDate(dateStr: string): string {
+  formatDate(dateStr: string | null): string {
+    if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString();
   }
 
@@ -77,9 +78,9 @@ export class OrdersListComponent {
   }
 
   getItemsByCategory(
-    items: { material: number; quantity: number }[],
+    items: Order['items'],
     categoryId: number | null
-  ): { material: number; quantity: number }[] {
+  ): Order['items'] {
     if (categoryId === null) {
       return [];
     }
@@ -95,7 +96,7 @@ export class OrdersListComponent {
     this.router.navigate(['/orders', id]);
   }
 
-  getTotalQuantityByCategory(items: { material: number; quantity: number; preis_pro_stueck: number; quelle: string }[], categoryId: number | null): number {
+  getTotalQuantityByCategory(items: Order['items'], categoryId: number | null): number {
     const categoryItems = this.getItemsByCategory(items, categoryId);
     return categoryItems.reduce((sum, item) => sum + parseFloat(item.quantity as any), 0);
   }

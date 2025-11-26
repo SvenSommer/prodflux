@@ -10,6 +10,17 @@
         </mat-select>
       </mat-form-field>
 
+      <!-- NEW: Order dropdown (optional) -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Zu Bestellung (optional)</mat-label>
+        <mat-select [(ngModel)]="order" name="order">
+          <mat-option [value]="null">— Keine Zuordnung —</mat-option>
+          <mat-option *ngFor="let o of orders" [value]="o.id">
+            {{ getOrderLabel(o) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Notiz</mat-label>
         <textarea matInput [(ngModel)]="note" name="note"></textarea>

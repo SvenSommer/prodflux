@@ -5,6 +5,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { DeliveriesService, DeliveryItem } from './deliveries.service';
 import { MaterialsService, MaterialCategoryGroup } from '../materials/materials.service';
 import { WorkshopsService, Workshop } from '../settings/workshop.services';
+import { OrdersService, Order } from '../orders/orders.service';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -36,14 +37,17 @@ export class DeliveryFormComponent {
   private deliveriesService = inject(DeliveriesService);
   private workshopsService = inject(WorkshopsService);
   private materialsService = inject(MaterialsService);
+  private ordersService = inject(OrdersService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   deliveryId: number | null = null;
   note = '';
   workshopId: number | null = null;
+  order: number | null = null;  // NEW: FK to Order (optional)
 
   workshops: Workshop[] = [];
+  orders: Order[] = [];  // NEW: for order dropdown
   materialGroups: MaterialCategoryGroup[] = [];
   materialAssignments: Record<number, { quantity: number; note: string }> = {};
 
@@ -53,12 +57,22 @@ export class DeliveryFormComponent {
     this.deliveryId = Number(this.route.snapshot.paramMap.get('id')) || null;
 
     this.loadWorkshops();
+    this.loadOrders();  // NEW: load orders for dropdown
     this.loadMaterialsAndDelivery();
   }
 
   private loadWorkshops(): void {
     this.workshopsService.getAll().subscribe(workshops => {
       this.workshops = workshops;
+    });
+  }
+
+  private loadOrders(): void {
+    this.ordersService.getAll().subscribe(orders => {
+      // Sort by bestellt_am descending (most recent first)
+      this.orders = orders.sort((a, b) =>
+        new Date(b.bestellt_am).getTime() - new Date(a.bestellt_am).getTime()
+      );
     });
   }
 
@@ -76,6 +90,7 @@ export class DeliveryFormComponent {
         this.deliveriesService.getOne(this.deliveryId).subscribe(delivery => {
           this.workshopId = Number(delivery.workshop);
           this.note = delivery.note || '';
+          this.order = delivery.order ?? null;  // NEW: load order if set
 
           delivery.items.forEach(item => {
             if (this.materialAssignments[item.material]) {
@@ -102,6 +117,7 @@ export class DeliveryFormComponent {
     const payload = {
       workshop: this.workshopId!,
       note: this.note,
+      order: this.order ?? null,  // NEW: include order field
       items,
     };
 
@@ -132,5 +148,9 @@ export class DeliveryFormComponent {
       }
     }
     return '';
+  }
+
+  getOrderLabel(order: Order): string {
+    return order.order_number || `#${order.id}`;
   }
 }

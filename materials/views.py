@@ -165,24 +165,49 @@ class MaterialAlternativesView(generics.ListCreateAPIView):
         return Response({'detail': 'Alternative symmetrisch entfernt.'}, status=204)
 
 class DeliveryListCreateView(generics.ListCreateAPIView):
-    queryset = Delivery.objects.all().order_by('-created_at')
     serializer_class = DeliverySerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return Delivery.objects.select_related(
+            'order__supplier'
+        ).all().order_by('-created_at')
+
+
 class DeliveryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Delivery.objects.all()
     serializer_class = DeliverySerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Delivery.objects.select_related('order__supplier').all()
+
 
 class OrderListCreateView(generics.ListCreateAPIView):
     queryset = Order.objects.all().order_by('-bestellt_am')
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
+
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+
+
+class OrderDeliveriesListView(generics.ListAPIView):
+    """
+    List all deliveries for a specific order.
+    Returns deliveries ordered by created_at descending (newest first).
+    """
+    serializer_class = DeliverySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        order_id = self.kwargs['pk']
+        return Delivery.objects.filter(
+            order_id=order_id
+        ).order_by('-created_at')
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

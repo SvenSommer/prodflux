@@ -4,13 +4,22 @@
 
     <form (ngSubmit)="save()">
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Bestellt am</mat-label>
-        <input matInput type="date" [(ngModel)]="bestellt_am" name="bestellt_am" required />
+        <mat-label>Lieferant</mat-label>
+        <mat-select [(ngModel)]="supplier" name="supplier" required>
+          <mat-option *ngFor="let s of suppliers" [value]="s.id">
+            {{ s.name }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Angekommen am</mat-label>
-        <input matInput type="date" [(ngModel)]="angekommen_am" name="angekommen_am" required />
+        <mat-label>Bestellnummer</mat-label>
+        <input matInput type="text" [(ngModel)]="order_number" name="order_number" placeholder="Leer lassen für Auto-Generierung" />
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Bestellt am</mat-label>
+        <input matInput type="date" [(ngModel)]="bestellt_am" name="bestellt_am" required />
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full-width">
@@ -29,61 +38,44 @@
           <h3>Materialien</h3>
         </div>
 
-        <ng-container *ngFor="let group of materialGroups">
-          <div *ngIf="group.materials.length > 0" class="material-category-block">
-            <h4 class="category-title">{{ group.category_name }}</h4>
-
-            <table mat-table [dataSource]="group.materials" class="mat-elevation-z1 full-width-table mb-6">
-              <ng-container matColumnDef="quantity">
-                <th mat-header-cell *matHeaderCellDef class="text-center">Menge</th>
-                <td mat-cell *matCellDef="let mat" class="text-center">
-                  <input
-                    matInput
-                    type="number"
-                    step="1"
-                    min="0"
-                    [(ngModel)]="materialAssignments[mat.id].quantity"
-                    [name]="'qty_' + mat.id"
-                  />
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="preis">
-                <th mat-header-cell *matHeaderCellDef class="text-center">Preis/Stk. (€)</th>
-                <td mat-cell *matCellDef="let mat" class="text-center">
-                  <input
-                    matInput
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    [(ngModel)]="materialAssignments[mat.id].preis"
-                    [name]="'preis_' + mat.id"
-                  />
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="quelle">
-                <th mat-header-cell *matHeaderCellDef class="text-center">Quelle</th>
-                <td mat-cell *matCellDef="let mat" class="text-center">
-                  <input
-                    matInput
-                    type="text"
-                    [(ngModel)]="materialAssignments[mat.id].quelle"
-                    [name]="'quelle_' + mat.id"
-                  />
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="material">
-                <th mat-header-cell *matHeaderCellDef>Material</th>
-                <td mat-cell *matCellDef="let mat">{{ mat.bezeichnung }}</td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="['quantity', 'preis', 'quelle', 'material']"></tr>
-              <tr mat-row *matRowDef="let row; columns: ['quantity', 'preis', 'quelle', 'material']"></tr>
-            </table>
-          </div>
-        </ng-container>
+        <app-material-table
+          [rows]="materialTableRows"
+          [columns]="tableColumns"
+          [showImage]="true"
+          [showCategory]="true"
+        >
+          <ng-template #customColumn let-row let-column="column">
+            @if (column.key === 'quantity') {
+              <input
+                matInput
+                type="number"
+                step="1"
+                min="0"
+                [(ngModel)]="materialAssignments[row.materialId].quantity"
+                [name]="'qty_' + row.materialId"
+                class="table-input"
+              />
+            } @else if (column.key === 'preis') {
+              <input
+                matInput
+                type="number"
+                step="0.01"
+                min="0"
+                [(ngModel)]="materialAssignments[row.materialId].preis"
+                [name]="'preis_' + row.materialId"
+                class="table-input"
+              />
+            } @else if (column.key === 'quelle') {
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="materialAssignments[row.materialId].quelle"
+                [name]="'quelle_' + row.materialId"
+                class="table-input"
+              />
+            }
+          </ng-template>
+        </app-material-table>
       </div>
 
       <div class="actions">

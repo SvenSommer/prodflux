@@ -87,10 +87,32 @@ class MaterialTransferItem(models.Model):
     note = models.TextField(blank=True)
 
 class Order(models.Model):
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.PROTECT,
+        related_name='orders'
+    )
+    order_number = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True,
+        help_text='Bestellnummer (z.B. ORD-2025-001)'
+    )
     bestellt_am = models.DateField()
-    angekommen_am = models.DateField(null=True, blank=True)
     versandkosten = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     notiz = models.TextField(blank=True)
+    
+    @property
+    def delivered_at(self):
+        """Returns the earliest delivery date (as date, not datetime) or None"""
+        # Handle both old related_name (delivery_set) and new (deliveries)
+        try:
+            deliveries = self.deliveries.all()
+        except AttributeError:
+            deliveries = self.delivery_set.all()
+        
+        earliest = deliveries.order_by('created_at').values_list('created_at', flat=True).first()
+        return earliest.date() if earliest else None
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
@@ -117,14 +139,26 @@ class OrderItem(models.Model):
         self.preis_pro_stueck_mit_versand = self.berechne_versandanteil()
         super().save(*args, **kwargs)
 
+
 class Delivery(models.Model):
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     note = models.TextField(blank=True)
-    order = models.ForeignKey(Order, null=True, blank=True, on_delete=models.SET_NULL)
+    order = models.ForeignKey(
+        Order,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='deliveries'
+    )
+
 
 class DeliveryItem(models.Model):
-    delivery = models.ForeignKey(Delivery, related_name='items', on_delete=models.CASCADE)
+    delivery = models.ForeignKey(
+        Delivery,
+        related_name='items',
+        on_delete=models.CASCADE
+    )
     material = models.ForeignKey(Material, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.TextField(blank=True)

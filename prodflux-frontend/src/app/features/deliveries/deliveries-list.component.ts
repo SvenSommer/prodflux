@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { DeliveriesService, Delivery } from './deliveries.service';
+import { DeliveriesService } from './deliveries.service';
+import { Delivery } from '../../shared/models/delivery.model';
 import { MaterialsService, MaterialCategoryGroup } from '../materials/materials.service';
 import { WorkshopsService } from '../settings/workshop.services';
 import { MatTableModule } from '@angular/material/table';
@@ -127,5 +128,48 @@ export class DeliveriesListComponent {
     }
     const categoryItems = this.getItemsByCategory(items, categoryId);
     return categoryItems.reduce((sum, item) => sum + parseFloat(item.quantity as any), 0);
+  }
+
+  /**
+   * Get display text for order column
+   */
+  getOrderDisplay(delivery: Delivery): string {
+    if (delivery.order_detail) {
+      return delivery.order_detail.order_number;
+    }
+    if (delivery.order) {
+      return `#${delivery.order}`;
+    }
+    return '—';
+  }
+
+  /**
+   * Get router link for order (if applicable)
+   */
+  getOrderLink(delivery: Delivery): any[] | null {
+    if (delivery.order_detail) {
+      return ['/orders', delivery.order_detail.id];
+    }
+    if (delivery.order) {
+      return ['/orders', delivery.order];
+    }
+    return null;
+  }
+
+  /**
+   * Check if order is linkable (has order_detail or order)
+   */
+  hasOrderLink(delivery: Delivery): boolean {
+    return !!(delivery.order_detail || delivery.order);
+  }
+
+  /**
+   * Get display text for supplier column
+   */
+  getSupplierDisplay(delivery: Delivery): string {
+    if (delivery.order_detail) {
+      return delivery.order_detail.supplier_name;
+    }
+    return '—';
   }
 }

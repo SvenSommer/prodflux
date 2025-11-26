@@ -259,13 +259,32 @@ class DeliveryItemSerializer(serializers.ModelSerializer):
         model = DeliveryItem
         fields = ['material', 'quantity', 'note']
 
+
 class DeliverySerializer(serializers.ModelSerializer):
     items = DeliveryItemSerializer(many=True)
+    order_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = Delivery
-        fields = ['id', 'workshop', 'created_at', 'note', 'items']
+        fields = [
+            'id', 'workshop', 'created_at', 'note', 'order',
+            'order_detail', 'items'
+        ]
         read_only_fields = ['id', 'created_at']
+
+    def get_order_detail(self, obj):
+        """
+        Return order details if delivery is linked to an order.
+        Returns None if no order is associated.
+        """
+        if not obj.order:
+            return None
+        return {
+            'id': obj.order.id,
+            'order_number': obj.order.order_number,
+            'supplier': obj.order.supplier_id,
+            'supplier_name': obj.order.supplier.name,
+        }
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
@@ -291,6 +310,7 @@ class DeliverySerializer(serializers.ModelSerializer):
 
         instance.note = validated_data.get('note', instance.note)
         instance.workshop = validated_data.get('workshop', instance.workshop)
+        instance.order = validated_data.get('order', instance.order)
         instance.save()
 
         # Alte Items und zugehörige Bewegungen löschen
@@ -316,31 +336,65 @@ class DeliverySerializer(serializers.ModelSerializer):
 
         return instance
 
+
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['id', 'material', 'quantity', 'preis_pro_stueck', 'preis_pro_stueck_mit_versand', 'quelle']
+        fields = [
+            'id', 'material', 'quantity',
+            'preis_pro_stueck', 'preis_pro_stueck_mit_versand', 'quelle'
+        ]
+
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
+    angekommen_am = serializers.DateField(
+        source='delivered_at',
+        read_only=True
+    )
 
     class Meta:
         model = Order
-        fields = ['id', 'bestellt_am', 'angekommen_am', 'versandkosten', 'notiz', 'items']
+        fields = [
+            'id', 'supplier', 'order_number', 'bestellt_am',
+            'angekommen_am', 'versandkosten', 'notiz', 'items'
+        ]
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
         order = Order.objects.create(**validated_data)
+        
+        # Auto-generate order_number if empty
+        if not order.order_number:
+            year = order.bestellt_am.year if order.bestellt_am else ''
+            if year:
+                order.order_number = f'ORD-{year}-{order.id:05d}'
+            else:
+                order.order_number = f'ORD-{order.id:05d}'
+            order.save(update_fields=['order_number'])
+        
         for item in items_data:
             OrderItem.objects.create(order=order, **item)
         return order
 
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items', [])
+        
+        # Update order fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+        
+        # Auto-generate order_number if empty
+        if not instance.order_number:
+            year = instance.bestellt_am.year if instance.bestellt_am else ''
+            if year:
+                instance.order_number = f'ORD-{year}-{instance.id:05d}'
+            else:
+                instance.order_number = f'ORD-{instance.id:05d}'
+            instance.save(update_fields=['order_number'])
 
+        # Replace items
         instance.items.all().delete()
         for item in items_data:
             OrderItem.objects.create(order=instance, **item)

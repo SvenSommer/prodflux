@@ -34,6 +34,27 @@
         <td mat-cell *matCellDef="let d">{{ d.note || "—" }}</td>
       </ng-container>
 
+      <!-- Bestellung -->
+      <ng-container matColumnDef="order">
+        <th mat-header-cell *matHeaderCellDef>Bestellung</th>
+        <td mat-cell *matCellDef="let d" (click)="$event.stopPropagation()">
+          <a
+            *ngIf="hasOrderLink(d)"
+            [routerLink]="getOrderLink(d)"
+            class="order-link"
+          >
+            {{ getOrderDisplay(d) }}
+          </a>
+          <span *ngIf="!hasOrderLink(d)">{{ getOrderDisplay(d) }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Lieferant -->
+      <ng-container matColumnDef="supplier">
+        <th mat-header-cell *matHeaderCellDef>Lieferant</th>
+        <td mat-cell *matCellDef="let d">{{ getSupplierDisplay(d) }}</td>
+      </ng-container>
+
       <!-- Materialien -->
       <ng-container matColumnDef="items">
         <th mat-header-cell *matHeaderCellDef>Materialien</th>
@@ -51,11 +72,11 @@
 
       <tr
         mat-header-row
-        *matHeaderRowDef="['id', 'workshop', 'note', 'items']"
+        *matHeaderRowDef="['id', 'workshop', 'note', 'order', 'supplier', 'items']"
       ></tr>
       <tr
         mat-row
-        *matRowDef="let row; columns: ['id', 'workshop', 'note', 'items']"
+        *matRowDef="let row; columns: ['id', 'workshop', 'note', 'order', 'supplier', 'items']"
         (click)="navigateToDetail(row.id)"
         class="clickable-row"
       ></tr>

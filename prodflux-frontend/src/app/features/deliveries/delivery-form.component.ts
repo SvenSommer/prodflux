@@ -65,7 +65,7 @@ export class DeliveryFormComponent {
 
     this.loadWorkshops();
     this.loadOrders();  // NEW: load orders for dropdown
-    
+
     if (orderId) {
       // Load materials first, then prefill from order
       this.loadMaterialsAndPrefillFromOrder(Number(orderId));
@@ -138,7 +138,7 @@ export class DeliveryFormComponent {
         this.order = order.id;
         this.note = `Lieferung zu Bestellung ${order.order_number || '#' + order.id}`;
         this.is_historical = order.is_historical || false;
-        
+
         // Set today's date as default delivery date
         const today = new Date();
         this.delivered_at = today.toISOString().split('T')[0];

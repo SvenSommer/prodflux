@@ -13,15 +13,15 @@ export interface PriceData {
 
 /**
  * Wiederverwendbare Komponente für Preiseingaben mit MwSt.-Berechnung
- * 
+ *
  * Features:
  * - Eingabe von Netto-Preis
  * - Auswahl des MwSt.-Satzes (19%, 7%, 0%)
  * - Automatische Berechnung und Anzeige von Brutto
  * - Kann als FormControl verwendet werden
- * 
+ *
  * @example
- * <app-price-input 
+ * <app-price-input
  *   [(value)]="priceData"
  *   [label]="'Preis pro Stück'"
  *   [required]="true">

@@ -150,6 +150,11 @@ class OrderItem(models.Model):
 class Delivery(models.Model):
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    delivered_at = models.DateField(
+        null=True,
+        blank=True,
+        help_text='Datum der tatsächlichen Lieferung'
+    )
     note = models.TextField(blank=True)
     order = models.ForeignKey(
         Order,
@@ -157,6 +162,13 @@ class Delivery(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='deliveries'
+    )
+    is_historical = models.BooleanField(
+        default=False,
+        help_text=(
+            'Historische Lieferungen haben keine Auswirkung '
+            'auf den Materialbestand'
+        )
     )
 
 

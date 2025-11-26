@@ -267,8 +267,8 @@ class DeliverySerializer(serializers.ModelSerializer):
     class Meta:
         model = Delivery
         fields = [
-            'id', 'workshop', 'created_at', 'note', 'order',
-            'order_detail', 'items'
+            'id', 'workshop', 'created_at', 'delivered_at', 'note', 'order',
+            'order_detail', 'is_historical', 'items'
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -290,10 +290,10 @@ class DeliverySerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items')
         delivery = Delivery.objects.create(**validated_data)
         
-        # Check if this delivery is linked to a historical order
+        # Check if this delivery is historical OR linked to a historical order
         is_historical = (
-            delivery.order and
-            delivery.order.is_historical
+            delivery.is_historical or
+            (delivery.order and delivery.order.is_historical)
         )
         
         for item_data in items_data:
@@ -319,12 +319,15 @@ class DeliverySerializer(serializers.ModelSerializer):
         instance.note = validated_data.get('note', instance.note)
         instance.workshop = validated_data.get('workshop', instance.workshop)
         instance.order = validated_data.get('order', instance.order)
+        instance.is_historical = validated_data.get(
+            'is_historical', instance.is_historical
+        )
         instance.save()
 
-        # Check if this delivery is linked to a historical order
+        # Check if this delivery is historical OR linked to a historical order
         is_historical = (
-            instance.order and
-            instance.order.is_historical
+            instance.is_historical or
+            (instance.order and instance.order.is_historical)
         )
 
         # Alte Items und zugehörige Bewegungen löschen

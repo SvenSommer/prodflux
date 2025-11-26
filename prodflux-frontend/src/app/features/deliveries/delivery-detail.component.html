@@ -22,6 +22,7 @@
     </div>
 
     <p><strong>Werkstatt:</strong> {{ getWorkshopName(delivery.workshop) }}</p>
+    <p><strong>Lieferdatum:</strong> {{ delivery.delivered_at || '—' }}</p>
     <p *ngIf="delivery.order_detail">
       <strong>Bestellung:</strong>
       <a [routerLink]="['/orders', delivery.order_detail.id]">
@@ -33,6 +34,10 @@
       <strong>Bestellung:</strong> #{{ delivery.order }}
     </p>
     <p><strong>Notiz:</strong> {{ delivery.note || "—" }}</p>
+    <p *ngIf="delivery.is_historical" class="historical-notice">
+      <mat-icon class="historical-icon">history</mat-icon>
+      <strong>Historische Lieferung</strong> - Diese Lieferung hat keine Auswirkung auf den Materialbestand
+    </p>
 
     <div class="mt-4">
       <h3>Gelieferte Materialien</h3>

@@ -10,6 +10,11 @@
         </mat-select>
       </mat-form-field>
 
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Lieferdatum</mat-label>
+        <input matInput type="date" [(ngModel)]="delivered_at" name="delivered_at" />
+      </mat-form-field>
+
       <!-- NEW: Order dropdown (optional) -->
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Zu Bestellung (optional)</mat-label>
@@ -25,6 +30,12 @@
         <mat-label>Notiz</mat-label>
         <textarea matInput [(ngModel)]="note" name="note"></textarea>
       </mat-form-field>
+
+      <div class="checkbox-container">
+        <mat-checkbox [(ngModel)]="is_historical" name="is_historical">
+          Historische Lieferung (keine Auswirkung auf Materialbestand)
+        </mat-checkbox>
+      </div>
 
       <!-- Materialzuordnung -->
       <div class="mt-4">

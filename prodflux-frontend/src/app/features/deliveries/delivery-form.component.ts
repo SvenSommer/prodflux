@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-delivery-form',
@@ -31,6 +32,7 @@ import { MatIconModule } from '@angular/material/icon';
     MatTableModule,
     MatCardModule,
     MatIconModule,
+    MatCheckboxModule,
   ],
 })
 export class DeliveryFormComponent {
@@ -45,6 +47,8 @@ export class DeliveryFormComponent {
   note = '';
   workshopId: number | null = null;
   order: number | null = null;  // NEW: FK to Order (optional)
+  is_historical = false;  // NEW: historical delivery flag
+  delivered_at: string = '';  // NEW: delivery date
 
   workshops: Workshop[] = [];
   orders: Order[] = [];  // NEW: for order dropdown
@@ -91,6 +95,8 @@ export class DeliveryFormComponent {
           this.workshopId = Number(delivery.workshop);
           this.note = delivery.note || '';
           this.order = delivery.order ?? null;  // NEW: load order if set
+          this.is_historical = delivery.is_historical || false;  // NEW: load is_historical
+          this.delivered_at = delivery.delivered_at || '';  // NEW: load delivered_at
 
           delivery.items.forEach(item => {
             if (this.materialAssignments[item.material]) {
@@ -116,8 +122,10 @@ export class DeliveryFormComponent {
 
     const payload = {
       workshop: this.workshopId!,
+      delivered_at: this.delivered_at || null,
       note: this.note,
       order: this.order ?? null,  // NEW: include order field
+      is_historical: this.is_historical,  // NEW: include is_historical
       items,
     };
 

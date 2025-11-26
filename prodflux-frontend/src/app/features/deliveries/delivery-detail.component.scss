@@ -38,3 +38,18 @@
   margin: 0 auto;
   padding: 20px;
 }
+
+.historical-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  margin: 16px 0;
+
+  .historical-icon {
+    color: #ff9800;
+  }
+}

@@ -28,10 +28,26 @@
         <td mat-cell *matCellDef="let d">{{ getWorkshopName(d.workshop) }}</td>
       </ng-container>
 
+      <!-- Lieferdatum -->
+      <ng-container matColumnDef="delivered_at">
+        <th mat-header-cell *matHeaderCellDef>Lieferdatum</th>
+        <td mat-cell *matCellDef="let d">{{ d.delivered_at || '—' }}</td>
+      </ng-container>
+
       <!-- Notiz -->
       <ng-container matColumnDef="note">
         <th mat-header-cell *matHeaderCellDef>Notiz</th>
         <td mat-cell *matCellDef="let d">{{ d.note || "—" }}</td>
+      </ng-container>
+
+      <!-- Historisch -->
+      <ng-container matColumnDef="is_historical">
+        <th mat-header-cell *matHeaderCellDef>Historisch</th>
+        <td mat-cell *matCellDef="let d">
+          <mat-icon *ngIf="d.is_historical" class="historical-icon" title="Historische Lieferung - keine Auswirkung auf Materialbestand">
+            history
+          </mat-icon>
+        </td>
       </ng-container>
 
       <!-- Bestellung -->
@@ -72,11 +88,11 @@
 
       <tr
         mat-header-row
-        *matHeaderRowDef="['id', 'workshop', 'note', 'order', 'supplier', 'items']"
+        *matHeaderRowDef="['id', 'workshop', 'delivered_at', 'note', 'is_historical', 'order', 'supplier', 'items']"
       ></tr>
       <tr
         mat-row
-        *matRowDef="let row; columns: ['id', 'workshop', 'note', 'order', 'supplier', 'items']"
+        *matRowDef="let row; columns: ['id', 'workshop', 'delivered_at', 'note', 'is_historical', 'order', 'supplier', 'items']"
         (click)="navigateToDetail(row.id)"
         class="clickable-row"
       ></tr>

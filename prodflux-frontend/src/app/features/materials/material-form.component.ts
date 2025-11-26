@@ -118,17 +118,19 @@ export class MaterialFormComponent {
       formData.append('category_id', this.selectedCategoryId.toString());
     }
 
-    // Add suppliers
-    this.selectedSupplierIds.forEach((supplierId, index) => {
-      formData.append(`suppliers[${index}]`, supplierId.toString());
+    // Add suppliers - append multiple times with same key for Django REST Framework
+    this.selectedSupplierIds.forEach((supplierId) => {
+      formData.append('suppliers', supplierId.toString());
     });
 
     const request = this.materialId
       ? this.materialsService.updateMaterialFormData(this.materialId, formData)
       : this.materialsService.createMaterialFormData(formData);
 
-    request.subscribe(() => {
-      this.router.navigate(['/materials']);
+    request.subscribe((savedMaterial) => {
+      // Bei Edit: zurück zur Detail-Ansicht, bei Create: zur neuen Detail-Ansicht
+      const materialId = this.materialId || savedMaterial.id;
+      this.router.navigate(['/materials', materialId]);
     });
   }
 

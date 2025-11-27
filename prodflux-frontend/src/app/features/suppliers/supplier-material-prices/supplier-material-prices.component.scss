@@ -1,6 +1,7 @@
-.supplier-prices-card {
+.material-prices-card {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
 
   mat-card-header {
     display: flex;
@@ -23,6 +24,10 @@
         height: 1.75rem;
         color: #2196F3;
       }
+
+      h3 {
+        margin: 0;
+      }
     }
 
     .add-button {
@@ -42,7 +47,7 @@
   overflow-x: auto;
 }
 
-.supplier-prices-table {
+.material-prices-table {
   width: 100%;
   background: white;
 
@@ -61,6 +66,21 @@
 
   tr:hover {
     background-color: #f8f9fa;
+  }
+
+  .material-link {
+    color: #1976d2;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    strong {
+      color: inherit;
+      font-size: 1rem;
+    }
   }
 
   .price-cell {
@@ -98,43 +118,11 @@
       font-family: monospace;
       margin-top: 0.125rem;
     }
-
-    .price-note {
-      display: inline-flex;
-      align-items: center;
-      cursor: help;
-
-      .info-icon {
-        font-size: 1rem;
-        width: 1rem;
-        height: 1rem;
-        color: #2196F3;
-      }
-    }
   }
 
   .no-data {
     color: #999;
     font-style: italic;
-  }
-
-  strong {
-    color: #333;
-    font-size: 1rem;
-  }
-
-  .supplier-link {
-    color: #1976d2;
-    text-decoration: none;
-    cursor: pointer;
-
-    &:hover {
-      text-decoration: underline;
-    }
-
-    strong {
-      color: inherit;
-    }
   }
 }
 
@@ -165,7 +153,7 @@
 
 // Responsive Design
 @media (max-width: 768px) {
-  .supplier-prices-table {
+  .material-prices-table {
     th, td {
       padding: 0.75rem 0.5rem;
       font-size: 0.875rem;

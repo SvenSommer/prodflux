@@ -70,9 +70,9 @@ export class OrderDetailComponent {
   formatCurrency(value: any): string {
     const num = typeof value === 'number' ? value : parseFloat(value);
     if (isNaN(num)) return '—';
-    return num.toLocaleString('de-DE', { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
+    return num.toLocaleString('de-DE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }) + ' €';
   }
 
@@ -115,10 +115,10 @@ export class OrderDetailComponent {
 
   getMaterialTableRows(): MaterialTableRow[] {
     if (!this.order) return [];
-    
+
     return this.order.items.map(item => {
       const material = this.materialsById.get(item.material);
-      const categoryGroup = this.materialGroups.find(g => 
+      const categoryGroup = this.materialGroups.find(g =>
         g.materials.some(m => m.id === item.material)
       );
       const categoryOrder = categoryGroup?.materials.find(m => m.id === item.material)?.category?.order ?? 9999;

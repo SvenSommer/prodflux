@@ -166,6 +166,12 @@ export class MaterialsService {
     );
   }
 
+  getAllMaterialSupplierPrices(): Observable<MaterialSupplierPriceOverview[]> {
+    return this.http.get<MaterialSupplierPriceOverview[]>(
+      `${environment.apiUrl}/api/material-supplier-prices/overview/`
+    );
+  }
+
   createMaterialSupplierPrice(data: CreateMaterialSupplierPrice): Observable<MaterialSupplierPrice> {
     return this.http.post<MaterialSupplierPrice>(
       `${environment.apiUrl}/api/material-supplier-prices/`,
@@ -194,6 +200,9 @@ export interface ToggleMaterialDeprecatedResponse {
 }
 
 export interface MaterialSupplierPriceOverview {
+  id?: number;
+  material_id?: number;
+  material_name?: string;
   supplier_id: number;
   supplier_name: string;
   manual_price: number | null;
@@ -201,8 +210,10 @@ export interface MaterialSupplierPriceOverview {
   manual_price_note: string | null;
   last_order_price: number | null;
   last_order_price_with_shipping: number | null;
+  last_order_shipping_cost?: number | null;
   last_order_date: string | null;
   last_order_number: string | null;
+  last_order_id?: number | null;
 }
 
 export interface CreateMaterialSupplierPrice {

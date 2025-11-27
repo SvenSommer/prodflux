@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +10,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { SuppliersService } from '../settings/suppliers.service';
 import { Supplier } from '../settings/models/supplier.model';
 import { SupplierDialogComponent, SupplierDialogData } from '../../shared/components/supplier-dialog/supplier-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 @Component({
@@ -30,9 +30,10 @@ import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.componen
 export class SuppliersManagementComponent {
   private suppliersService = inject(SuppliersService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   suppliers: Supplier[] = [];
-  displayedColumns: string[] = ['name', 'url', 'kundenkonto', 'is_active', 'aktionen'];
+  displayedColumns: string[] = ['name', 'url', 'kundenkonto', 'is_active'];
 
   ngOnInit() {
     this.loadSuppliers();
@@ -44,10 +45,12 @@ export class SuppliersManagementComponent {
     });
   }
 
-  openSupplierDialog(supplier?: Supplier) {
-    const dialogData: SupplierDialogData = {
-      supplier: supplier
-    };
+  onSupplierClick(supplier: Supplier) {
+    this.router.navigate(['/suppliers', supplier.id]);
+  }
+
+  openNewSupplierDialog() {
+    const dialogData: SupplierDialogData = {};
 
     const dialogRef = this.dialog.open(SupplierDialogComponent, {
       width: '600px',
@@ -58,36 +61,6 @@ export class SuppliersManagementComponent {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadSuppliers();
-      }
-    });
-  }
-
-  deleteSupplier(supplier: Supplier) {
-    const dialogData: ConfirmDialogData = {
-      title: 'Lieferant löschen',
-      message: `Möchten Sie den Lieferanten "${supplier.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
-      confirmText: 'Löschen',
-      cancelText: 'Abbrechen',
-      icon: 'delete',
-      color: 'warn'
-    };
-
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: dialogData
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.suppliersService.delete(supplier.id).subscribe({
-          next: () => {
-            this.loadSuppliers();
-          },
-          error: (err) => {
-            console.error('Fehler beim Löschen des Lieferanten:', err);
-            // TODO: Fehlerbehandlung mit Snackbar
-          }
-        });
       }
     });
   }

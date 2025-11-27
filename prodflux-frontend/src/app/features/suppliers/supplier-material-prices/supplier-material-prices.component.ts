@@ -8,11 +8,11 @@ import { MatTableModule } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
-import { MaterialsService, MaterialSupplierPriceOverview } from '../materials.service';
-import { MaterialSupplierPriceDialogComponent } from '../material-supplier-price-dialog/material-supplier-price-dialog.component';
+import { MaterialsService, MaterialSupplierPriceOverview } from '../../materials/materials.service';
+import { SupplierMaterialPriceDialogComponent } from '../supplier-material-price-dialog/supplier-material-price-dialog.component';
 
 @Component({
-  selector: 'app-material-supplier-prices',
+  selector: 'app-supplier-material-prices',
   standalone: true,
   imports: [
     CommonModule,
@@ -23,38 +23,41 @@ import { MaterialSupplierPriceDialogComponent } from '../material-supplier-price
     MatTableModule,
     RouterLink
   ],
-  templateUrl: './material-supplier-prices.component.html',
-  styleUrls: ['./material-supplier-prices.component.scss']
+  templateUrl: './supplier-material-prices.component.html',
+  styleUrls: ['./supplier-material-prices.component.scss']
 })
-export class MaterialSupplierPricesComponent implements OnInit {
-  @Input() materialId!: number;
-  @Input() materialName: string = '';
+export class SupplierMaterialPricesComponent implements OnInit {
+  @Input() supplierId!: number;
+  @Input() supplierName: string = '';
 
   private materialsService = inject(MaterialsService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
-  supplierPrices: MaterialSupplierPriceOverview[] = [];
-  displayedColumns: string[] = ['supplier', 'manual_price', 'last_order_price', 'actions'];
+  materialPrices: MaterialSupplierPriceOverview[] = [];
+  displayedColumns: string[] = ['material', 'manual_price', 'last_order_price', 'actions'];
 
   ngOnInit() {
-    this.loadSupplierPrices();
+    this.loadMaterialPrices();
   }
 
-  loadSupplierPrices() {
-    if (!this.materialId) return;
+  loadMaterialPrices() {
+    if (!this.supplierId) return;
 
-    this.materialsService.getMaterialSupplierPricesOverview(this.materialId).subscribe(
-      prices => this.supplierPrices = prices
+    // Lade alle Material-Supplier-Preise und filtere nach diesem Lieferanten
+    this.materialsService.getAllMaterialSupplierPrices().subscribe(
+      prices => {
+        this.materialPrices = prices.filter(p => p.supplier_id === this.supplierId);
+      }
     );
   }
 
   openPriceDialog(priceData?: MaterialSupplierPriceOverview) {
-    const dialogRef = this.dialog.open(MaterialSupplierPriceDialogComponent, {
+    const dialogRef = this.dialog.open(SupplierMaterialPriceDialogComponent, {
       width: '500px',
       data: {
-        materialId: this.materialId,
-        materialName: this.materialName,
+        supplierId: this.supplierId,
+        supplierName: this.supplierName,
         priceData: priceData
       }
     });
@@ -63,7 +66,7 @@ export class MaterialSupplierPricesComponent implements OnInit {
       if (result) {
         this.materialsService.createMaterialSupplierPrice(result).subscribe({
           next: () => {
-            this.loadSupplierPrices();
+            this.loadMaterialPrices();
             this.snackBar.open('Preis erfolgreich gespeichert', 'Schließen', {
               duration: 3000
             });
@@ -77,6 +80,25 @@ export class MaterialSupplierPricesComponent implements OnInit {
         });
       }
     });
+  }
+
+  deletePrice(price: MaterialSupplierPriceOverview) {
+    if (confirm(`Möchten Sie den Preis für ${price.material_name} wirklich löschen?`)) {
+      this.materialsService.deleteMaterialSupplierPrice(price.id!).subscribe({
+        next: () => {
+          this.loadMaterialPrices();
+          this.snackBar.open('Preis erfolgreich gelöscht', 'Schließen', {
+            duration: 3000
+          });
+        },
+        error: (error) => {
+          console.error('Fehler beim Löschen des Preises:', error);
+          this.snackBar.open('Fehler beim Löschen des Preises', 'Schließen', {
+            duration: 5000
+          });
+        }
+      });
+    }
   }
 
   formatPrice(price: number | string | null): string {

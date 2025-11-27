@@ -945,6 +945,10 @@ def material_supplier_prices_overview(request, material_id):
                 last_order_item.order.order_number
                 if last_order_item else None
             ),
+            'last_order_id': (
+                last_order_item.order.id
+                if last_order_item else None
+            ),
         })
     
     # Sortiere nach Lieferantenname

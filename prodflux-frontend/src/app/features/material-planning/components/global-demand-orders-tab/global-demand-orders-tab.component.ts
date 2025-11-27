@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,7 +11,7 @@ import { OrderProposalDialogComponent } from '../order-proposal-dialog/order-pro
 @Component({
   selector: 'app-global-demand-orders-tab',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatTableModule, MatButtonModule, MaterialTableComponent],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MaterialTableComponent],
   templateUrl: './global-demand-orders-tab.component.html',
   styleUrl: './global-demand-orders-tab.component.scss'
 })

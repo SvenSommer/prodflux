@@ -68,8 +68,13 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   }
 
-  tr:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+  .clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.08) !important;
+    }
   }
 
   .supplier-name {

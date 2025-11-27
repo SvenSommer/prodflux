@@ -239,6 +239,12 @@ class MaterialSupplierPrice(models.Model):
         blank=True,
         help_text='Optional: Notizen zum Preis (z.B. Mindestbestellmenge)'
     )
+    material_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='URL zum Material beim Lieferanten (z.B. Produktseite)'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

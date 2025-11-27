@@ -1,0 +1,162 @@
+<div class="supplier-detail-container">
+  <app-breadcrumb [links]="getBreadcrumbLinks()"></app-breadcrumb>
+
+  <mat-card class="supplier-detail-card" *ngIf="supplier">
+    <mat-card-header class="card-header">
+      <div class="header-content">
+        <div class="title-section">
+          <mat-icon class="supplier-icon">business</mat-icon>
+          <mat-card-title>{{ supplier.name }}</mat-card-title>
+        </div>
+        <div class="action-buttons">
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="openEditDialog()"
+            matTooltip="Lieferant bearbeiten"
+          >
+            <mat-icon>edit</mat-icon>
+            Bearbeiten
+          </button>
+          <button
+            mat-stroked-button
+            color="warn"
+            (click)="deleteSupplier()"
+            matTooltip="Lieferant löschen"
+          >
+            <mat-icon>delete</mat-icon>
+            Löschen
+          </button>
+        </div>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Supplier Information -->
+      <div class="info-section">
+        <h3>
+          <mat-icon>info</mat-icon>
+          Lieferanteninformationen
+        </h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Name:</span>
+            <span class="info-value">{{ supplier.name }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">URL:</span>
+            <span class="info-value">
+              <a *ngIf="supplier.url" [href]="supplier.url" target="_blank" class="supplier-url">
+                <mat-icon class="link-icon">link</mat-icon>
+                {{ supplier.url }}
+              </a>
+              <span *ngIf="!supplier.url" class="no-data">—</span>
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Kundenkonto:</span>
+            <span class="info-value">{{ supplier.kundenkonto || '—' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Status:</span>
+            <span class="info-value">
+              <mat-chip [class.active-chip]="supplier.is_active" [class.inactive-chip]="!supplier.is_active">
+                <mat-icon>{{ supplier.is_active ? 'check_circle' : 'cancel' }}</mat-icon>
+                {{ supplier.is_active ? 'Aktiv' : 'Inaktiv' }}
+              </mat-chip>
+            </span>
+          </div>
+          <div class="info-item full-width" *ngIf="supplier.notes">
+            <span class="info-label">Notizen:</span>
+            <span class="info-value">{{ supplier.notes }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Supplier Materials Section -->
+      <div class="materials-section">
+        <h3>
+          <mat-icon>inventory_2</mat-icon>
+          Materialien von diesem Lieferanten ({{ supplierMaterials.length }})
+        </h3>
+
+        <div *ngIf="supplierMaterials.length > 0; else noMaterials">
+          <app-material-table
+            [rows]="getMaterialTableRows()"
+            [columns]="materialTableColumns"
+            [showImage]="true"
+            [showCategory]="true">
+            <ng-template #customColumn let-row let-column="column">
+              @switch (column.key) {
+                @case ('manual_price') {
+                  <div class="price-cell">
+                    <div *ngIf="row.data.priceData?.manual_price !== null && row.data.priceData?.manual_price !== undefined" class="price-value manual">
+                      {{ formatPrice(row.data.priceData.manual_price) }}
+                    </div>
+                    <div *ngIf="!row.data.priceData?.manual_price" class="no-data">—</div>
+                    <div *ngIf="row.data.priceData?.manual_price_valid_from" class="price-info">
+                      gültig ab {{ formatDate(row.data.priceData.manual_price_valid_from) }}
+                    </div>
+                    <div *ngIf="row.data.priceData?.manual_price_note" class="price-shipping">
+                      {{ row.data.priceData.manual_price_note }}
+                    </div>
+                    <button
+                      mat-stroked-button
+                      color="primary"
+                      (click)="openPriceDialog(row.data.material, row.data.priceData)"
+                      class="add-price-button">
+                      <mat-icon>{{ row.data.priceData?.manual_price ? 'edit' : 'add' }}</mat-icon>
+                      {{ row.data.priceData?.manual_price ? 'Bearbeiten' : 'Preis hinzufügen' }}
+                    </button>
+                  </div>
+                }
+                @case ('last_order_price') {
+                  <div class="price-cell">
+                    <div *ngIf="row.data.priceData?.last_order_price !== null && row.data.priceData?.last_order_price !== undefined" class="price-value order">
+                      {{ formatPrice(row.data.priceData.last_order_price) }}
+                    </div>
+                    <div *ngIf="!row.data.priceData?.last_order_price" class="no-data">—</div>
+                    <div *ngIf="row.data.priceData?.last_order_date" class="price-info">
+                      vom {{ formatDate(row.data.priceData.last_order_date) }}
+                    </div>
+                    <div *ngIf="row.data.priceData?.last_order_id" class="order-number">
+                      <button
+                        mat-button
+                        color="primary"
+                        (click)="navigateToOrder(row.data.priceData.last_order_id)"
+                        class="order-button">
+                        <mat-icon>receipt</mat-icon>
+                        Bestellung: {{ row.data.priceData.last_order_number }}
+                      </button>
+                    </div>
+                    <div *ngIf="!row.data.priceData?.last_order_id && row.data.priceData?.last_order_number" class="order-number">
+                      Bestellung: {{ row.data.priceData.last_order_number }}
+                    </div>
+                    <div *ngIf="row.data.priceData?.last_order_shipping_cost && row.data.priceData.last_order_shipping_cost > 0" class="price-shipping">
+                      zzgl. {{ formatPrice(row.data.priceData.last_order_shipping_cost) }} Versand
+                    </div>
+                  </div>
+                }
+              }
+            </ng-template>
+          </app-material-table>
+        </div>
+
+        <ng-template #noMaterials>
+          <div class="empty-state">
+            <mat-icon>inventory</mat-icon>
+            <h4>Keine Materialien zugeordnet</h4>
+            <p>Diesem Lieferanten sind aktuell keine Materialien zugeordnet.</p>
+            <p>Sie können Materialien in der <a routerLink="/materials">Materialverwaltung</a> diesem Lieferanten zuordnen.</p>
+          </div>
+        </ng-template>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div *ngIf="!supplier" class="loading-state">
+    <mat-icon>hourglass_empty</mat-icon>
+    <p>Laden...</p>
+  </div>
+</div>

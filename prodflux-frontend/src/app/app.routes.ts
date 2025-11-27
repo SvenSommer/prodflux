@@ -74,6 +74,10 @@ export const routes: Routes = [
         path: 'suppliers',
         loadComponent: () => import('./features/suppliers/suppliers-management.component').then(m => m.SuppliersManagementComponent)
       },
+      {
+        path: 'suppliers/:id',
+        loadComponent: () => import('./features/suppliers/supplier-detail.component').then(m => m.SupplierDetailComponent)
+      },
 
       // LIEFERUNGEN - alle geschützt
       {

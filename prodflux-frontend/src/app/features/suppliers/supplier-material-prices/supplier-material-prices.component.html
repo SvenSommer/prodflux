@@ -1,0 +1,109 @@
+<mat-card class="material-prices-card">
+  <mat-card-header>
+    <div class="section-title">
+      <mat-icon>price_check</mat-icon>
+      <h3>Materialpreise</h3>
+    </div>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="openPriceDialog()"
+      class="add-button">
+      <mat-icon>add</mat-icon>
+      Preis hinzufügen
+    </button>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div *ngIf="materialPrices.length > 0; else noPrices" class="table-container">
+      <table mat-table [dataSource]="materialPrices" class="material-prices-table">
+
+        <!-- Material Column -->
+        <ng-container matColumnDef="material">
+          <th mat-header-cell *matHeaderCellDef>Material</th>
+          <td mat-cell *matCellDef="let price">
+            <a [routerLink]="['/materials', price.material_id]" class="material-link">
+              <strong>{{ price.material_name }}</strong>
+            </a>
+          </td>
+        </ng-container>
+
+        <!-- Manual Price Column -->
+        <ng-container matColumnDef="manual_price">
+          <th mat-header-cell *matHeaderCellDef>Manueller Preis</th>
+          <td mat-cell *matCellDef="let price">
+            <div class="price-cell">
+              <div *ngIf="price.manual_price !== null" class="price-value manual">
+                {{ formatPrice(price.manual_price) }}
+              </div>
+              <div *ngIf="price.manual_price === null" class="no-data">—</div>
+              <div *ngIf="price.manual_price_valid_from" class="price-info">
+                gültig ab {{ formatDate(price.manual_price_valid_from) }}
+              </div>
+              <div *ngIf="price.manual_price_note" class="price-shipping">
+                {{ price.manual_price_note }}
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Last Order Price Column -->
+        <ng-container matColumnDef="last_order_price">
+          <th mat-header-cell *matHeaderCellDef>Letzter Bestellpreis</th>
+          <td mat-cell *matCellDef="let price">
+            <div class="price-cell">
+              <div *ngIf="price.last_order_price !== null" class="price-value order">
+                {{ formatPrice(price.last_order_price) }}
+              </div>
+              <div *ngIf="price.last_order_price === null" class="no-data">—</div>
+              <div *ngIf="price.last_order_date" class="price-info">
+                vom {{ formatDate(price.last_order_date) }}
+              </div>
+              <div *ngIf="price.last_order_number" class="order-number">
+                Bestellung: {{ price.last_order_number }}
+              </div>
+              <div *ngIf="price.last_order_shipping_cost && price.last_order_shipping_cost > 0" class="price-shipping">
+                zzgl. {{ formatPrice(price.last_order_shipping_cost) }} Versand
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+          <td mat-cell *matCellDef="let price">
+            <button
+              mat-icon-button
+              color="primary"
+              (click)="openPriceDialog(price)"
+              matTooltip="Preis bearbeiten">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="deletePrice(price)"
+              matTooltip="Preis löschen">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    <ng-template #noPrices>
+      <div class="no-prices">
+        <mat-icon>price_change</mat-icon>
+        <p>Noch keine Preise hinterlegt</p>
+        <button mat-raised-button color="primary" (click)="openPriceDialog()">
+          <mat-icon>add</mat-icon>
+          Ersten Preis hinzufügen
+        </button>
+      </div>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

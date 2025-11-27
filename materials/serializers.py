@@ -500,4 +500,5 @@ class MaterialSupplierPriceOverviewSerializer(serializers.Serializer):
     )
     last_order_date = serializers.DateField(allow_null=True)
     last_order_number = serializers.CharField(allow_null=True)
+    last_order_id = serializers.IntegerField(allow_null=True)
 

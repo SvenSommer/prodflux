@@ -1,8 +1,8 @@
 export interface Supplier {
   id: number;
   name: string;
-  url: string;
-  kundenkonto: string;
+  url?: string;
+  kundenkonto?: string;
   notes?: string;
   is_active: boolean;
   created_at?: string;

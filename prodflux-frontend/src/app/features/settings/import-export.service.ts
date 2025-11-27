@@ -7,6 +7,7 @@ export interface ImportExportResponse {
   count?: number;
   suppliers?: any[];
   orders?: any[];
+  prices?: any[];
   success?: boolean;
   created_count?: number;
   messages?: string[];
@@ -43,24 +44,53 @@ export class ImportExportService {
   ): Observable<ImportExportResponse> {
     let url = `${this.apiUrl}/orders/export/`;
     const params: string[] = [];
-    
+
     if (supplierId !== undefined) {
       params.push(`supplier_id=${supplierId}`);
     }
     if (isHistorical !== undefined) {
       params.push(`is_historical=${isHistorical}`);
     }
-    
+
     if (params.length > 0) {
       url += '?' + params.join('&');
     }
-    
+
     return this.http.get<ImportExportResponse>(url);
   }
 
   importOrders(data: any): Observable<ImportExportResponse> {
     return this.http.post<ImportExportResponse>(
       `${this.apiUrl}/orders/import/`,
+      data
+    );
+  }
+
+  // Material Supplier Prices
+  exportMaterialSupplierPrices(
+    materialId?: number,
+    supplierId?: number
+  ): Observable<ImportExportResponse> {
+    let url = `${this.apiUrl}/material-supplier-prices/export/`;
+    const params: string[] = [];
+
+    if (materialId !== undefined) {
+      params.push(`material_id=${materialId}`);
+    }
+    if (supplierId !== undefined) {
+      params.push(`supplier_id=${supplierId}`);
+    }
+
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+
+    return this.http.get<ImportExportResponse>(url);
+  }
+
+  importMaterialSupplierPrices(data: any): Observable<ImportExportResponse> {
+    return this.http.post<ImportExportResponse>(
+      `${this.apiUrl}/material-supplier-prices/import/`,
       data
     );
   }

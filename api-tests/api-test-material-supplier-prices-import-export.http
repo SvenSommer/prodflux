@@ -1,0 +1,122 @@
+###
+# Material Supplier Prices Import/Export API Tests
+###
+
+@baseUrl = http://localhost:8000
+@token = YOUR_JWT_TOKEN_HERE
+
+### Login (get token first)
+POST {{baseUrl}}/api/auth/login/
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "your-password"
+}
+
+### 1. Export all material supplier prices
+GET {{baseUrl}}/api/material-supplier-prices/export/
+Authorization: Bearer {{token}}
+
+### 2. Export prices filtered by material_id
+GET {{baseUrl}}/api/material-supplier-prices/export/?material_id=1
+Authorization: Bearer {{token}}
+
+### 3. Export prices filtered by supplier_id
+GET {{baseUrl}}/api/material-supplier-prices/export/?supplier_id=1
+Authorization: Bearer {{token}}
+
+### 4. Import material supplier prices
+POST {{baseUrl}}/api/material-supplier-prices/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "prices": [
+    {
+      "material_id": 1,
+      "supplier_id": 1,
+      "price": "15.99",
+      "valid_from": "2024-01-01",
+      "note": "Großhandel Preis 2024"
+    },
+    {
+      "material_id": 2,
+      "supplier_id": 1,
+      "price": "8.50",
+      "valid_from": "2024-01-15",
+      "note": "Aktionspreis"
+    }
+  ]
+}
+
+### 5. Import single price (will update if same material+supplier+date exists)
+POST {{baseUrl}}/api/material-supplier-prices/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "prices": [
+    {
+      "material_id": 1,
+      "supplier_id": 1,
+      "price": "16.99",
+      "valid_from": "2024-01-01",
+      "note": "Preis aktualisiert"
+    }
+  ]
+}
+
+### 6. Test error handling - missing material_id
+POST {{baseUrl}}/api/material-supplier-prices/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "prices": [
+    {
+      "supplier_id": 1,
+      "price": "15.99",
+      "valid_from": "2024-01-01"
+    }
+  ]
+}
+
+### 7. Test error handling - invalid material_id
+POST {{baseUrl}}/api/material-supplier-prices/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "prices": [
+    {
+      "material_id": 99999,
+      "supplier_id": 1,
+      "price": "15.99",
+      "valid_from": "2024-01-01"
+    }
+  ]
+}
+
+### 8. Complete workflow: Export -> Modify -> Import
+# Step 1: Export current prices
+GET {{baseUrl}}/api/material-supplier-prices/export/
+Authorization: Bearer {{token}}
+
+# Step 2: Copy the response, modify prices/dates as needed
+# Step 3: Import the modified data
+POST {{baseUrl}}/api/material-supplier-prices/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "prices": [
+    {
+      "material_id": 1,
+      "supplier_id": 1,
+      "price": "17.50",
+      "valid_from": "2024-06-01",
+      "note": "Preiserhöhung Juni 2024"
+    }
+  ]
+}

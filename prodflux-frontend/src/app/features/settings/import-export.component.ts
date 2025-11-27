@@ -179,6 +179,77 @@ export class ImportExportComponent {
       });
   }
 
+  // Export Material Supplier Prices
+  exportMaterialSupplierPrices(): void {
+    this.isExporting = true;
+    this.importExportService.exportMaterialSupplierPrices().subscribe({
+      next: (response) => {
+        const filename = `material_supplier_prices_export_${this.getDateString()}.json`;
+        this.importExportService.downloadJson(response, filename);
+        this.snackBar.open(
+          `${response.count} Preise exportiert`,
+          'OK',
+          { duration: 3000 }
+        );
+        this.isExporting = false;
+      },
+      error: (error) => {
+        this.snackBar.open(
+          'Fehler beim Exportieren: ' + error.message,
+          'OK',
+          { duration: 5000 }
+        );
+        this.isExporting = false;
+      },
+    });
+  }
+
+  // Import Material Supplier Prices
+  onImportMaterialSupplierPrices(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
+
+    const file = input.files[0];
+    this.isImporting = true;
+    this.importMessages = [];
+    this.showMessages = false;
+
+    this.importExportService
+      .readJsonFile(file)
+      .then((jsonData) => {
+        this.importExportService.importMaterialSupplierPrices(jsonData).subscribe({
+          next: (response) => {
+            this.importMessages = response.messages || [];
+            this.showMessages = true;
+            this.snackBar.open(
+              `${response.created_count} Preise importiert`,
+              'OK',
+              { duration: 5000 }
+            );
+            this.isImporting = false;
+            input.value = '';
+          },
+          error: (error) => {
+            this.snackBar.open(
+              'Fehler beim Importieren: ' +
+                (error.error?.error || error.message),
+              'OK',
+              { duration: 5000 }
+            );
+            this.isImporting = false;
+            input.value = '';
+          },
+        });
+      })
+      .catch((error) => {
+        this.snackBar.open(error.message, 'OK', { duration: 5000 });
+        this.isImporting = false;
+        input.value = '';
+      });
+  }
+
   private getDateString(): string {
     const now = new Date();
     return now.toISOString().split('T')[0];

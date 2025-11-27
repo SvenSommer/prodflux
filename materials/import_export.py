@@ -1,5 +1,5 @@
 """
-Import/Export utilities for Suppliers and Orders
+Import/Export utilities for Suppliers, Orders and Material Supplier Prices
 Supports JSON format for easy manual editing
 Includes deduplication logic
 """
@@ -8,7 +8,7 @@ from decimal import Decimal
 from datetime import datetime
 from typing import Dict, List, Tuple
 from django.db import transaction
-from .models import Supplier, Order, OrderItem, Material
+from .models import Supplier, Order, OrderItem, Material, MaterialSupplierPrice
 
 
 class SupplierImportExport:
@@ -237,5 +237,124 @@ class OrderImportExport:
                 messages.append(
                     f"✓ Created: Order {order_number} with {items_created} items"
                 )
+        
+        return created, messages
+
+
+class MaterialSupplierPriceImportExport:
+    """Handle import/export of Material Supplier Prices"""
+    
+    @staticmethod
+    def export_prices(prices_queryset) -> List[Dict]:
+        """Export material supplier prices to JSON-serializable format"""
+        result = []
+        for price in prices_queryset:
+            result.append({
+                'material_id': price.material.id,
+                'material_bezeichnung': price.material.bezeichnung,  # For reference
+                'supplier_id': price.supplier.id,
+                'supplier_name': price.supplier.name,  # For reference
+                'price': str(price.price),
+                'valid_from': price.valid_from.isoformat(),
+                'note': price.note,
+            })
+        return result
+    
+    @staticmethod
+    def import_prices(data: List[Dict]) -> Tuple[List[MaterialSupplierPrice], List[str]]:
+        """
+        Import material supplier prices from JSON data
+        
+        Returns:
+            Tuple of (created_prices, messages)
+            - created_prices: List of newly created MaterialSupplierPrice objects
+            - messages: List of status messages (skipped, created, updated)
+        """
+        created = []
+        messages = []
+        
+        with transaction.atomic():
+            for item in data:
+                # Validate material
+                material_id = item.get('material_id')
+                if not material_id:
+                    messages.append("⚠️  Skipped: Price without material_id")
+                    continue
+                
+                try:
+                    material = Material.objects.get(id=material_id)
+                except Material.DoesNotExist:
+                    messages.append(
+                        f"⚠️  Skipped: Material ID {material_id} not found"
+                    )
+                    continue
+                
+                # Validate supplier
+                supplier_id = item.get('supplier_id')
+                if not supplier_id:
+                    messages.append(
+                        f"⚠️  Skipped: Price for {material.bezeichnung} without supplier_id"
+                    )
+                    continue
+                
+                try:
+                    supplier = Supplier.objects.get(id=supplier_id)
+                except Supplier.DoesNotExist:
+                    messages.append(
+                        f"⚠️  Skipped: Price for {material.bezeichnung} - "
+                        f"Supplier ID {supplier_id} not found"
+                    )
+                    continue
+                
+                # Parse date
+                try:
+                    valid_from = datetime.fromisoformat(
+                        item.get('valid_from', '')
+                    ).date()
+                except (ValueError, TypeError):
+                    messages.append(
+                        f"⚠️  Skipped: Price for {material.bezeichnung} from {supplier.name} - "
+                        f"Invalid date format"
+                    )
+                    continue
+                
+                # Parse price
+                try:
+                    price = Decimal(str(item.get('price', '0')))
+                except (ValueError, TypeError):
+                    messages.append(
+                        f"⚠️  Skipped: Price for {material.bezeichnung} from {supplier.name} - "
+                        f"Invalid price format"
+                    )
+                    continue
+                
+                # Check for existing price (unique together: material, supplier, valid_from)
+                existing = MaterialSupplierPrice.objects.filter(
+                    material=material,
+                    supplier=supplier,
+                    valid_from=valid_from
+                ).first()
+                
+                if existing:
+                    # Update existing price
+                    existing.price = price
+                    existing.note = item.get('note', '')
+                    existing.save()
+                    messages.append(
+                        f"✓ Updated: {material.bezeichnung} - {supplier.name} ({valid_from})"
+                    )
+                else:
+                    # Create new price
+                    price_obj = MaterialSupplierPrice.objects.create(
+                        material=material,
+                        supplier=supplier,
+                        price=price,
+                        valid_from=valid_from,
+                        note=item.get('note', ''),
+                    )
+                    created.append(price_obj)
+                    messages.append(
+                        f"✓ Created: {material.bezeichnung} - {supplier.name} ({valid_from})"
+                    )
         
         return created, messages

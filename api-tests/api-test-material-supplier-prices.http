@@ -1,0 +1,53 @@
+### Material Supplier Prices API Tests
+### Requires authentication token
+
+@baseUrl = http://localhost:8000
+@token = YOUR_JWT_TOKEN_HERE
+
+### 1. Get Material Supplier Prices Overview for a Material
+# Replace {material_id} with actual material ID
+GET {{baseUrl}}/api/materials/1/supplier-prices/
+Authorization: Bearer {{token}}
+
+### 2. List all Material Supplier Prices (optional filters)
+GET {{baseUrl}}/api/material-supplier-prices/
+Authorization: Bearer {{token}}
+
+### 3. List Material Supplier Prices filtered by material
+GET {{baseUrl}}/api/material-supplier-prices/?material_id=1
+Authorization: Bearer {{token}}
+
+### 4. List Material Supplier Prices filtered by supplier
+GET {{baseUrl}}/api/material-supplier-prices/?supplier_id=1
+Authorization: Bearer {{token}}
+
+### 5. Create a new Material Supplier Price
+POST {{baseUrl}}/api/material-supplier-prices/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "material": 1,
+  "supplier": 1,
+  "price": 12.50,
+  "valid_from": "2025-11-27",
+  "note": "Mindestbestellmenge: 10 Stück"
+}
+
+### 6. Get specific Material Supplier Price details
+GET {{baseUrl}}/api/material-supplier-prices/1/
+Authorization: Bearer {{token}}
+
+### 7. Update a Material Supplier Price
+PATCH {{baseUrl}}/api/material-supplier-prices/1/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "price": 11.99,
+  "note": "Neuer Preis nach Preisverhandlung"
+}
+
+### 8. Delete a Material Supplier Price
+DELETE {{baseUrl}}/api/material-supplier-prices/1/
+Authorization: Bearer {{token}}

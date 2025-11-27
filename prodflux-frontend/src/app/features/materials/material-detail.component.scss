@@ -373,17 +373,10 @@
     }
   }
 
-  // Bottom Section: Bewegungshistorie und Lagerbestand nebeneinander
-  .bottom-section {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    margin-top: 2rem;
-
-    @media (max-width: 1024px) {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
+  // Full width section for supplier prices
+  .full-width-section {
+    display: block;
+    margin-bottom: 2rem;
   }
 
   // Bottom Section: Bewegungshistorie und Lagerbestand nebeneinander

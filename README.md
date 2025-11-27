@@ -1,206 +1,6 @@
 # 🏭 Prodflux - Production & Materials Management System
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Die Swagger UI ist jetzt ein **All-in-One Tool** für API-Entwicklung und Testing!✅ **Zeitersparnis** bei jedem API-Test  ✅ **Bessere Developer Experience**  ✅ **Automatische Token-Verwaltung**  ✅ **Schneller Login** direkt in der Dokumentation  ✅ **Keine externen Tools** mehr notwendig  Das Quick Login Feature macht die API-Dokumentation zu einem vollständigen Entwicklungstool:## Zusammenfassung- Keine Standard-Credentials im Template- CORS richtig konfigurieren- HTTPS verwenden (Token-Sicherheit)**Wichtig:**```https://your-domain.com/api/docs/```In Produktion funktioniert das Feature identisch:## Produktionsumgebung- Browser-Einstellungen für Cookies/Storage prüfen- Private/Incognito-Modus löscht localStorage- LocalStorage könnte deaktiviert sein### Token bleibt nicht erhalten- Browser-Cache leeren- Logout und erneuter Login- Prüfen Sie, ob das Schloss-Symbol geschlossen ist### Token funktioniert nicht bei API-Requests- Network-Tab prüfen für failed requests- Nach JavaScript-Fehlern suchen- Browser-Console öffnen (F12)### Token wird nicht gesetzt- Stellen Sie sicher, dass der Benutzer in der Datenbank existiert- Überprüfen Sie Username/Password### "Login failed: Invalid credentials"## Fehlerbehebung```const LOGIN_URL = API_BASE_URL + '/api/custom-auth/';// In templates/swagger_ui.html```javascriptWenn Sie einen anderen Auth-Endpoint verwenden:### Unterschiedliche Login-URLs```}    /* Position, Farben, etc. anpassen */#login-panel {/* In templates/swagger_ui.html <style> section */```cssDas Login-Panel kann über CSS angepasst werden:### Styling anpassen⚠️ **Warnung:** Nur für lokale Entwicklung! Niemals in Produktion!```<input type="password" id="password" placeholder="Password" value="admin"><input type="text" id="username" placeholder="Username" value="admin"><!-- In templates/swagger_ui.html -->```htmlFür Entwicklung können Sie Standard-Credentials im Template setzen:### Standard-Benutzer## Anpassungen**Zeitersparnis:** ~90%3. ✓ Fertig!2. "Login & Authorize" klicken1. Username + Password eingeben### Jetzt (Integriert):6. Bei jedem Browser-Neustart wiederholen5. Token manuell einfügen4. "Authorize" klicken3. In Swagger UI wechseln2. Token aus Response kopieren1. Login-Request in separatem Tool (curl, Postman, etc.)### Vorher (Manuell):## Vorteile gegenüber manueller Autorisierung```7. UI wird auf "logged-in" Status aktualisiert   ↓6. Swagger UI setzt "Authorization: Bearer {token}" in alle Requests   ↓5. JavaScript ruft ui.preauthorizeApiKey("Bearer", token)   ↓4. JavaScript speichert Access Token in localStorage   ↓3. Django gibt JWT Access + Refresh Token zurück   ↓2. JavaScript sendet POST zu /api/auth/login/   ↓1. Benutzer gibt Credentials ein```### Login-Flow- Logout löscht Token vollständig- Token wird nur für API-Requests verwendet- LocalStorage ist domain-spezifisch**Sicherheit:**- Automatisches Laden beim Öffnen der Swagger UI- Kein erneuter Login bei Seitenaktualisierung- Token bleibt über Browser-Neustarts erhalten**Vorteile:**```localStorage.setItem('username', username);localStorage.setItem('jwt_token', token);```javascriptDer Token wird im Browser's localStorage gespeichert:### Token-Speicherung- Login-Endpoint: `/api/auth/login/` (JWT SimpleJWT)- Template: `templates/swagger_ui.html`- Custom View: `core/swagger_views.py` - `CustomSwaggerView`**Backend (Django):**- SwaggerUIBundle.preauthorizeApiKey() für Token-Verwaltung- Fetch API für Login-Request- LocalStorage für Token-Persistenz- Custom Swagger UI Template mit integriertem Login-Formular**Frontend (JavaScript):**### Implementierung## Technische Details```3. Autorisierung wird aus Swagger UI entfernt2. Token wird gelöscht1. Klicken Sie den roten "Logout" Button im Login-Panel```### 3. Logout- Sie können sofort API-Endpunkte testen- Der Bearer-Token wird automatisch in allen Requests mitgesendet- Alle API-Endpunkte zeigen das geschlossene Schloss-Symbol ✓Nach dem Login:### 2. API verwenden- ✓ Alle API-Endpunkte sind sofort nutzbar- ✓ Ihr Username wird angezeigt- ✓ Panel wechselt zu grünem Hintergrund- ✓ Token wird automatisch in Swagger UI gesetzt- ✓ Erfolgsmeldung wird angezeigt**Ergebnis:**```5. Klicken Sie "Login & Authorize" (oder drücken Enter)4. Geben Sie Ihr Password ein3. Geben Sie Ihren Username ein2. Finden Sie das "🔐 Quick Login" Panel rechts oben1. Öffnen Sie: http://localhost:8000/api/docs/```### 1. Login## Verwendung✅ **Keyboard-Support** - Enter-Taste für schnellen Login  ✅ **Logout-Funktion** - Einfaches Löschen des Tokens  ✅ **Benutzeranzeige** - Sichtbare Anzeige des angemeldeten Benutzers  ✅ **Persistenz** - Token bleibt über Browser-Neustarts erhalten  ✅ **Automatische Autorisierung** - Token wird sofort in Swagger UI gesetzt  ✅ **Direkter Login** - Keine manuelle Token-Verwaltung notwendig  Das Login-Panel befindet sich **rechts oben** in der Swagger UI und bietet:### 🔐 Quick Login Panel## FeaturesDie Swagger UI wurde mit einem integrierten Login-Panel erweitert, das die Authentifizierung vereinfacht und den JWT-Token automatisch verwaltet.## ÜberblickA comprehensive production and materials management system built with Django REST Framework and Angular.
-
 [![Django](https://img.shields.io/badge/Django-5.2.8-green.svg)](https://www.djangoproject.com/)
 [![Angular](https://img.shields.io/badge/Angular-19-red.svg)](https://angular.io/)
 [![DRF](https://img.shields.io/badge/DRF-3.16.0-blue.svg)](https://www.django-rest-framework.org/)
@@ -295,7 +95,9 @@ python manage.py migrate
 python manage.py createsuperuser
 
 # Start Django server
-./start_local.sh
+python manage.py runserver
+# OR use the convenience script
+./scripts/startup/start_local.sh
 ```
 
 ### 3. Frontend Setup
@@ -303,8 +105,8 @@ python manage.py createsuperuser
 cd prodflux-frontend
 npm install
 npm start
-# OR use the convenience script
-./start_frontend.sh
+# OR use the convenience script from root
+./scripts/startup/start_frontend.sh
 ```
 
 ### 4. Development Mode (Both Servers)
@@ -336,7 +138,7 @@ Prodflux provides comprehensive OpenAPI 3.0 documentation with interactive inter
   - Import into Postman, Insomnia, etc.
   - Code generation support
 
-For detailed information, see [OPENAPI.md](OPENAPI.md)
+For detailed information, see [OPENAPI.md](docs/OPENAPI.md)
 
 ### Key API Endpoints
 
@@ -360,31 +162,44 @@ For detailed information, see [OPENAPI.md](OPENAPI.md)
 - `GET|POST /api/workshops/` - Workshop management
 - `GET|PUT|DELETE /api/workshops/{id}/` - Workshop operations
 
-For complete API documentation, see [DEVELOPMENT.md](DEVELOPMENT.md) and [OPENAPI.md](OPENAPI.md)
+For complete API documentation, see [DEVELOPMENT.md](docs/DEVELOPMENT.md) and [OPENAPI.md](docs/OPENAPI.md)
 
 ## 🏗️ Project Structure
 
 ```
 prodflux/
-├── core/                    # Core app (auth, workshops)
-│   ├── models.py           # User, Workshop models
-│   ├── views.py            # Authentication views
-│   └── serializers.py      # API serializers
+├── api-tests/              # HTTP API test files
+│   ├── api-test.http      # General API tests
+│   ├── api-test-suppliers.http
+│   └── ...
+├── backups/                # Database backups
+├── core/                   # Core app (auth, workshops)
+│   ├── models.py          # User, Workshop models
+│   ├── views.py           # Authentication views
+│   └── serializers.py     # API serializers
+├── docs/                   # Project documentation
+│   ├── DEVELOPMENT.md     # Development guide
+│   ├── OPENAPI.md         # API documentation
+│   ├── prodflux.yaml      # OpenAPI schema
+│   └── schema.yaml        # OpenAPI schema (alternative)
 ├── materials/              # Materials management
-│   ├── models.py           # Material, Movement, Transfer models
-│   ├── views.py            # Material API views
-│   └── utils.py            # Helper functions
+│   ├── models.py          # Material, Movement, Transfer models
+│   ├── views.py           # Material API views
+│   └── utils.py           # Helper functions
 ├── products/               # Product management
-│   ├── models.py           # Product, BOM models
-│   └── views.py            # Product API views
+│   ├── models.py          # Product, BOM models
+│   └── views.py           # Product API views
 ├── shopbridge/             # E-commerce integration
 ├── manufacturing/          # Production management
+├── scripts/                # Utility scripts
+│   ├── startup/           # Startup scripts
+│   │   ├── start_local.sh
+│   │   └── start_frontend.sh
+│   └── seed_materials.py  # Database seeding
 ├── prodflux-frontend/      # Angular frontend
 │   ├── src/app/           # Angular application
 │   └── package.json       # Frontend dependencies
-├── start_dev.sh           # Development startup script
-├── start_local.sh         # Backend only script
-├── start_frontend.sh      # Frontend only script
+├── start_dev.sh           # Development startup (both servers)
 └── requirements.txt       # Python dependencies
 ```
 
@@ -401,10 +216,13 @@ SERVE_FRONTEND=False
 ```
 
 ### API Testing
-Use the provided HTTP test files:
-- `api-test.http` - General API testing
-- `api-test-openapi.http` - OpenAPI endpoint testing
-- `api-test Workshops.http` - Workshop-specific tests
+Use the provided HTTP test files in the `api-tests/` folder:
+- `api-tests/api-test.http` - General API testing
+- `api-tests/api-test-openapi.http` - OpenAPI endpoint testing
+- `api-tests/api-test-workshops.http` - Workshop-specific tests
+- `api-tests/api-test-suppliers.http` - Supplier management tests
+- `api-tests/api-test-material-supplier-prices.http` - Material pricing tests
+- `api-tests/api-test-import-export.http` - Import/Export tests
 
 Or use the interactive Swagger UI at http://localhost:8000/api/docs/
 
@@ -461,8 +279,10 @@ python manage.py collectstatic
 
 ## 📄 Documentation
 
-- [Development Guide](DEVELOPMENT.md) - Detailed technical documentation
-- [OpenAPI Documentation](OPENAPI.md) - API documentation and usage
+- [Development Guide](docs/DEVELOPMENT.md) - Detailed technical documentation
+- [OpenAPI Documentation](docs/OPENAPI.md) - API documentation and usage
+- [Supplier Implementation](docs/SUPPLIER_IMPLEMENTATION.md) - Supplier management details
+- [Material Supplier Prices](docs/MATERIAL_SUPPLIER_PRICES.md) - Pricing system documentation
 - [GitHub Copilot Instructions](.github/copilot-instructions.md) - AI assistant configuration
 
 ## 📝 License

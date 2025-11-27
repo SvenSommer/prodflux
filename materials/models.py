@@ -213,3 +213,43 @@ class DeliveryItem(models.Model):
     material = models.ForeignKey(Material, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     note = models.TextField(blank=True)
+
+
+class MaterialSupplierPrice(models.Model):
+    """Manuelle Preispflege für Materialien bei verschiedenen Lieferanten"""
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
+        related_name='supplier_prices'
+    )
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.CASCADE,
+        related_name='material_prices'
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=5,
+        help_text='Preis pro Einheit (netto)'
+    )
+    valid_from = models.DateField(
+        help_text='Ab wann dieser Preis gültig ist'
+    )
+    note = models.TextField(
+        blank=True,
+        help_text='Optional: Notizen zum Preis (z.B. Mindestbestellmenge)'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-valid_from']
+        unique_together = [['material', 'supplier', 'valid_from']]
+        verbose_name = 'Material-Lieferanten-Preis'
+        verbose_name_plural = 'Material-Lieferanten-Preise'
+
+    def __str__(self):
+        return (
+            f"{self.material.bezeichnung} - {self.supplier.name}: "
+            f"{self.price}€ (ab {self.valid_from})"
+        )

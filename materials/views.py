@@ -1,18 +1,43 @@
 from decimal import Decimal
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from .models import Delivery, Material, MaterialCategory, MaterialMovement, MaterialTransfer, Order, Supplier
-from .serializers import DeliverySerializer, MaterialCategorySerializer, MaterialSerializer, MaterialMovementSerializer, MaterialTransferSerializer, OrderSerializer, SupplierSerializer
+from .models import (
+    Delivery,
+    Material,
+    MaterialCategory,
+    MaterialMovement,
+    MaterialTransfer,
+    Order,
+    OrderItem,
+    Supplier,
+    MaterialSupplierPrice
+)
+from .serializers import (
+    DeliverySerializer,
+    MaterialCategorySerializer,
+    MaterialSerializer,
+    MaterialMovementSerializer,
+    MaterialTransferSerializer,
+    OrderSerializer,
+    SupplierSerializer,
+    MaterialSupplierPriceSerializer,
+    MaterialSupplierPriceOverviewSerializer
+)
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from collections import defaultdict
-from rest_framework.exceptions import ValidationError  
+from rest_framework.exceptions import ValidationError
 from .utils import group_materials_by_category
 from .validators import validate_stock_movement
-from .import_export import SupplierImportExport, OrderImportExport
+from .import_export import (
+    SupplierImportExport,
+    OrderImportExport,
+    MaterialSupplierPriceImportExport
+)
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
+from django.db.models import OuterRef, Subquery, Q
 
 
 class SupplierListCreateView(generics.ListCreateAPIView):
@@ -727,3 +752,377 @@ def import_orders(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+
+# ============================================================================
+# MATERIAL SUPPLIER PRICES
+# ============================================================================
+
+class MaterialSupplierPriceListCreateView(generics.ListCreateAPIView):
+    """
+    Liste und Erstellung von manuellen Material-Lieferanten-Preisen
+    """
+    serializer_class = MaterialSupplierPriceSerializer
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="List material supplier prices",
+        description=(
+            "List all manual supplier prices. "
+            "Can be filtered by material_id or supplier_id."
+        ),
+        parameters=[
+            {
+                'name': 'material_id',
+                'in': 'query',
+                'description': 'Filter by material ID',
+                'required': False,
+                'schema': {'type': 'integer'}
+            },
+            {
+                'name': 'supplier_id',
+                'in': 'query',
+                'description': 'Filter by supplier ID',
+                'required': False,
+                'schema': {'type': 'integer'}
+            }
+        ],
+        tags=['Materials']
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="Create a new manual supplier price",
+        description=(
+            "Create a new manual price entry for a "
+            "material-supplier combination."
+        ),
+        tags=['Materials']
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+    def get_queryset(self):
+        material_id = self.request.query_params.get('material_id')
+        supplier_id = self.request.query_params.get('supplier_id')
+        
+        queryset = MaterialSupplierPrice.objects.select_related(
+            'material', 'supplier'
+        )
+        
+        if material_id:
+            queryset = queryset.filter(material_id=material_id)
+        if supplier_id:
+            queryset = queryset.filter(supplier_id=supplier_id)
+        
+        return queryset
+
+
+class MaterialSupplierPriceDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Detail-Ansicht für manuelle Material-Lieferanten-Preise
+    """
+    queryset = MaterialSupplierPrice.objects.all()
+    serializer_class = MaterialSupplierPriceSerializer
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Get a specific manual supplier price",
+        description="Retrieve details of a manual supplier price entry.",
+        tags=['Materials']
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="Update a manual supplier price",
+        description="Update an existing manual supplier price entry.",
+        tags=['Materials']
+    )
+    def put(self, request, *args, **kwargs):
+        return super().put(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="Partially update a manual supplier price",
+        description=(
+            "Partially update an existing manual supplier price entry."
+        ),
+        tags=['Materials']
+    )
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="Delete a manual supplier price",
+        description="Delete a manual supplier price entry.",
+        tags=['Materials']
+    )
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
+
+@extend_schema(
+    summary="Get supplier prices overview for a material",
+    description=(
+        "Returns an overview of all supplier prices for a material. "
+        "Combines manual prices with last order prices from order history."
+    ),
+    responses={
+        200: MaterialSupplierPriceOverviewSerializer(many=True),
+        404: {'description': 'Material not found'}
+    },
+    tags=['Materials']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def material_supplier_prices_overview(request, material_id):
+    """
+    Gibt eine Übersicht aller Lieferantenpreise für ein Material zurück.
+    Kombiniert manuelle Preise und letzte Bestellpreise.
+    
+    GET /api/materials/{material_id}/supplier-prices/
+    """
+    try:
+        material = Material.objects.get(pk=material_id)
+    except Material.DoesNotExist:
+        return Response(
+            {'detail': 'Material nicht gefunden.'},
+            status=404
+        )
+    
+    # Alle Lieferanten für dieses Material
+    supplier_ids = set(material.suppliers.values_list('id', flat=True))
+    
+    # Lieferanten aus Bestellungen hinzufügen
+    order_suppliers = OrderItem.objects.filter(
+        material=material
+    ).values_list('order__supplier_id', flat=True).distinct()
+    supplier_ids.update(order_suppliers)
+    
+    # Daten für jeden Lieferanten sammeln
+    overview_data = []
+    
+    for supplier_id in supplier_ids:
+        try:
+            supplier = Supplier.objects.get(pk=supplier_id)
+        except Supplier.DoesNotExist:
+            continue
+        
+        # Letzter manueller Preis
+        manual_price = MaterialSupplierPrice.objects.filter(
+            material=material,
+            supplier=supplier
+        ).order_by('-valid_from').first()
+        
+        # Letzter Bestellpreis
+        last_order_item = OrderItem.objects.filter(
+            material=material,
+            order__supplier=supplier
+        ).select_related('order').order_by(
+            '-order__bestellt_am'
+        ).first()
+        
+        overview_data.append({
+            'supplier_id': supplier.id,
+            'supplier_name': supplier.name,
+            'manual_price': manual_price.price if manual_price else None,
+            'manual_price_valid_from': (
+                manual_price.valid_from if manual_price else None
+            ),
+            'manual_price_note': manual_price.note if manual_price else None,
+            'last_order_price': (
+                last_order_item.preis_pro_stueck if last_order_item else None
+            ),
+            'last_order_price_with_shipping': (
+                last_order_item.preis_pro_stueck_mit_versand
+                if last_order_item else None
+            ),
+            'last_order_date': (
+                last_order_item.order.bestellt_am
+                if last_order_item else None
+            ),
+            'last_order_number': (
+                last_order_item.order.order_number
+                if last_order_item else None
+            ),
+        })
+    
+    # Sortiere nach Lieferantenname
+    overview_data.sort(key=lambda x: x['supplier_name'])
+    
+    serializer = MaterialSupplierPriceOverviewSerializer(
+        overview_data,
+        many=True
+    )
+    
+    return Response(serializer.data)
+
+
+# ============================================================================
+# MATERIAL SUPPLIER PRICES IMPORT/EXPORT
+# ============================================================================
+
+@extend_schema(
+    summary="Export material supplier prices to JSON",
+    description=(
+        "Export all manual material supplier prices to JSON format. "
+        "Can be filtered by material_id or supplier_id."
+    ),
+    parameters=[
+        {
+            'name': 'material_id',
+            'in': 'query',
+            'description': 'Filter prices by material ID',
+            'required': False,
+            'schema': {'type': 'integer'}
+        },
+        {
+            'name': 'supplier_id',
+            'in': 'query',
+            'description': 'Filter prices by supplier ID',
+            'required': False,
+            'schema': {'type': 'integer'}
+        }
+    ],
+    responses={
+        200: {
+            'type': 'object',
+            'properties': {
+                'count': {'type': 'integer'},
+                'prices': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'material_id': {'type': 'integer'},
+                            'material_bezeichnung': {'type': 'string'},
+                            'supplier_id': {'type': 'integer'},
+                            'supplier_name': {'type': 'string'},
+                            'price': {'type': 'string'},
+                            'valid_from': {'type': 'string', 'format': 'date'},
+                            'note': {'type': 'string'},
+                        }
+                    }
+                }
+            }
+        }
+    },
+    tags=['Import/Export']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def export_material_supplier_prices(request):
+    """
+    Export material supplier prices to JSON format
+    GET /api/material-supplier-prices/export/
+    """
+    prices = MaterialSupplierPrice.objects.select_related(
+        'material',
+        'supplier'
+    ).all()
+    
+    # Filter by material_id
+    material_id = request.query_params.get('material_id')
+    if material_id:
+        prices = prices.filter(material_id=material_id)
+    
+    # Filter by supplier_id
+    supplier_id = request.query_params.get('supplier_id')
+    if supplier_id:
+        prices = prices.filter(supplier_id=supplier_id)
+    
+    data = MaterialSupplierPriceImportExport.export_prices(prices)
+    return Response({
+        'count': len(data),
+        'prices': data
+    })
+
+
+@extend_schema(
+    summary="Import material supplier prices from JSON",
+    description=(
+        "Import material supplier prices from JSON data with deduplication. "
+        "If a price with the same material, supplier and valid_from already "
+        "exists, it will be updated."
+    ),
+    request={
+        'application/json': {
+            'type': 'object',
+            'properties': {
+                'prices': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'material_id': {'type': 'integer'},
+                            'supplier_id': {'type': 'integer'},
+                            'price': {'type': 'string'},
+                            'valid_from': {
+                                'type': 'string',
+                                'format': 'date'
+                            },
+                            'note': {'type': 'string'},
+                        }
+                    }
+                }
+            }
+        }
+    },
+    responses={
+        200: {
+            'type': 'object',
+            'properties': {
+                'success': {'type': 'boolean'},
+                'created_count': {'type': 'integer'},
+                'messages': {
+                    'type': 'array',
+                    'items': {'type': 'string'}
+                }
+            }
+        }
+    },
+    tags=['Import/Export']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def import_material_supplier_prices(request):
+    """
+    Import material supplier prices from JSON data
+    POST /api/material-supplier-prices/import/
+    
+    Body format:
+    {
+        "prices": [
+            {
+                "material_id": 1,
+                "supplier_id": 2,
+                "price": "12.50",
+                "valid_from": "2024-01-01",
+                "note": "Optional note"
+            }
+        ]
+    }
+    """
+    prices_data = request.data.get('prices', [])
+    
+    if not isinstance(prices_data, list):
+        return Response(
+            {'error': 'prices must be an array'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        created, messages = (
+            MaterialSupplierPriceImportExport.import_prices(prices_data)
+        )
+        
+        return Response({
+            'success': True,
+            'created_count': len(created),
+            'messages': messages
+        })
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )

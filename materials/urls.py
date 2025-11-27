@@ -16,15 +16,20 @@ from .views import (
     OrderListCreateView,
     SupplierDetailView,
     SupplierListCreateView,
+    MaterialSupplierPriceListCreateView,
+    MaterialSupplierPriceDetailView,
     all_materials_stock_by_workshop,
     material_stock_view,
     material_inventory_correction_view,
     material_products_view,
     toggle_material_deprecated,
+    material_supplier_prices_overview,
     export_suppliers,
     import_suppliers,
     export_orders,
     import_orders,
+    export_material_supplier_prices,
+    import_material_supplier_prices,
 )
 
 urlpatterns = [
@@ -58,6 +63,16 @@ urlpatterns = [
     path("materials/<int:material_id>/toggle-deprecated/",
          toggle_material_deprecated,
          name="toggle-material-deprecated"),
+    # Material Supplier Prices
+    path("material-supplier-prices/",
+         MaterialSupplierPriceListCreateView.as_view(),
+         name="material-supplier-price-list-create"),
+    path("material-supplier-prices/<int:pk>/",
+         MaterialSupplierPriceDetailView.as_view(),
+         name="material-supplier-price-detail"),
+    path("materials/<int:material_id>/supplier-prices/",
+         material_supplier_prices_overview,
+         name="material-supplier-prices-overview"),
     # Export/Import endpoints
     path("suppliers/export/",
          export_suppliers,
@@ -71,4 +86,10 @@ urlpatterns = [
     path("orders/import/",
          import_orders,
          name="orders-import"),
+    path("material-supplier-prices/export/",
+         export_material_supplier_prices,
+         name="material-supplier-prices-export"),
+    path("material-supplier-prices/import/",
+         import_material_supplier_prices,
+         name="material-supplier-prices-import"),
 ]

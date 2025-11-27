@@ -394,6 +394,253 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/material-supplier-prices/:
+    get:
+      operationId: material_supplier_prices_list
+      description: List all manual supplier prices. Can be filtered by material_id
+        or supplier_id.
+      summary: List material supplier prices
+      tags:
+      - Materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaterialSupplierPrice'
+          description: ''
+    post:
+      operationId: material_supplier_prices_create
+      description: Create a new manual price entry for a material-supplier combination.
+      summary: Create a new manual supplier price
+      tags:
+      - Materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialSupplierPriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialSupplierPriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialSupplierPriceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialSupplierPrice'
+          description: ''
+  /api/material-supplier-prices/{id}/:
+    get:
+      operationId: material_supplier_prices_retrieve
+      description: Retrieve details of a manual supplier price entry.
+      summary: Get a specific manual supplier price
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialSupplierPrice'
+          description: ''
+    put:
+      operationId: material_supplier_prices_update
+      description: Update an existing manual supplier price entry.
+      summary: Update a manual supplier price
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaterialSupplierPriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MaterialSupplierPriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MaterialSupplierPriceRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialSupplierPrice'
+          description: ''
+    patch:
+      operationId: material_supplier_prices_partial_update
+      description: Partially update an existing manual supplier price entry.
+      summary: Partially update a manual supplier price
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Materials
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialSupplierPriceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialSupplierPriceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMaterialSupplierPriceRequest'
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaterialSupplierPrice'
+          description: ''
+    delete:
+      operationId: material_supplier_prices_destroy
+      description: Delete a manual supplier price entry.
+      summary: Delete a manual supplier price
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/material-supplier-prices/export/:
+    get:
+      operationId: material_supplier_prices_export_retrieve
+      description: Export all manual material supplier prices to JSON format. Can
+        be filtered by material_id or supplier_id.
+      summary: Export material supplier prices to JSON
+      tags:
+      - Import/Export
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  prices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        material_id:
+                          type: integer
+                        material_bezeichnung:
+                          type: string
+                        supplier_id:
+                          type: integer
+                        supplier_name:
+                          type: string
+                        price:
+                          type: string
+                        valid_from:
+                          type: string
+                          format: date
+                        note:
+                          type: string
+          description: ''
+  /api/material-supplier-prices/import/:
+    post:
+      operationId: material_supplier_prices_import_create
+      description: Import material supplier prices from JSON data with deduplication.
+        If a price with the same material, supplier and valid_from already exists,
+        it will be updated.
+      summary: Import material supplier prices from JSON
+      tags:
+      - Import/Export
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prices:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      material_id:
+                        type: integer
+                      supplier_id:
+                        type: integer
+                      price:
+                        type: string
+                      valid_from:
+                        type: string
+                        format: date
+                      note:
+                        type: string
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  created_count:
+                    type: integer
+                  messages:
+                    type: array
+                    items:
+                      type: string
+          description: ''
   /api/materials/:
     get:
       operationId: materials_list
@@ -674,6 +921,38 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/materials/{material_id}/supplier-prices/:
+    get:
+      operationId: materials_supplier_prices_list
+      description: Returns an overview of all supplier prices for a material. Combines
+        manual prices with last order prices from order history.
+      summary: Get supplier prices overview for a material
+      parameters:
+      - in: path
+        name: material_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Materials
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaterialSupplierPriceOverview'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Material not found
+          description: ''
   /api/materials/{material_id}/toggle-deprecated/:
     post:
       operationId: materials_toggle_deprecated_create
@@ -2796,6 +3075,127 @@ components:
           description: Material ist veraltet und wird nicht mehr verwendet
       required:
       - bezeichnung
+    MaterialSupplierPrice:
+      type: object
+      description: Serializer für manuelle Lieferantenpreise
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        material:
+          type: integer
+        material_name:
+          type: string
+          readOnly: true
+        supplier:
+          type: integer
+        supplier_name:
+          type: string
+          readOnly: true
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          description: Preis pro Einheit (netto)
+        valid_from:
+          type: string
+          format: date
+          description: Ab wann dieser Preis gültig ist
+        note:
+          type: string
+          description: 'Optional: Notizen zum Preis (z.B. Mindestbestellmenge)'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - material
+      - material_name
+      - price
+      - supplier
+      - supplier_name
+      - updated_at
+      - valid_from
+    MaterialSupplierPriceOverview:
+      type: object
+      description: |-
+        Übersicht über Lieferantenpreise für ein Material.
+        Kombiniert manuelle Preise und letzte Bestellpreise.
+      properties:
+        supplier_id:
+          type: integer
+        supplier_name:
+          type: string
+        manual_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          nullable: true
+        manual_price_valid_from:
+          type: string
+          format: date
+          nullable: true
+        manual_price_note:
+          type: string
+          nullable: true
+        last_order_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          nullable: true
+        last_order_price_with_shipping:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          nullable: true
+        last_order_date:
+          type: string
+          format: date
+          nullable: true
+        last_order_number:
+          type: string
+          nullable: true
+      required:
+      - last_order_date
+      - last_order_number
+      - last_order_price
+      - last_order_price_with_shipping
+      - manual_price
+      - manual_price_note
+      - manual_price_valid_from
+      - supplier_id
+      - supplier_name
+    MaterialSupplierPriceRequest:
+      type: object
+      description: Serializer für manuelle Lieferantenpreise
+      properties:
+        material:
+          type: integer
+        supplier:
+          type: integer
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          description: Preis pro Einheit (netto)
+        valid_from:
+          type: string
+          format: date
+          description: Ab wann dieser Preis gültig ist
+        note:
+          type: string
+          description: 'Optional: Notizen zum Preis (z.B. Mindestbestellmenge)'
+      required:
+      - material
+      - price
+      - supplier
+      - valid_from
     MaterialTransfer:
       type: object
       properties:
@@ -3092,6 +3492,26 @@ components:
         deprecated:
           type: boolean
           description: Material ist veraltet und wird nicht mehr verwendet
+    PatchedMaterialSupplierPriceRequest:
+      type: object
+      description: Serializer für manuelle Lieferantenpreise
+      properties:
+        material:
+          type: integer
+        supplier:
+          type: integer
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          description: Preis pro Einheit (netto)
+        valid_from:
+          type: string
+          format: date
+          description: Ab wann dieser Preis gültig ist
+        note:
+          type: string
+          description: 'Optional: Notizen zum Preis (z.B. Mindestbestellmenge)'
     PatchedMaterialTransferRequest:
       type: object
       properties:

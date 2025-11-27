@@ -19,6 +19,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { Router } from '@angular/router';
+import { MaterialSupplierPricesComponent } from './material-supplier-prices/material-supplier-prices.component';
 
 @Component({
   selector: 'app-material-detail',
@@ -38,7 +39,8 @@ import { Router } from '@angular/router';
     MatButtonModule,
     MatTooltipModule,
     MaterialUsageComponent,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    MaterialSupplierPricesComponent
   ]
 })
 export class MaterialDetailComponent {

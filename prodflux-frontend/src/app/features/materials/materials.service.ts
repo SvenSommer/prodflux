@@ -158,10 +158,70 @@ export class MaterialsService {
       {}
     );
   }
+
+  // Material Supplier Prices
+  getMaterialSupplierPricesOverview(materialId: number): Observable<MaterialSupplierPriceOverview[]> {
+    return this.http.get<MaterialSupplierPriceOverview[]>(
+      `${this.baseUrl}${materialId}/supplier-prices/`
+    );
+  }
+
+  createMaterialSupplierPrice(data: CreateMaterialSupplierPrice): Observable<MaterialSupplierPrice> {
+    return this.http.post<MaterialSupplierPrice>(
+      `${environment.apiUrl}/api/material-supplier-prices/`,
+      data
+    );
+  }
+
+  updateMaterialSupplierPrice(id: number, data: Partial<CreateMaterialSupplierPrice>): Observable<MaterialSupplierPrice> {
+    return this.http.patch<MaterialSupplierPrice>(
+      `${environment.apiUrl}/api/material-supplier-prices/${id}/`,
+      data
+    );
+  }
+
+  deleteMaterialSupplierPrice(id: number): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}/api/material-supplier-prices/${id}/`
+    );
+  }
 }
 
 export interface ToggleMaterialDeprecatedResponse {
   material_id: number;
   material_deprecated: boolean;
   action: 'deprecated' | 'reactivated';
+}
+
+export interface MaterialSupplierPriceOverview {
+  supplier_id: number;
+  supplier_name: string;
+  manual_price: number | null;
+  manual_price_valid_from: string | null;
+  manual_price_note: string | null;
+  last_order_price: number | null;
+  last_order_price_with_shipping: number | null;
+  last_order_date: string | null;
+  last_order_number: string | null;
+}
+
+export interface CreateMaterialSupplierPrice {
+  material: number;
+  supplier: number;
+  price: number;
+  valid_from: string;
+  note?: string;
+}
+
+export interface MaterialSupplierPrice {
+  id: number;
+  material: number;
+  material_name: string;
+  supplier: number;
+  supplier_name: string;
+  price: number;
+  valid_from: string;
+  note: string;
+  created_at: string;
+  updated_at: string;
 }

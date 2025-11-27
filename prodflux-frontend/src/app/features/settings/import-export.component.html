@@ -9,9 +9,9 @@
   <mat-card class="info-card mb-4">
     <mat-card-content>
       <p class="info-text">
-        Hier kannst du Lieferanten- und Bestelldaten als JSON-Dateien exportieren
+        Hier kannst du Lieferanten-, Bestellungs- und Preisdaten als JSON-Dateien exportieren
         herunterladen oder solche Dateien importieren. Achte darauf, die
-        Reihenfolge beim Import einzuhalten: Zuerst Lieferanten, dann Bestellungen.
+        Reihenfolge beim Import einzuhalten: Zuerst Lieferanten, dann Bestellungen oder Preise.
       </p>
     </mat-card-content>
   </mat-card>
@@ -104,6 +104,51 @@
     </mat-card-content>
   </mat-card>
 
+  <mat-divider class="my-4"></mat-divider>
+
+  <!-- Material Supplier Prices Section -->
+  <mat-card class="section-card">
+    <mat-card-title>
+      <mat-icon>euro</mat-icon>
+      Material-Lieferanten-Preise
+    </mat-card-title>
+    <mat-card-content>
+      <p class="section-description">
+        Exportiere und importiere manuelle Preise für Material-Lieferanten-Kombinationen.
+        Preise mit gleicher Kombination (Material + Lieferant + Datum) werden aktualisiert.
+      </p>
+
+      <div class="action-buttons">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="exportMaterialSupplierPrices()"
+          [disabled]="isExporting || isImporting"
+        >
+          <mat-icon>download</mat-icon>
+          Exportieren
+        </button>
+
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="fileInputPrices.click()"
+          [disabled]="isExporting || isImporting"
+        >
+          <mat-icon>upload</mat-icon>
+          Importieren
+        </button>
+        <input
+          #fileInputPrices
+          type="file"
+          accept=".json"
+          style="display: none"
+          (change)="onImportMaterialSupplierPrices($event)"
+        />
+      </div>
+    </mat-card-content>
+  </mat-card>
+
   <!-- Import Messages -->
   <mat-expansion-panel *ngIf="showMessages" class="mt-4" [expanded]="true">
     <mat-expansion-panel-header>
@@ -153,6 +198,12 @@
           <li>Material in Zielumgebung anlegen ODER</li>
           <li>ID in JSON-Datei anpassen</li>
         </ul>
+      </div>
+
+      <div class="error-section">
+        <h4>"Supplier ID X not found" (bei Preisen)</h4>
+        <p><strong>Problem:</strong> Lieferant mit dieser ID existiert nicht</p>
+        <p><strong>Lösung:</strong> Lieferanten zuerst importieren oder ID in JSON anpassen</p>
       </div>
 
       <div class="error-section">
@@ -209,14 +260,31 @@
   ]
 &#125;</code></pre>
 
+      <h4>Material-Lieferanten-Preise (material_supplier_prices_export.json)</h4>
+      <pre><code>&#123;
+  "count": 2,
+  "prices": [
+    &#123;
+      "material_id": 1,
+      "material_bezeichnung": "Nur zur Info",
+      "supplier_id": 3,
+      "supplier_name": "Nur zur Info",
+      "price": "15.99",
+      "valid_from": "2024-01-01",
+      "note": "Großhandel Preis 2024"
+    &#125;
+  ]
+&#125;</code></pre>
+
       <mat-divider class="my-3"></mat-divider>
 
       <h3>Wichtige Hinweise</h3>
       <ul>
-        <li><strong>Reihenfolge:</strong> Immer zuerst Lieferanten, dann Bestellungen importieren</li>
+        <li><strong>Reihenfolge:</strong> Immer zuerst Lieferanten, dann Bestellungen/Preise importieren</li>
         <li><strong>Material-IDs:</strong> Müssen in der Zielumgebung existieren</li>
-        <li><strong>Deduplizierung:</strong> Lieferanten mit gleichem Namen werden aktualisiert</li>
-        <li><strong>Deduplizierung:</strong> Bestellungen mit gleicher order_number werden übersprungen</li>
+        <li><strong>Deduplizierung Lieferanten:</strong> Lieferanten mit gleichem Namen werden aktualisiert</li>
+        <li><strong>Deduplizierung Bestellungen:</strong> Bestellungen mit gleicher order_number werden übersprungen</li>
+        <li><strong>Deduplizierung Preise:</strong> Preise mit gleicher Material+Lieferant+Datum Kombination werden aktualisiert</li>
         <li><strong>Backup:</strong> Immer vor Import in Produktion ein Backup erstellen!</li>
       </ul>
     </div>

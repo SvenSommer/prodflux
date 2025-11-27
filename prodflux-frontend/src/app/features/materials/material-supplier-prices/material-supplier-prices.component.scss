@@ -1,0 +1,166 @@
+.supplier-prices-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+
+      mat-icon {
+        font-size: 1.75rem;
+        width: 1.75rem;
+        height: 1.75rem;
+        color: #2196F3;
+      }
+    }
+
+    .add-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  mat-card-content {
+    padding: 0 2rem 2rem 2rem !important;
+  }
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.supplier-prices-table {
+  width: 100%;
+  background: white;
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    color: #666;
+    padding: 1rem 0.75rem;
+    text-align: left;
+  }
+
+  td {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .price-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .price-value {
+      font-weight: 700;
+      font-size: 1.125rem;
+
+      &.manual {
+        color: #4caf50;
+      }
+
+      &.order {
+        color: #2196F3;
+      }
+    }
+
+    .price-info {
+      color: #999;
+      font-size: 0.875rem;
+    }
+
+    .price-shipping {
+      color: #666;
+      font-size: 0.8125rem;
+      font-style: italic;
+    }
+
+    .order-number {
+      color: #999;
+      font-size: 0.8125rem;
+      font-family: monospace;
+      margin-top: 0.125rem;
+    }
+
+    .price-note {
+      display: inline-flex;
+      align-items: center;
+      cursor: help;
+
+      .info-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        color: #2196F3;
+      }
+    }
+  }
+
+  .no-data {
+    color: #999;
+    font-style: italic;
+  }
+
+  strong {
+    color: #333;
+    font-size: 1rem;
+  }
+}
+
+.no-prices {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #999;
+
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: #ccc;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .supplier-prices-table {
+    th, td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .price-cell {
+      .price-value {
+        font-size: 1rem;
+      }
+    }
+  }
+}

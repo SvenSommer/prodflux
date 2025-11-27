@@ -70,16 +70,6 @@
                 <span class="label">Hersteller:</span>
                 <span class="value">{{ material.hersteller_bezeichnung }}</span>
               </div>
-
-              <!-- Lieferanten anzeigen -->
-              <div class="info-row" *ngIf="material.supplier_details && material.supplier_details.length > 0">
-                <span class="label">Lieferanten:</span>
-                <span class="value">
-                  <span *ngFor="let supplier of material.supplier_details; let last = last">
-                    {{ supplier.name }}<span *ngIf="!last">, </span>
-                  </span>
-                </span>
-              </div>
               <!-- Hier können weitere Stammdaten hinzugefügt werden -->
             </div>
 
@@ -89,7 +79,7 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Rechte Spalte: Verwendet in und Alternative Materialien -->
+    <!-- Rechte Spalte: Container für Verwendet in und Alternative Materialien -->
     <div class="right-column">
       <!-- Verwendet in Card -->
       <mat-card class="usage-info-card" *ngIf="material">
@@ -131,6 +121,14 @@
       </mat-card>
     </div>
   </div>
+
+  <!-- Lieferantenpreise über die gesamte Breite -->
+  <app-material-supplier-prices
+    *ngIf="material"
+    [materialId]="material.id"
+    [materialName]="material.bezeichnung"
+    class="full-width-section">
+  </app-material-supplier-prices>
 
   <!-- Bewegungshistorie und Lagerbestand Sektion -->
   <div class="bottom-section">

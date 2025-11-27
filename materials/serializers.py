@@ -4,7 +4,19 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from core.models import Workshop
-from .models import Material, MaterialCategory, MaterialMovement, Delivery, DeliveryItem, MaterialTransfer, MaterialTransferItem, Order, OrderItem, Supplier
+from .models import (
+    Material,
+    MaterialCategory,
+    MaterialMovement,
+    Delivery,
+    DeliveryItem,
+    MaterialTransfer,
+    MaterialTransferItem,
+    Order,
+    OrderItem,
+    Supplier,
+    MaterialSupplierPrice
+)
 from .validators import validate_stock_movement
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum
@@ -440,3 +452,52 @@ class OrderSerializer(serializers.ModelSerializer):
             OrderItem.objects.create(order=instance, **item)
 
         return instance
+
+
+class MaterialSupplierPriceSerializer(serializers.ModelSerializer):
+    """Serializer für manuelle Lieferantenpreise"""
+    supplier_name = serializers.CharField(
+        source='supplier.name',
+        read_only=True
+    )
+    material_name = serializers.CharField(
+        source='material.bezeichnung',
+        read_only=True
+    )
+
+    class Meta:
+        model = MaterialSupplierPrice
+        fields = [
+            'id', 'material', 'material_name', 'supplier', 'supplier_name',
+            'price', 'valid_from', 'note', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class MaterialSupplierPriceOverviewSerializer(serializers.Serializer):
+    """
+    Übersicht über Lieferantenpreise für ein Material.
+    Kombiniert manuelle Preise und letzte Bestellpreise.
+    """
+    supplier_id = serializers.IntegerField()
+    supplier_name = serializers.CharField()
+    manual_price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=5,
+        allow_null=True
+    )
+    manual_price_valid_from = serializers.DateField(allow_null=True)
+    manual_price_note = serializers.CharField(allow_null=True)
+    last_order_price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=5,
+        allow_null=True
+    )
+    last_order_price_with_shipping = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=5,
+        allow_null=True
+    )
+    last_order_date = serializers.DateField(allow_null=True)
+    last_order_number = serializers.CharField(allow_null=True)
+

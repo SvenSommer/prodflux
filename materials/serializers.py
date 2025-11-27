@@ -397,6 +397,14 @@ class OrderSerializer(serializers.ModelSerializer):
                 order.order_number = f'ORD-{order.id:05d}'
             order.save(update_fields=['order_number'])
         
+        # Add supplier to materials if not already assigned
+        if order.supplier:
+            for item in items_data:
+                material = item['material']
+                supplier_id = order.supplier.id
+                if not material.suppliers.filter(id=supplier_id).exists():
+                    material.suppliers.add(order.supplier)
+        
         for item in items_data:
             OrderItem.objects.create(order=order, **item)
         return order
@@ -417,6 +425,14 @@ class OrderSerializer(serializers.ModelSerializer):
             else:
                 instance.order_number = f'ORD-{instance.id:05d}'
             instance.save(update_fields=['order_number'])
+
+        # Add supplier to materials if not already assigned
+        if instance.supplier:
+            for item in items_data:
+                material = item['material']
+                supplier_id = instance.supplier.id
+                if not material.suppliers.filter(id=supplier_id).exists():
+                    material.suppliers.add(instance.supplier)
 
         # Replace items
         instance.items.all().delete()

@@ -1,138 +1,139 @@
-<div class="form-container">
-  <mat-card class="order-form-card">
-    <mat-card-title>{{ orderId ? 'Bestellung bearbeiten' : 'Neue Bestellung anlegen' }}</mat-card-title>
+<div class="page-container">
+  <!-- Breadcrumb Navigation -->
+  <app-breadcrumb [links]="breadcrumbLinks"></app-breadcrumb>
 
-    <form (ngSubmit)="save()">
-      <div class="supplier-field-container">
-        <mat-form-field appearance="fill" class="supplier-field">
-          <mat-label>Lieferant</mat-label>
-          <input
-            type="text"
-            matInput
-            [formControl]="supplierControl"
-            [matAutocomplete]="auto"
-            required
-          />
-          <mat-autocomplete
-            #auto="matAutocomplete"
-            [displayWith]="displaySupplierFn"
-            (optionSelected)="onSupplierSelected($event.option.value)"
-          >
-            <mat-option *ngFor="let s of filteredSuppliers | async" [value]="s">
-              {{ s.name }}
-            </mat-option>
-          </mat-autocomplete>
-        </mat-form-field>
-        <button
-          type="button"
-          mat-mini-fab
-          color="primary"
-          class="add-supplier-button"
-          (click)="openNewSupplierDialog()"
-          matTooltip="Neuen Lieferanten anlegen"
-        >
-          <mat-icon>add</mat-icon>
+  <div class="edit-page-content">
+    <!-- Page Header mit Actions -->
+    <div class="page-header">
+      <h1>
+        <mat-icon>receipt</mat-icon>
+        {{ orderId ? 'Bestellung bearbeiten' : 'Neue Bestellung' }}
+      </h1>
+      <div class="header-actions">
+        <button mat-stroked-button type="button" [routerLink]="cancelRoute">
+          <mat-icon>close</mat-icon>
+          Abbrechen
         </button>
-      </div>
-
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Bestellnummer</mat-label>
-        <input matInput type="text" [(ngModel)]="order_number" name="order_number" placeholder="Leer lassen für Auto-Generierung" />
-      </mat-form-field>
-
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Lieferanten-URL</mat-label>
-        <input matInput type="url" [(ngModel)]="supplier_url" name="supplier_url" placeholder="https://beispiel.de/bestellung/12345" />
-        <mat-hint>Link zur Bestellung beim Lieferanten (optional)</mat-hint>
-      </mat-form-field>
-
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Bestellt am</mat-label>
-        <input matInput type="date" [(ngModel)]="bestellt_am" name="bestellt_am" required />
-      </mat-form-field>
-
-      <div class="full-width">
-        <label class="versand-label">Versandkosten</label>
-        <app-price-input
-          [(ngModel)]="versandkosten"
-          name="versandkosten"
-        ></app-price-input>
-      </div>
-
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Notiz</mat-label>
-        <textarea matInput [(ngModel)]="notiz" name="notiz"></textarea>
-      </mat-form-field>
-
-      <div class="checkbox-container">
-        <mat-checkbox [(ngModel)]="is_historical" name="is_historical">
-          Historische Bestellung (keine Auswirkung auf Materialbestand)
-        </mat-checkbox>
-      </div>
-
-      <!-- Materialien -->
-      <div class="mt-4">
-        <div class="header-row">
-          <h3>Materialien</h3>
-        </div>
-
-        <app-material-table
-          [rows]="materialTableRows"
-          [columns]="tableColumns"
-          [showImage]="true"
-          [showCategory]="true"
-        >
-          <ng-template #customColumn let-row let-column="column">
-            @if (column.key === 'quantity') {
-              <input
-                matInput
-                type="number"
-                step="1"
-                min="0"
-                [(ngModel)]="materialAssignments[row.materialId].quantity"
-                [name]="'qty_' + row.materialId"
-                class="table-input"
-              />
-            } @else if (column.key === 'price') {
-              <app-price-input
-                [(ngModel)]="materialAssignments[row.materialId].price"
-                [name]="'price_' + row.materialId"
-                [label]="''"
-                class="compact-price-input">
-              </app-price-input>
-            } @else if (column.key === 'total') {
-              <div class="total-price">
-                {{ calculateTotalPrice(materialAssignments[row.materialId]) }}
-              </div>
-            } @else if (column.key === 'artikelnummer') {
-              <input
-                matInput
-                type="text"
-                [(ngModel)]="materialAssignments[row.materialId].artikelnummer"
-                [name]="'artikelnummer_' + row.materialId"
-                class="table-input"
-                placeholder="Art.-Nr."
-              />
-            } @else if (column.key === 'material_url') {
-              <input
-                matInput
-                type="url"
-                [(ngModel)]="materialAssignments[row.materialId].material_url"
-                [name]="'material_url_' + row.materialId"
-                class="table-input"
-                placeholder="https://..."
-              />
-            }
-          </ng-template>
-        </app-material-table>
-      </div>
-
-      <div class="actions">
-        <button mat-raised-button color="primary" type="submit">
+        <button mat-raised-button color="primary" type="submit" form="orderForm">
           <mat-icon>save</mat-icon>
           Speichern
         </button>
       </div>
+    </div>
+
+    <!-- Historical Order Banner (wie auf Detail-Seite) -->
+    <div class="historical-banner" [class.active]="is_historical" (click)="is_historical = !is_historical">
+      <mat-checkbox [(ngModel)]="is_historical" name="is_historical" (click)="$event.stopPropagation()">
+      </mat-checkbox>
+      <mat-icon>history</mat-icon>
+      <span>Historische Bestellung - Keine Auswirkung auf Materialbestand</span>
+    </div>
+
+    <form id="orderForm" (ngSubmit)="save()">
+      <!-- Content Grid: Linke Spalte (Eingaben) + Rechte Spalte (Kosten) -->
+      <div class="content-grid">
+        <!-- Linke Spalte: Bestellinformationen -->
+        <div class="left-column">
+          <!-- Grundinformationen Card -->
+          <mat-card class="form-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>info</mat-icon>
+                Bestellinformationen
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <!-- Zeile 1: Lieferant + Bestellt am + Bestellnummer -->
+              <div class="form-row">
+                <div class="field-with-action">
+                  <mat-form-field appearance="fill" class="field-main">
+                    <mat-label>Lieferant</mat-label>
+                    <input
+                      type="text"
+                      matInput
+                      [formControl]="supplierControl"
+                      [matAutocomplete]="auto"
+                      required
+                    />
+                    <mat-autocomplete
+                      #auto="matAutocomplete"
+                      [displayWith]="displaySupplierFn"
+                      (optionSelected)="onSupplierSelected($event.option.value)"
+                    >
+                      <mat-option *ngFor="let s of filteredSuppliers | async" [value]="s">
+                        {{ s.name }}
+                      </mat-option>
+                    </mat-autocomplete>
+                  </mat-form-field>
+                  <button
+                    type="button"
+                    mat-mini-fab
+                    color="primary"
+                    class="field-action"
+                    (click)="openNewSupplierDialog()"
+                    matTooltip="Neuen Lieferanten anlegen"
+                  >
+                    <mat-icon>add</mat-icon>
+                  </button>
+                </div>
+
+                <mat-form-field appearance="fill" class="field-sm">
+                  <mat-label>Bestellt am</mat-label>
+                  <input matInput type="date" [(ngModel)]="bestellt_am" name="bestellt_am" required />
+                </mat-form-field>
+
+                <mat-form-field appearance="fill" class="field-sm">
+                  <mat-label>Bestellnummer</mat-label>
+                  <input matInput type="text" [(ngModel)]="order_number" name="order_number" placeholder="Auto" />
+                </mat-form-field>
+              </div>
+
+              <!-- Zeile 2: Lieferanten-URL -->
+              <div class="form-row">
+                <mat-form-field appearance="fill" class="field-xl">
+                  <mat-label>Lieferanten-URL</mat-label>
+                  <input matInput type="url" [(ngModel)]="supplier_url" name="supplier_url" placeholder="https://beispiel.de/bestellung/12345" />
+                  <mat-icon matSuffix>link</mat-icon>
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Rechte Spalte: Kosten-Übersicht + Notizen -->
+        <div class="right-column">
+          <app-order-costs-card 
+            [order]="buildPreviewOrder()" 
+            [mode]="'edit'"
+            (shippingCostChange)="onShippingCostChange($event)">
+          </app-order-costs-card>
+
+          <!-- Notizen Card -->
+          <mat-card class="form-card notes-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>notes</mat-icon>
+                Notizen
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-form-field appearance="fill" class="field-full">
+                <mat-label>Notiz</mat-label>
+                <textarea matInput [(ngModel)]="notiz" name="notiz" rows="4" placeholder="Optionale Anmerkungen zur Bestellung..."></textarea>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+
+      <!-- Materialien Section (Full Width) -->
+      <app-order-materials-table
+        [mode]="'edit'"
+        [items]="orderItems"
+        [materialsList]="materialsList"
+        [materialGroups]="materialGroups"
+        (assignmentsChange)="onAssignmentsChange($event)">
+      </app-order-materials-table>
     </form>
-  </mat-card>
+  </div>
 </div>

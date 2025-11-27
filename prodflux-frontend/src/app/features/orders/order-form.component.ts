@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { OrdersService, OrderItem } from './orders.service';
+import { OrdersService, Order, OrderItem } from './orders.service';
 import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
 import { SuppliersService } from '../settings/suppliers.service';
 import { Supplier } from '../../shared/models/supplier.model';
@@ -10,15 +10,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MaterialTableComponent, MaterialTableColumn, MaterialTableRow } from '../../shared/components/material-table/material-table.component';
-import { PriceInputComponent, PriceData } from '../../shared/components/price-input/price-input.component';
+import { PriceData } from '../../shared/components/price-input/price-input.component';
+import { OrderMaterialsTableComponent, MaterialAssignment } from './order-materials-table/order-materials-table.component';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { OrderCostsCardComponent, ShippingCostChange } from './order-shipping-card/order-shipping-card.component';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
@@ -36,18 +37,20 @@ import { map, startWith } from 'rxjs/operators';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatTableModule,
     MatCardModule,
     MatIconModule,
     MatCheckboxModule,
     MatAutocompleteModule,
     MatDialogModule,
     MatTooltipModule,
-    MaterialTableComponent,
-    PriceInputComponent
+    OrderMaterialsTableComponent,
+    BreadcrumbComponent,
+    OrderCostsCardComponent
   ]
 })
 export class OrderFormComponent {
+  @ViewChild(OrderMaterialsTableComponent) materialsTable!: OrderMaterialsTableComponent;
+
   private dialog = inject(MatDialog);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -57,6 +60,26 @@ export class OrderFormComponent {
 
   orderId: number | null = null;
   supplier: number | null = null;
+
+  // Breadcrumb Navigation
+  get breadcrumbLinks() {
+    if (this.orderId) {
+      return [
+        { label: 'Bestellungen', url: '/orders' },
+        { label: 'Bestellung #' + this.orderId, url: '/orders/' + this.orderId },
+        { label: 'Bearbeiten', url: '' }
+      ];
+    }
+    return [
+      { label: 'Bestellungen', url: '/orders' },
+      { label: 'Neu', url: '' }
+    ];
+  }
+
+  // Cancel Route
+  get cancelRoute(): string[] {
+    return this.orderId ? ['/orders', String(this.orderId)] : ['/orders'];
+  }
   order_number: string = '';
   bestellt_am: string = '';
   supplier_url: string = '';
@@ -68,21 +91,11 @@ export class OrderFormComponent {
   supplierControl = new FormControl<string | Supplier>('');
   filteredSuppliers!: Observable<Supplier[]>;
   materialGroups: MaterialCategoryGroup[] = [];
-
   materialsList: Material[] = [];
-  materialAssignments: {
-    [materialId: number]: { quantity: number; price: PriceData; artikelnummer: string; material_url: string };
-  } = {};
 
-  // For MaterialTableComponent
-  materialTableRows: MaterialTableRow[] = [];
-  tableColumns: MaterialTableColumn[] = [
-    { key: 'quantity', header: 'Menge', width: '120px' },
-    { key: 'price', header: 'Preis/Stk. (Netto/MwSt.)', width: '350px' },
-    { key: 'total', header: 'Gesamt (netto)', width: '150px' },
-    { key: 'artikelnummer', header: 'Artikelnummer', width: '200px' },
-    { key: 'material_url', header: 'Produktlink', width: '200px' }
-  ];
+  // Items for the materials table component
+  orderItems: OrderItem[] = [];
+  materialAssignments: { [materialId: number]: MaterialAssignment } = {};
 
   ngOnInit() {
     console.log('[OrderForm] Init');
@@ -110,35 +123,8 @@ export class OrderFormComponent {
   loadMaterialsAndOrder() {
     this.materialsService.getMaterialsGrouped().subscribe(groups => {
       this.materialGroups = groups;
-
-      const allMaterials = groups.flatMap(g => g.materials);
-      this.materialsList = allMaterials;
-
-      console.log('[OrderForm] materialsList:', allMaterials);
-
-      // Prepare material assignments and table rows
-      this.materialTableRows = [];
-      for (const mat of allMaterials) {
-        this.materialAssignments[mat.id] = {
-          quantity: 0,
-          price: { netto: 0, mwst_satz: 19 },
-          artikelnummer: '',
-          material_url: ''
-        };
-
-        // Find category for this material
-        const group = groups.find(g => g.materials.some(m => m.id === mat.id));
-
-        this.materialTableRows.push({
-          materialId: mat.id,
-          materialName: mat.bezeichnung,
-          materialManufacturerName: mat.hersteller_bezeichnung,
-          materialImageUrl: mat.bild_url,
-          categoryName: group?.category_name || 'Ohne Kategorie',
-          categoryOrder: mat.category?.order ?? 9999,
-          data: mat
-        });
-      }
+      this.materialsList = groups.flatMap(g => g.materials);
+      console.log('[OrderForm] materialsList loaded:', this.materialsList.length, 'materials');
 
       if (this.orderId) {
         this.ordersService.get(this.orderId).subscribe(order => {
@@ -162,30 +148,25 @@ export class OrderFormComponent {
           this.notiz = order.notiz || '';
           this.is_historical = order.is_historical || false;
 
+          // Store order items for the materials table component
+          this.orderItems = order.items;
+
+          // Also store assignments for save() method
           order.items.forEach(item => {
-            if (!this.materialAssignments[item.material]) {
-              console.warn('[OrderForm] WARN: material id not found in materialAssignments:', item.material);
-              this.materialAssignments[item.material] = {
-                quantity: item.quantity,
-                price: {
-                  netto: item.preis_pro_stueck,
-                  mwst_satz: item.mwst_satz || 19
-                },
-                artikelnummer: item.artikelnummer || '',
-                material_url: item.material_url || ''
-              };
-            } else {
-              this.materialAssignments[item.material].quantity = item.quantity;
-              this.materialAssignments[item.material].price = {
+            // Ensure mwst_satz is a number, defaulting to 19
+            const mwstSatz = item.mwst_satz != null ? Number(item.mwst_satz) : 19;
+            this.materialAssignments[item.material] = {
+              quantity: item.quantity,
+              price: {
                 netto: item.preis_pro_stueck,
-                mwst_satz: item.mwst_satz || 19
-              };
-              this.materialAssignments[item.material].artikelnummer = item.artikelnummer || '';
-              this.materialAssignments[item.material].material_url = item.material_url || '';
-            }
+                mwst_satz: mwstSatz
+              },
+              artikelnummer: item.artikelnummer || '',
+              material_url: item.material_url || ''
+            };
           });
 
-          console.log('[OrderForm] materialAssignments after load:', this.materialAssignments);
+          console.log('[OrderForm] Order loaded with', order.items.length, 'items');
         });
       }
     });
@@ -294,15 +275,51 @@ export class OrderFormComponent {
   }
 
   onSupplierSelected(supplier: Supplier) {
+    console.log('[OrderForm] Supplier selected:', supplier.id, supplier.name);
     this.supplier = supplier.id;
   }
 
-  calculateTotalPrice(assignment: { quantity: number; price: PriceData; artikelnummer: string }): string {
-    if (!assignment.quantity || !assignment.price.netto) {
-      return '—';
-    }
-    const netto = Number(assignment.quantity) * Number(assignment.price.netto);
-    return `${netto.toFixed(5).replace(/\.?0+$/, '')} €`;
+  // Handler for when materials table emits assignment changes
+  onAssignmentsChange(assignments: { [materialId: number]: MaterialAssignment }) {
+    this.materialAssignments = assignments;
+    console.log('[OrderForm] Assignments updated:', Object.keys(assignments).length, 'materials');
+  }
+
+  // Handler for when shipping costs change in the costs card
+  onShippingCostChange(change: ShippingCostChange) {
+    this.versandkosten = {
+      netto: change.netto,
+      mwst_satz: change.mwst_satz
+    };
+    console.log('[OrderForm] Shipping costs updated:', this.versandkosten);
+  }
+
+  // Build a preview Order object for the costs card (live calculation)
+  buildPreviewOrder(): Order {
+    const items: OrderItem[] = Object.entries(this.materialAssignments)
+      .filter(([_, v]) => v.quantity > 0)
+      .map(([materialId, v]) => ({
+        material: +materialId,
+        quantity: Number(v.quantity),
+        preis_pro_stueck: Number(v.price.netto),
+        mwst_satz: Number(v.price.mwst_satz),
+        artikelnummer: v.artikelnummer || '',
+        material_url: v.material_url || undefined
+      }));
+
+    return {
+      id: this.orderId || 0,
+      supplier: this.supplier || 0,
+      order_number: this.order_number || '',
+      bestellt_am: this.bestellt_am || '',
+      angekommen_am: null,
+      supplier_url: this.supplier_url || undefined,
+      versandkosten: this.versandkosten.netto,
+      versandkosten_mwst_satz: this.versandkosten.mwst_satz,
+      notiz: this.notiz || '',
+      is_historical: this.is_historical,
+      items
+    };
   }
 
   openNewSupplierDialog() {

@@ -1,113 +1,225 @@
-.form-container {
+// Container - identisch mit Detail-Seiten
+.page-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.order-form-card {
-  padding: 24px;
-  position: relative;
+// Hauptinhalt mit konsistentem Gap
+.edit-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  // Form Container - gleicher Gap wie content für Cards
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
 }
 
-.header-row {
+// Header - identisch mit Detail-Seiten
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-}
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
 
-.full-width {
-  width: 100%;
-}
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+    color: #333;
 
-.supplier-field-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 16px;
-
-  .supplier-field {
-    flex: 1;
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
   }
 
-  .add-supplier-button {
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+}
+
+// 2-Spalten Grid Layout (wie Detail-Seite)
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+
+  @media (max-width: 968px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.left-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// Form Cards
+.form-card {
+  mat-card-header {
+    margin-bottom: 20px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 0 8px;
+  }
+}
+
+// Form Rows - flexible Zeilen für Feldgruppierung
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+// Feldgrößen - angepasst an erwarteten Inhalt
+.field-xs { width: 100px; }
+.field-sm { width: 150px; flex-shrink: 0; }
+.field-md { width: 250px; }
+.field-lg { width: 400px; }
+.field-xl { width: 100%; max-width: 600px; }
+.field-full { width: 100%; }
+
+// Flex-basierte Felder
+.field-flex-1 { flex: 1; min-width: 250px; }
+.field-flex-2 { flex: 2; min-width: 300px; }
+
+// Feld mit Action-Button (z.B. Lieferant + Add)
+.field-with-action {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+  
+  .field-main {
+    flex: 1;
+  }
+  
+  .field-action {
     margin-top: 8px;
   }
 }
 
-.versand-label {
-  display: block;
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.6);
-  margin-bottom: 8px;
-}
-
-.checkbox-container {
-  margin: 16px 0;
-}
-
-.compact-price-input {
-  app-price-input {
-    .price-input-row {
-      gap: 8px;
-    }
-
-    .netto-field,
-    .mwst-field {
-      margin-bottom: 0;
-    }
-
-    .price-summary {
-      font-size: 0.85rem;
-      padding: 8px 12px;
-      margin-top: 4px;
-    }
-  }
-}
-
-.full-width-table {
-  width: 100%;
-  margin-top: 16px;
-}
-
-.actions {
-  margin-top: 32px;
+// Historical Banner - klickbar, oben wie auf Detail-Seite
+.historical-banner {
   display: flex;
-  justify-content: flex-end;
-}
-
-.material-category-block {
-  margin-top: 2rem;
-}
-
-.category-title {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #555;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 0.25rem;
-}
-
-.table-input {
-  padding: 4px 8px;
-  border: 1px solid #ccc;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-left: 4px solid #9e9e9e;
   border-radius: 4px;
+  color: #666;
   font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
 
-  &:focus {
-    outline: none;
-    border-color: #3f51b5;
+  mat-checkbox {
+    margin-right: 4px;
+  }
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #9e9e9e;
+    transition: color 0.2s ease;
+  }
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+
+  // Aktiver Zustand - oranges Banner wie auf Detail-Seite
+  &.active {
+    background-color: #fff3e0;
+    border-left: 4px solid #ff9800;
+    color: #e65100;
+
+    mat-icon {
+      color: #ff9800;
+    }
   }
 }
 
-.total-price {
-  font-weight: 500;
-  color: #2e7d32;
-  text-align: right;
-  padding-right: 8px;
+// Notes Card
+.notes-card {
+  mat-card-content {
+    padding: 0 8px;
+  }
+
+  .field-full {
+    width: 100%;
+  }
 }
 
-.mt-4 {
-  margin-top: 24px;
+// Responsive Anpassungen
+@media (max-width: 968px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+
+    h1 {
+      font-size: 24px;
+    }
+
+    .header-actions {
+      justify-content: flex-end;
+    }
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .field-xs, .field-sm, .field-md, 
+  .field-lg, .field-xl,
+  .field-with-action,
+  .field-flex-1 {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+  }
 }

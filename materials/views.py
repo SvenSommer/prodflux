@@ -62,7 +62,7 @@ class SupplierDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class MaterialListCreateView(generics.ListCreateAPIView):
-    queryset = Material.objects.select_related('category').all()
+    queryset = Material.objects.select_related('category').prefetch_related('suppliers', 'alternatives').all()
     serializer_class = MaterialSerializer
     permission_classes = [IsAuthenticated]
 

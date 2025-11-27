@@ -1,14 +1,32 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { Order } from '../orders.service';
+
+export interface ShippingCostChange {
+  netto: number;
+  mwst_satz: number;
+}
 
 @Component({
   selector: 'app-order-costs-card',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatDividerModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatCardModule,
+    MatIconModule,
+    MatDividerModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule
+  ],
   template: `
     <mat-card class="costs-card">
       <mat-card-header>
@@ -35,11 +53,43 @@ import { Order } from '../orders.service';
         </div>
 
         <!-- Versandkosten -->
-        <div class="cost-row">
+        <div class="cost-row shipping-row" [class.edit-mode]="mode === 'edit'">
           <span class="label-column">Versandkosten</span>
-          <span class="value-column">{{ formatCurrency(shippingNetto) }}</span>
-          <span class="value-column">{{ formatCurrency(shippingMwst) }}</span>
-          <span class="value-column">{{ formatCurrency(shippingBrutto) }}</span>
+          
+          <!-- Edit Mode: Eingabefelder -->
+          <ng-container *ngIf="mode === 'edit'; else viewShipping">
+            <div class="value-column editable">
+              <input
+                type="number"
+                class="inline-input"
+                [ngModel]="editShippingNetto"
+                (ngModelChange)="onShippingNettoChange($event)"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+              />
+              <span class="currency-suffix">€</span>
+            </div>
+            <div class="value-column mwst-select">
+              <select
+                class="inline-select"
+                [ngModel]="editMwstSatz"
+                (ngModelChange)="onMwstSatzChange($event)"
+              >
+                <option [ngValue]="0">0%</option>
+                <option [ngValue]="7">7%</option>
+                <option [ngValue]="19">19%</option>
+              </select>
+            </div>
+            <span class="value-column">{{ formatCurrency(calculatedShippingBrutto) }}</span>
+          </ng-container>
+          
+          <!-- View Mode: Nur Anzeige -->
+          <ng-template #viewShipping>
+            <span class="value-column">{{ formatCurrency(shippingNetto) }}</span>
+            <span class="value-column">{{ formatCurrency(shippingMwst) }}</span>
+            <span class="value-column">{{ formatCurrency(shippingBrutto) }}</span>
+          </ng-template>
         </div>
 
         <mat-divider class="total-divider"></mat-divider>
@@ -104,6 +154,7 @@ import { Order } from '../orders.service';
       padding: 10px 0;
       font-size: 14px;
       border-bottom: 1px solid #f0f0f0;
+      align-items: center;
     }
 
     .label-column {
@@ -114,6 +165,69 @@ import { Order } from '../orders.service';
       text-align: right;
       color: #666;
       font-variant-numeric: tabular-nums;
+    }
+
+    // Edit Mode Styles
+    .shipping-row.edit-mode {
+      background-color: #f8f9fa;
+      margin: 0 -16px;
+      padding: 10px 16px;
+      border-radius: 4px;
+    }
+
+    .value-column.editable {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .inline-input {
+      width: 80px;
+      padding: 6px 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      background-color: white;
+      transition: border-color 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #1976d2;
+      }
+
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+
+    .currency-suffix {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .value-column.mwst-select {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .inline-select {
+      padding: 6px 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: white;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #1976d2;
+      }
     }
 
     .total-divider {
@@ -143,6 +257,12 @@ import { Order } from '../orders.service';
 })
 export class OrderCostsCardComponent implements OnChanges {
   @Input() order!: Order;
+  @Input() mode: 'view' | 'edit' = 'view';
+  @Output() shippingCostChange = new EventEmitter<ShippingCostChange>();
+
+  // Edit mode values
+  editShippingNetto: number = 0;
+  editMwstSatz: number = 19;
 
   // Cached values
   private _materialsNetto?: number;
@@ -166,6 +286,38 @@ export class OrderCostsCardComponent implements OnChanges {
     this._totalNetto = undefined;
     this._totalMwst = undefined;
     this._totalBrutto = undefined;
+
+    // Initialize edit values from order
+    if (this.order && this.mode === 'edit') {
+      // Calculate netto from brutto (versandkosten is stored as brutto)
+      const brutto = this.order.versandkosten ?? 0;
+      const mwstSatz = this.order.versandkosten_mwst_satz ?? 19;
+      this.editMwstSatz = mwstSatz;
+      this.editShippingNetto = brutto / (1 + (mwstSatz / 100));
+    }
+  }
+
+  // Edit mode handlers
+  onShippingNettoChange(value: number) {
+    this.editShippingNetto = value || 0;
+    this.emitShippingChange();
+  }
+
+  onMwstSatzChange(value: number) {
+    this.editMwstSatz = value;
+    this.emitShippingChange();
+  }
+
+  private emitShippingChange() {
+    this.shippingCostChange.emit({
+      netto: this.editShippingNetto,
+      mwst_satz: this.editMwstSatz
+    });
+  }
+
+  // Calculated brutto for edit mode
+  get calculatedShippingBrutto(): number {
+    return this.editShippingNetto * (1 + (this.editMwstSatz / 100));
   }
 
   // Materialkosten berechnet
@@ -232,20 +384,30 @@ export class OrderCostsCardComponent implements OnChanges {
     return this._shippingMwst;
   }
 
-  // Gesamtkosten
+  // Gesamtkosten - im Edit-Modus die editierten Werte verwenden
   get totalNetto(): number {
+    if (this.mode === 'edit') {
+      return this.materialsNetto + this.editShippingNetto;
+    }
     if (this._totalNetto !== undefined) return this._totalNetto;
     this._totalNetto = this.materialsNetto + this.shippingNetto;
     return this._totalNetto;
   }
 
   get totalMwst(): number {
+    if (this.mode === 'edit') {
+      const editShippingMwst = this.editShippingNetto * (this.editMwstSatz / 100);
+      return this.materialsMwst + editShippingMwst;
+    }
     if (this._totalMwst !== undefined) return this._totalMwst;
     this._totalMwst = this.materialsMwst + this.shippingMwst;
     return this._totalMwst;
   }
 
   get totalBrutto(): number {
+    if (this.mode === 'edit') {
+      return this.materialsBrutto + this.calculatedShippingBrutto;
+    }
     if (this._totalBrutto !== undefined) return this._totalBrutto;
     this._totalBrutto = this.materialsBrutto + this.shippingBrutto;
     return this._totalBrutto;

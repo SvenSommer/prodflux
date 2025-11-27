@@ -1,0 +1,80 @@
+<div class="material-picker" [style.maxHeight]="maxHeight">
+  <!-- Search Field -->
+  <div class="picker-search">
+    <mat-form-field appearance="outline" class="picker-search-field">
+      <mat-label>{{ searchLabel }}</mat-label>
+      <input
+        matInput
+        [formControl]="searchControl"
+        [placeholder]="placeholder"
+      />
+      @if (searchControl.value) {
+        <button matSuffix mat-icon-button (click)="clearSearch()" type="button">
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else {
+        <mat-icon matSuffix>search</mat-icon>
+      }
+    </mat-form-field>
+  </div>
+
+  <!-- Categories with expandable sections -->
+  <div class="picker-categories">
+    @for (group of getFilteredGroups(); track group.category_id) {
+      <div class="picker-category">
+        <!-- Category Header (clickable to expand/collapse) -->
+        <div
+          class="category-header"
+          (click)="toggleCategory(group.category_id)"
+          [class.expanded]="isCategoryExpanded(group.category_id)">
+          <mat-icon class="expand-icon">
+            {{ isCategoryExpanded(group.category_id) ? 'expand_more' : 'chevron_right' }}
+          </mat-icon>
+          <span class="category-name">{{ group.category_name }}</span>
+          <span class="category-count">({{ group.materials.length }})</span>
+        </div>
+
+        <!-- Materials List (only shown when expanded) -->
+        @if (isCategoryExpanded(group.category_id)) {
+          <div class="category-materials">
+            @for (m of group.materials; track m.id) {
+              <div
+                class="material-item"
+                (click)="selectMaterial(m, $event)">
+                @if (showImages) {
+                  @if (m.bild_url) {
+                    <img
+                      [src]="m.bild_url"
+                      class="material-image"
+                      [alt]="m.bezeichnung"
+                    />
+                  } @else {
+                    <div class="material-image-placeholder">
+                      <mat-icon>inventory_2</mat-icon>
+                    </div>
+                  }
+                }
+                <div class="material-info">
+                  <span class="material-name">{{ m.bezeichnung }}</span>
+                  <span class="material-manufacturer">{{ m.hersteller_bezeichnung || '—' }}</span>
+                </div>
+                <mat-icon class="add-icon">add_circle</mat-icon>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (getFilteredGroups().length === 0) {
+      <div class="no-materials-available">
+        <mat-icon>search_off</mat-icon>
+        @if (hasActiveSearch()) {
+          <span>Keine Materialien gefunden für "{{ searchControl.value }}"</span>
+        } @else {
+          <span>Keine Materialien verfügbar</span>
+        }
+      </div>
+    }
+  </div>
+</div>

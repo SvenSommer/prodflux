@@ -83,6 +83,33 @@
   gap: 24px;
 }
 
+// Notes Card
+.notes-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  .notes-text {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+}
+
 .loading-state {
   display: flex;
   flex-direction: column;

@@ -1,0 +1,173 @@
+.materials-card {
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 0;
+  }
+}
+
+// Material Add Controls
+.material-add-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+
+  .add-material-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+// Material Picker Wrapper
+.material-picker-wrapper {
+  margin: 0 16px 16px 16px;
+}
+
+// No materials state
+.no-materials-message {
+  text-align: center;
+  padding: 48px 24px;
+  color: #666;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ccc;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin: 8px 0;
+    font-size: 16px;
+
+    &.hint {
+      font-size: 14px;
+      color: #999;
+    }
+  }
+}
+
+// View mode styles
+.total-price {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.article-number {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #666;
+}
+
+.material-url-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.2s ease;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: #1565c0;
+    text-decoration: underline;
+  }
+}
+
+.no-url {
+  color: #999;
+  font-size: 13px;
+}
+
+// Edit mode styles
+.table-input {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #3f51b5;
+  }
+
+  &.quantity-input {
+    width: 70px;
+    text-align: right;
+  }
+
+  &.price-input {
+    width: 100px;
+    text-align: right;
+  }
+
+  &.url-input {
+    width: 100%;
+    min-width: 80px;
+  }
+}
+
+.table-select {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #3f51b5;
+  }
+}
+
+// Responsive
+@media (max-width: 968px) {
+  .materials-card {
+    mat-card-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .material-add-controls {
+    flex-direction: column;
+    justify-content: stretch;
+
+    .category-filter-field,
+    .material-search-field {
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
+}

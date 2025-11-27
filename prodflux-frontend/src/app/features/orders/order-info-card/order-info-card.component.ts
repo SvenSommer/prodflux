@@ -20,14 +20,6 @@ import { Supplier } from '../../settings/models/supplier.model';
       </mat-card-header>
       <mat-card-content>
         <div class="info-grid">
-          <div class="info-item">
-            <span class="label">Bestellnummer:</span>
-            <span class="value">{{ order.order_number }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">Bestellt am:</span>
-            <span class="value">{{ formatDate(order.bestellt_am) }}</span>
-          </div>
           <div class="info-item" *ngIf="supplier">
             <span class="label">Lieferant:</span>
             <a [routerLink]="['/suppliers', order.supplier]" class="supplier-link">
@@ -35,9 +27,21 @@ import { Supplier } from '../../settings/models/supplier.model';
               {{ supplier.name }}
             </a>
           </div>
-          <div class="info-item" *ngIf="order.notiz">
-            <span class="label">Notiz:</span>
-            <span class="value">{{ order.notiz }}</span>
+          <div class="info-item">
+            <span class="label">Bestellt am:</span>
+            <span class="value">{{ formatDate(order.bestellt_am) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Bestellnummer:</span>
+            <ng-container *ngIf="order.supplier_url; else noLink">
+              <a [href]="order.supplier_url" target="_blank" class="order-link">
+                {{ order.order_number }}
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+            </ng-container>
+            <ng-template #noLink>
+              <span class="value">{{ order.order_number }}</span>
+            </ng-template>
           </div>
         </div>
       </mat-card-content>
@@ -106,6 +110,27 @@ import { Supplier } from '../../settings/models/supplier.model';
           font-size: 18px;
           width: 18px;
           height: 18px;
+        }
+      }
+
+      .order-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #1976d2;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #1565c0;
+          text-decoration: underline;
+        }
+
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
         }
       }
     }

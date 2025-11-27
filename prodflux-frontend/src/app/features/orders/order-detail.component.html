@@ -49,14 +49,29 @@
       <!-- Right Column -->
       <div class="right-column">
         <app-order-costs-card [order]="order"></app-order-costs-card>
+        
+        <!-- Notizen Card -->
+        <mat-card class="notes-card" *ngIf="order.notiz">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>notes</mat-icon>
+              Notizen
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="notes-text">{{ order.notiz }}</p>
+          </mat-card-content>
+        </mat-card>
       </div>
     </div>
 
     <!-- Materials Section (Full Width) -->
-    <app-order-materials-card
-      [rows]="getMaterialTableRows()"
-      [columns]="materialTableColumns">
-    </app-order-materials-card>
+    <app-order-materials-table
+      [mode]="'view'"
+      [items]="order.items"
+      [materialsList]="materialsList"
+      [materialGroups]="materialGroups">
+    </app-order-materials-table>
   </div>
 
   <!-- Loading State -->

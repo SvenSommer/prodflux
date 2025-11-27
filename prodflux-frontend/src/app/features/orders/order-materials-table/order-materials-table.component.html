@@ -1,0 +1,173 @@
+<mat-card class="materials-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>inventory_2</mat-icon>
+      Bestellte Materialien
+    </mat-card-title>
+
+    <!-- Material Add Controls (only in edit mode) -->
+    @if (mode === 'edit') {
+      <div class="material-add-controls">
+        <!-- Add Material Button -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="toggleMaterialPicker()"
+          class="add-material-btn">
+          <mat-icon>{{ showMaterialPicker ? 'close' : 'add' }}</mat-icon>
+          {{ showMaterialPicker ? 'Schließen' : 'Material hinzufügen' }}
+        </button>
+      </div>
+    }
+  </mat-card-header>
+
+  <!-- Material Picker Panel -->
+  @if (mode === 'edit' && showMaterialPicker) {
+    <div class="material-picker-wrapper">
+      <app-material-picker
+        [materialGroups]="materialGroups"
+        [excludedMaterialIds]="selectedMaterialIds"
+        [placeholder]="'Name oder Hersteller eingeben...'"
+        [searchLabel]="'Material suchen...'"
+        [maxHeight]="'400px'"
+        (materialSelected)="onMaterialSelected($event)">
+      </app-material-picker>
+    </div>
+  }
+
+  <mat-card-content>
+    @if (materialTableRows.length === 0) {
+      <div class="no-materials-message">
+        <mat-icon>inventory_2</mat-icon>
+        <p>Keine Materialien vorhanden.</p>
+        @if (mode === 'edit') {
+          <p class="hint">Suchen Sie nach einem Material und fügen Sie es hinzu.</p>
+        }
+      </div>
+    } @else {
+      <app-material-table
+        [rows]="materialTableRows"
+        [columns]="tableColumns"
+        [showImage]="true"
+        [showCategory]="true"
+      >
+        <ng-template #customColumn let-row let-column="column">
+          <!-- VIEW MODE COLUMNS -->
+          @if (mode === 'view') {
+            @switch (column.key) {
+              @case ('quantity') {
+                {{ row.data.quantity | number:'1.0-2' }}
+              }
+              @case ('preis') {
+                {{ formatCurrency(row.data.preis) }}
+              }
+              @case ('mwst') {
+                {{ row.data.mwst }}%
+              }
+              @case ('gesamt_netto') {
+                {{ formatCurrency(row.data.gesamt_netto) }}
+              }
+              @case ('brutto') {
+                {{ formatCurrency(row.data.brutto) }}
+              }
+              @case ('gesamt_brutto') {
+                <strong class="total-price">{{ formatCurrency(row.data.gesamt_brutto) }}</strong>
+              }
+              @case ('artikelnummer') {
+                <span class="article-number">{{ row.data.artikelnummer }}</span>
+              }
+              @case ('material_url') {
+                @if (row.data.material_url) {
+                  <a [href]="row.data.material_url" target="_blank" rel="noopener noreferrer" class="material-url-link">
+                    <mat-icon>open_in_new</mat-icon>
+                    Link
+                  </a>
+                } @else {
+                  <span class="no-url">—</span>
+                }
+              }
+            }
+          }
+
+          <!-- EDIT MODE COLUMNS -->
+          @if (mode === 'edit') {
+            @switch (column.key) {
+              @case ('remove') {
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="removeMaterial(row.materialId)"
+                  type="button"
+                  matTooltip="Material entfernen">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+              @case ('quantity') {
+                <input
+                  matInput
+                  type="number"
+                  step="1"
+                  min="0"
+                  [(ngModel)]="materialAssignments[row.materialId].quantity"
+                  (ngModelChange)="emitChanges()"
+                  class="table-input quantity-input"
+                />
+              }
+              @case ('preis') {
+                <input
+                  matInput
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  [(ngModel)]="materialAssignments[row.materialId].price.netto"
+                  (ngModelChange)="emitChanges()"
+                  class="table-input price-input"
+                />
+              }
+              @case ('mwst') {
+                <select
+                  [(ngModel)]="materialAssignments[row.materialId].price.mwst_satz"
+                  (ngModelChange)="emitChanges()"
+                  class="table-select">
+                  <option [ngValue]="19">19%</option>
+                  <option [ngValue]="7">7%</option>
+                  <option [ngValue]="0">0%</option>
+                </select>
+              }
+              @case ('gesamt_netto') {
+                {{ formatCurrency(getGesamtNetto(row.materialId)) }}
+              }
+              @case ('brutto') {
+                {{ formatCurrency(getBruttoProStueck(row.materialId)) }}
+              }
+              @case ('gesamt_brutto') {
+                <strong class="total-price">{{ formatCurrency(getGesamtBrutto(row.materialId)) }}</strong>
+              }
+              @case ('artikelnummer') {
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="materialAssignments[row.materialId].artikelnummer"
+                  (ngModelChange)="emitChanges()"
+                  class="table-input"
+                  placeholder="Art.-Nr."
+                />
+              }
+              @case ('material_url') {
+                <input
+                  matInput
+                  type="url"
+                  [(ngModel)]="materialAssignments[row.materialId].material_url"
+                  (ngModelChange)="emitChanges()"
+                  class="table-input url-input"
+                  placeholder="https://..."
+                />
+              }
+            }
+          }
+        </ng-template>
+      </app-material-table>
+    }
+  </mat-card-content>
+</mat-card>

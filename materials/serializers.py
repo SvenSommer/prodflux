@@ -372,12 +372,20 @@ class DeliverySerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    # material_url kann eingegeben oder aus MaterialSupplierPrice geladen
+    material_url = serializers.URLField(
+        allow_blank=True,
+        required=False,
+        help_text='URL zum Material beim Lieferanten'
+    )
+    
     class Meta:
         model = OrderItem
         fields = [
             'id', 'material', 'quantity',
             'preis_pro_stueck', 'mwst_satz',
-            'preis_pro_stueck_mit_versand', 'artikelnummer'
+            'preis_pro_stueck_mit_versand', 'artikelnummer',
+            'material_url'
         ]
 
 
@@ -392,8 +400,8 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'supplier', 'order_number', 'bestellt_am',
-            'angekommen_am', 'versandkosten', 'versandkosten_mwst_satz',
-            'notiz', 'is_historical', 'items'
+            'supplier_url', 'angekommen_am', 'versandkosten',
+            'versandkosten_mwst_satz', 'notiz', 'is_historical', 'items'
         ]
 
     def create(self, validated_data):

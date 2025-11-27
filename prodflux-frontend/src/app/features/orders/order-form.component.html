@@ -113,6 +113,15 @@
                 class="table-input"
                 placeholder="Art.-Nr."
               />
+            } @else if (column.key === 'material_url') {
+              <input
+                matInput
+                type="url"
+                [(ngModel)]="materialAssignments[row.materialId].material_url"
+                [name]="'material_url_' + row.materialId"
+                class="table-input"
+                placeholder="https://..."
+              />
             }
           </ng-template>
         </app-material-table>

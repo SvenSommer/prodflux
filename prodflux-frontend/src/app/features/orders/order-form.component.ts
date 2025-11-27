@@ -71,7 +71,7 @@ export class OrderFormComponent {
 
   materialsList: Material[] = [];
   materialAssignments: {
-    [materialId: number]: { quantity: number; price: PriceData; artikelnummer: string };
+    [materialId: number]: { quantity: number; price: PriceData; artikelnummer: string; material_url: string };
   } = {};
 
   // For MaterialTableComponent
@@ -80,7 +80,8 @@ export class OrderFormComponent {
     { key: 'quantity', header: 'Menge', width: '120px' },
     { key: 'price', header: 'Preis/Stk. (Netto/MwSt.)', width: '350px' },
     { key: 'total', header: 'Gesamt (netto)', width: '150px' },
-    { key: 'artikelnummer', header: 'Artikelnummer', width: '200px' }
+    { key: 'artikelnummer', header: 'Artikelnummer', width: '200px' },
+    { key: 'material_url', header: 'Produktlink', width: '200px' }
   ];
 
   ngOnInit() {
@@ -121,7 +122,8 @@ export class OrderFormComponent {
         this.materialAssignments[mat.id] = {
           quantity: 0,
           price: { netto: 0, mwst_satz: 19 },
-          artikelnummer: ''
+          artikelnummer: '',
+          material_url: ''
         };
 
         // Find category for this material
@@ -169,7 +171,8 @@ export class OrderFormComponent {
                   netto: item.preis_pro_stueck,
                   mwst_satz: item.mwst_satz || 19
                 },
-                artikelnummer: item.artikelnummer || ''
+                artikelnummer: item.artikelnummer || '',
+                material_url: item.material_url || ''
               };
             } else {
               this.materialAssignments[item.material].quantity = item.quantity;
@@ -178,6 +181,7 @@ export class OrderFormComponent {
                 mwst_satz: item.mwst_satz || 19
               };
               this.materialAssignments[item.material].artikelnummer = item.artikelnummer || '';
+              this.materialAssignments[item.material].material_url = item.material_url || '';
             }
           });
 
@@ -200,7 +204,8 @@ export class OrderFormComponent {
         quantity: Number(v.quantity),
         preis_pro_stueck: Number(v.price.netto),
         mwst_satz: Number(v.price.mwst_satz),
-        artikelnummer: v.artikelnummer || ''
+        artikelnummer: v.artikelnummer || '',
+        material_url: v.material_url || undefined
       }));
 
     const payload = {

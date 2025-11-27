@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+timport { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -45,6 +45,16 @@ import { MaterialTableComponent, MaterialTableRow, MaterialTableColumn } from '.
               @case ('artikelnummer') {
                 <span class="article-number">{{ row.data.artikelnummer }}</span>
               }
+              @case ('material_url') {
+                @if (row.data.material_url) {
+                  <a [href]="row.data.material_url" target="_blank" rel="noopener noreferrer" class="material-url-link">
+                    <mat-icon>open_in_new</mat-icon>
+                    Link
+                  </a>
+                } @else {
+                  <span class="no-url">—</span>
+                }
+              }
             }
           </ng-template>
         </app-material-table>
@@ -83,6 +93,32 @@ import { MaterialTableComponent, MaterialTableRow, MaterialTableColumn } from '.
       font-family: 'Courier New', monospace;
       font-size: 13px;
       color: #666;
+    }
+
+    .material-url-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #1976d2;
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s ease;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover {
+        color: #1565c0;
+        text-decoration: underline;
+      }
+    }
+
+    .no-url {
+      color: #999;
+      font-size: 13px;
     }
   `]
 })

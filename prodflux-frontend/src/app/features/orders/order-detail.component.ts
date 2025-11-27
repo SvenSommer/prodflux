@@ -67,7 +67,8 @@ export class OrderDetailComponent {
     { key: 'gesamt_netto', header: 'Gesamt (netto)', width: '130px' },
     { key: 'brutto', header: 'Preis/Stk. (brutto)', width: '140px' },
     { key: 'gesamt_brutto', header: 'Gesamt (brutto)', width: '140px' },
-    { key: 'artikelnummer', header: 'Artikelnr.', width: '150px' }
+    { key: 'artikelnummer', header: 'Artikelnr.', width: '150px' },
+    { key: 'material_url', header: 'Produktlink', width: '110px' }
   ];
 
   ngOnInit() {
@@ -176,7 +177,8 @@ export class OrderDetailComponent {
           gesamt_netto: gesamtNetto,
           brutto: preisProStueckBrutto,
           gesamt_brutto: gesamtBrutto,
-          artikelnummer: item.artikelnummer || '—'
+          artikelnummer: item.artikelnummer || '—',
+          material_url: item.material_url || null
         }
       };
     });

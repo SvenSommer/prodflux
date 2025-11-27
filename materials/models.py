@@ -167,6 +167,15 @@ class OrderItem(models.Model):
         verbose_name='Artikelnummer',
         help_text='Artikelnummer des Lieferanten'
     )
+    material_url = models.URLField(
+        max_length=500,
+        blank=True,
+        verbose_name='Material-URL',
+        help_text=(
+            'URL zum Material beim Lieferanten '
+            '(z.B. Produktseite)'
+        )
+    )
 
     def berechne_versandanteil(self):
         if not self.order.versandkosten or self.order.versandkosten == 0:

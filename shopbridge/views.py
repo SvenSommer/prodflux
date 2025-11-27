@@ -24,6 +24,7 @@ from .serializers import EmailTemplateSerializer, EmailTemplateRenderSerializer
 # Nur einmal versuchen, die .env zu laden, falls sie existiert
 _ENV_LOADED = False
 _SECRET_ENV_PATH = Path("/etc/secrets/woocommerce_secrets.env")
+_SHOPBRIDGE_ENV_PATH = Path(__file__).parent / ".env"  # shopbridge/.env
 
 # Cache settings
 CACHE_TIMEOUT_ORDERS = 60 * 5  # 5 Minuten für Bestellübersicht
@@ -47,7 +48,15 @@ def get_env_var(name: str) -> str:
         if value:
             return value
 
-    # 3. Lokal .env laden (nur für Entwicklung)
+    # 3. shopbridge/.env laden (WooCommerce Credentials)
+    if not _ENV_LOADED and _SHOPBRIDGE_ENV_PATH.exists():
+        load_dotenv(dotenv_path=_SHOPBRIDGE_ENV_PATH)
+        _ENV_LOADED = True
+        value = os.environ.get(name)
+        if value:
+            return value
+
+    # 4. Lokal .env laden (nur für Entwicklung)
     if not _ENV_LOADED and Path(".env").exists():
         load_dotenv()
         _ENV_LOADED = True
@@ -55,7 +64,7 @@ def get_env_var(name: str) -> str:
         if value:
             return value
 
-    # 4. Wenn alles fehlschlägt
+    # 5. Wenn alles fehlschlägt
     raise RuntimeError(
         f"Environment variable '{name}' is not set"
     )
@@ -670,13 +679,24 @@ def email_template_render_view(request):
     rendered_subject = template.render_subject(context)
     rendered_body = template.render_body(context)
 
-    # mailto-Link erstellen
+    # mailto-Link erstellen mit optionalem BCC
+    from django.conf import settings
     email = data['email']
-    mailto_link = (
-        f"mailto:{email}"
-        f"?subject={quote(rendered_subject)}"
+    
+    # BCC-Adressen aus Settings
+    bcc_str = settings.EMAIL_BCC_ADDRESSES or ''
+    bcc_list = [addr.strip() for addr in bcc_str.split(',') if addr.strip()]
+    
+    mailto_parts = [
+        f"mailto:{email}",
+        f"?subject={quote(rendered_subject)}",
         f"&body={quote(rendered_body)}"
-    )
+    ]
+    
+    if bcc_list:
+        mailto_parts.append(f"&bcc={quote(','.join(bcc_list))}")
+    
+    mailto_link = ''.join(mailto_parts)
 
     return Response({
         'template_id': template.id,
@@ -686,6 +706,7 @@ def email_template_render_view(request):
         'subject': rendered_subject,
         'body': rendered_body,
         'email': email,
+        'bcc_addresses': bcc_list,
         'mailto_link': mailto_link,
     })
 
@@ -738,11 +759,17 @@ def email_sender_config_view(request):
     Die sensiblen Daten kommen aus den Umgebungsvariablen.
     """
     from django.conf import settings
+    
+    # BCC-Adressen als Liste aufbereiten
+    bcc_str = settings.EMAIL_BCC_ADDRESSES or ''
+    bcc_list = [addr.strip() for addr in bcc_str.split(',') if addr.strip()]
+    
     return Response({
         'sender_name': settings.EMAIL_SENDER_NAME,
         'sender_email': settings.EMAIL_SENDER_EMAIL,
         'sender_phone': settings.EMAIL_SENDER_PHONE,
         'company_name': settings.EMAIL_COMPANY_NAME,
+        'bcc_addresses': bcc_list,
     })
 
 

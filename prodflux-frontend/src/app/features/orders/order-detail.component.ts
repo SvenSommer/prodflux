@@ -104,7 +104,8 @@ export class OrderDetailComponent {
 
     const dialogData: LinkDeliveryDialogData = {
       orderId: this.order.id,
-      orderNumber: this.order.order_number
+      orderNumber: this.order.order_number,
+      orderMaterialIds: this.order.items.map(item => item.material)
     };
 
     const dialogRef = this.dialog.open(LinkDeliveryDialogComponent, {

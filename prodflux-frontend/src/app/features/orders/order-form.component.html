@@ -102,8 +102,8 @@
 
         <!-- Rechte Spalte: Kosten-Übersicht + Notizen -->
         <div class="right-column">
-          <app-order-costs-card 
-            [order]="buildPreviewOrder()" 
+          <app-order-costs-card
+            [order]="buildPreviewOrder()"
             [mode]="'edit'"
             (shippingCostChange)="onShippingCostChange($event)">
           </app-order-costs-card>

@@ -55,7 +55,7 @@ export interface ShippingCostChange {
         <!-- Versandkosten -->
         <div class="cost-row shipping-row" [class.edit-mode]="mode === 'edit'">
           <span class="label-column">Versandkosten</span>
-          
+
           <!-- Edit Mode: Eingabefelder -->
           <ng-container *ngIf="mode === 'edit'; else viewShipping">
             <div class="value-column editable">
@@ -83,7 +83,7 @@ export interface ShippingCostChange {
             </div>
             <span class="value-column">{{ formatCurrency(calculatedShippingBrutto) }}</span>
           </ng-container>
-          
+
           <!-- View Mode: Nur Anzeige -->
           <ng-template #viewShipping>
             <span class="value-column">{{ formatCurrency(shippingNetto) }}</span>

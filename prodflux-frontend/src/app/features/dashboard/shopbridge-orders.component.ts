@@ -1,19 +1,20 @@
 // src/app/features/dashboard/shopbridge-orders.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ShopbridgeOrder, ShopbridgeOrdersService } from './shopbridgeorder.service';
+import { RouterModule } from '@angular/router';
+import { ShopbridgeOrdersSummary, ShopbridgeOrdersService } from './shopbridgeorder.service';
 
 
 
 @Component({
   selector: 'app-shopbridge-orders',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './shopbridge-orders.component.html',
   styleUrls: ['./shopbridge-orders.component.scss']
 })
 export class ShopbridgeOrdersComponent implements OnInit {
-  data: ShopbridgeOrder | null = null;
+  data: ShopbridgeOrdersSummary | null = null;
 
   constructor(private service: ShopbridgeOrdersService) {}
 

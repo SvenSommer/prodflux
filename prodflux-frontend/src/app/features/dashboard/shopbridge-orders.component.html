@@ -30,7 +30,11 @@
           <tr *ngFor="let order of product.orders; let i = index">
             <td *ngIf="i === 0" [attr.rowspan]="product.orders.length">{{ product.name }}</td>
             <td *ngIf="i === 0" [attr.rowspan]="product.orders.length">{{ product.total_quantity }}</td>
-            <td>#{{ order.order_id }}</td>
+            <td>
+              <a [routerLink]="['/dashboard/shopbridge-orders', order.order_id]" class="order-link">
+                #{{ order.order_id }}
+              </a>
+            </td>
             <td>{{ order.status }}</td>
             <td>{{ order.quantity }}</td>
             <td>{{ order.total }} {{ order.currency }}</td>

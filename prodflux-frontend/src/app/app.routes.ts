@@ -26,6 +26,10 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/shopbridge-orders.component').then(m => m.ShopbridgeOrdersComponent)
       },
+      {
+        path: 'dashboard/shopbridge-orders/:id',
+        loadComponent: () => import('./features/dashboard/shopbridge-order-detail/shopbridge-order-detail.component').then(m => m.ShopbridgeOrderDetailComponent)
+      },
 
       // MATERIALIEN - alle geschützt
       {

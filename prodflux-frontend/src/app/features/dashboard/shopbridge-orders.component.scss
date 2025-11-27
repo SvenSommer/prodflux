@@ -45,4 +45,27 @@
       background-color: #f7f9fc;
     }
   }
+
+  // Order Link Styling
+  .order-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.08);
+      color: #1565c0;
+      text-decoration: underline;
+    }
+
+    &:active {
+      background-color: rgba(25, 118, 210, 0.12);
+    }
+  }
 }

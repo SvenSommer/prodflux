@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { OrdersService, Order } from './orders.service';
 import { MaterialCategoryGroup, MaterialsService, Material } from '../materials/materials.service';
-import { DeliveriesService, Delivery } from '../deliveries/deliveries.service';
+import { DeliveriesService, Delivery, CreateOrUpdateDelivery } from '../deliveries/deliveries.service';
 import { SuppliersService } from '../settings/suppliers.service';
 import { Supplier } from '../settings/models/supplier.model';
 import { MatCardModule } from '@angular/material/card';
@@ -12,11 +12,33 @@ import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.componen
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MaterialTableComponent, MaterialTableRow, MaterialTableColumn } from '../../shared/components/material-table/material-table.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { LinkDeliveryDialogComponent, LinkDeliveryDialogData, LinkDeliveryDialogResult } from './link-delivery-dialog/link-delivery-dialog.component';
+import { OrderInfoCardComponent } from './order-info-card/order-info-card.component';
+import { OrderCostsCardComponent } from './order-shipping-card/order-shipping-card.component';
+import { OrderDeliveriesCardComponent } from './order-deliveries-card/order-deliveries-card.component';
+import { OrderMaterialsCardComponent } from './order-materials-card/order-materials-card.component';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatTableModule, BreadcrumbComponent, RouterModule, MatIconModule, MatButtonModule, MaterialTableComponent],
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatTableModule,
+    BreadcrumbComponent,
+    RouterModule,
+    MatIconModule,
+    MatButtonModule,
+    MaterialTableComponent,
+    MatDialogModule,
+    MatSnackBarModule,
+    OrderInfoCardComponent,
+    OrderCostsCardComponent,
+    OrderDeliveriesCardComponent,
+    OrderMaterialsCardComponent
+  ],
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.scss'],
 })
@@ -27,6 +49,8 @@ export class OrderDetailComponent {
   private materialsService = inject(MaterialsService);
   private deliveriesService = inject(DeliveriesService);
   private suppliersService = inject(SuppliersService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   orderId = Number(this.route.snapshot.paramMap.get('id'));
   order: Order | undefined;
@@ -68,9 +92,7 @@ export class OrderDetailComponent {
     });
 
     // Load deliveries for this order (server-side filtered)
-    this.deliveriesService.getByOrder(this.orderId).subscribe(deliveries => {
-      this.deliveries = deliveries;
-    });
+    this.loadDeliveries();
   }
 
   getMaterialName(id: number): string {
@@ -157,6 +179,64 @@ export class OrderDetailComponent {
           artikelnummer: item.artikelnummer || '—'
         }
       };
+    });
+  }
+
+  openLinkDeliveryDialog() {
+    if (!this.order) return;
+
+    const dialogData: LinkDeliveryDialogData = {
+      orderId: this.order.id,
+      orderNumber: this.order.order_number
+    };
+
+    const dialogRef = this.dialog.open(LinkDeliveryDialogComponent, {
+      width: '600px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe((result: LinkDeliveryDialogResult) => {
+      if (result) {
+        if (result.action === 'create') {
+          // Navigate to create new delivery with order pre-filled
+          this.router.navigate(['/deliveries/new'], {
+            queryParams: { orderId: this.order!.id }
+          });
+        } else if (result.action === 'link' && result.deliveryId) {
+          // Update existing delivery to link with this order
+          this.deliveriesService.getOne(result.deliveryId).subscribe(delivery => {
+            const updateData: CreateOrUpdateDelivery = {
+              workshop: typeof delivery.workshop === 'number' ? delivery.workshop : parseInt(delivery.workshop),
+              delivered_at: delivery.delivered_at,
+              note: delivery.note,
+              order: this.order!.id,
+              is_historical: delivery.is_historical,
+              items: delivery.items
+            };
+            this.deliveriesService.update(result.deliveryId!, updateData).subscribe({
+              next: () => {
+                this.snackBar.open('Lieferung erfolgreich verknüpft', 'Schließen', {
+                  duration: 3000
+                });
+                // Reload deliveries
+                this.loadDeliveries();
+              },
+              error: (err) => {
+                console.error('Fehler beim Verknüpfen der Lieferung:', err);
+                this.snackBar.open('Fehler beim Verknüpfen der Lieferung', 'Schließen', {
+                  duration: 5000
+                });
+              }
+            });
+          });
+        }
+      }
+    });
+  }
+
+  loadDeliveries() {
+    this.deliveriesService.getByOrder(this.orderId).subscribe(deliveries => {
+      this.deliveries = deliveries;
     });
   }
 }

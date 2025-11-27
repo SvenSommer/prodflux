@@ -140,6 +140,8 @@
 - Reactive forms and data handling
 - Service-based API communication
 - Responsive layout design
+- **Detail Page Design Pattern:** See [DETAIL_PAGE_DESIGN_TEMPLATE.md](DETAIL_PAGE_DESIGN_TEMPLATE.md) for comprehensive guide on implementing card-based detail pages with consistent styling, layout, and component patterns
+- **Overview Page Design Pattern:** See [OVERVIEW_PAGE_DESIGN_TEMPLATE.md](OVERVIEW_PAGE_DESIGN_TEMPLATE.md) for comprehensive guide on implementing table-based list/overview pages with expandable rows, filtering, and consistent styling
 
 **Build & Deployment:**
 - Development: `ng serve` on port 4200

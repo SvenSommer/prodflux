@@ -10,10 +10,12 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import { WorkshopsService, Workshop } from './workshop.services';
 import { VersionsService, ProductVersion } from './versions.service';
 import { VariantsService, ProductVariant } from './variants.service';
 import { MaterialCategoriesService, MaterialCategory } from './material-categories.service';
+import { ImportExportComponent } from './import-export.component';
 
 @Component({
   selector: 'app-settings',
@@ -32,6 +34,8 @@ import { MaterialCategoriesService, MaterialCategory } from './material-categori
     MatSelectModule,
     MatOptionModule,
     MatTooltipModule,
+    MatTabsModule,
+    ImportExportComponent,
   ],
 })
 export class SettingsComponent {

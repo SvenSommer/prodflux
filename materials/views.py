@@ -10,6 +10,9 @@ from collections import defaultdict
 from rest_framework.exceptions import ValidationError  
 from .utils import group_materials_by_category
 from .validators import validate_stock_movement
+from .import_export import SupplierImportExport, OrderImportExport
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
 
 
 class SupplierListCreateView(generics.ListCreateAPIView):
@@ -462,3 +465,265 @@ def toggle_material_deprecated(request, material_id):
         'material_deprecated': new_deprecated_status,
         'action': action
     })
+
+
+# ============================================================================
+# EXPORT/IMPORT ENDPOINTS
+# ============================================================================
+
+@extend_schema(
+    summary="Export suppliers to JSON",
+    description="Export all suppliers to JSON format for backup or transfer",
+    responses={
+        200: {
+            'type': 'object',
+            'properties': {
+                'count': {'type': 'integer'},
+                'suppliers': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'name': {'type': 'string'},
+                            'url': {'type': 'string'},
+                            'kundenkonto': {'type': 'string'},
+                            'notes': {'type': 'string'},
+                            'is_active': {'type': 'boolean'},
+                        }
+                    }
+                }
+            }
+        }
+    },
+    tags=['Import/Export']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def export_suppliers(request):
+    """
+    Export all suppliers to JSON format
+    GET /api/suppliers/export/
+    """
+    suppliers = Supplier.objects.all()
+    data = SupplierImportExport.export_suppliers(suppliers)
+    return Response({
+        'count': len(data),
+        'suppliers': data
+    })
+
+
+@extend_schema(
+    summary="Import suppliers from JSON",
+    description="Import suppliers from JSON data with deduplication by name",
+    request={
+        'application/json': {
+            'type': 'object',
+            'properties': {
+                'suppliers': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'name': {'type': 'string'},
+                            'url': {'type': 'string'},
+                            'kundenkonto': {'type': 'string'},
+                            'notes': {'type': 'string'},
+                            'is_active': {'type': 'boolean'},
+                        }
+                    }
+                }
+            }
+        }
+    },
+    responses={
+        200: {
+            'type': 'object',
+            'properties': {
+                'success': {'type': 'boolean'},
+                'created_count': {'type': 'integer'},
+                'messages': {
+                    'type': 'array',
+                    'items': {'type': 'string'}
+                }
+            }
+        }
+    },
+    tags=['Import/Export']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def import_suppliers(request):
+    """
+    Import suppliers from JSON data
+    POST /api/suppliers/import/
+    Body: {"suppliers": [...]}
+    """
+    suppliers_data = request.data.get('suppliers', [])
+    
+    if not isinstance(suppliers_data, list):
+        return Response(
+            {'error': 'suppliers must be a list'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        created, messages = SupplierImportExport.import_suppliers(
+            suppliers_data
+        )
+        return Response({
+            'success': True,
+            'created_count': len(created),
+            'messages': messages
+        })
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@extend_schema(
+    summary="Export orders to JSON",
+    description="Export orders with items to JSON format",
+    parameters=[
+        {
+            'name': 'supplier_id',
+            'in': 'query',
+            'description': 'Filter by supplier ID',
+            'required': False,
+            'schema': {'type': 'integer'}
+        },
+        {
+            'name': 'is_historical',
+            'in': 'query',
+            'description': 'Filter by historical status',
+            'required': False,
+            'schema': {'type': 'boolean'}
+        }
+    ],
+    responses={
+        200: {
+            'type': 'object',
+            'properties': {
+                'count': {'type': 'integer'},
+                'orders': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'order_number': {'type': 'string'},
+                            'supplier_id': {'type': 'integer'},
+                            'supplier_name': {'type': 'string'},
+                            'bestellt_am': {'type': 'string', 'format': 'date'},
+                            'versandkosten': {'type': 'string'},
+                            'versandkosten_mwst_satz': {'type': 'string'},
+                            'notiz': {'type': 'string'},
+                            'is_historical': {'type': 'boolean'},
+                            'items': {'type': 'array'}
+                        }
+                    }
+                }
+            }
+        }
+    },
+    tags=['Import/Export']
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def export_orders(request):
+    """
+    Export orders to JSON format
+    GET /api/orders/export/
+    Optional query params:
+        - supplier_id: Filter by supplier
+        - is_historical: Filter by historical status
+    """
+    queryset = Order.objects.all()
+    
+    # Apply filters
+    supplier_id = request.query_params.get('supplier_id')
+    if supplier_id:
+        queryset = queryset.filter(supplier_id=supplier_id)
+    
+    is_historical = request.query_params.get('is_historical')
+    if is_historical is not None:
+        is_historical_bool = is_historical.lower() == 'true'
+        queryset = queryset.filter(is_historical=is_historical_bool)
+    
+    data = OrderImportExport.export_orders(queryset)
+    return Response({
+        'count': len(data),
+        'orders': data
+    })
+
+
+@extend_schema(
+    summary="Import orders from JSON",
+    description="Import orders with items from JSON data",
+    request={
+        'application/json': {
+            'type': 'object',
+            'properties': {
+                'orders': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'order_number': {'type': 'string'},
+                            'supplier_id': {'type': 'integer'},
+                            'bestellt_am': {'type': 'string', 'format': 'date'},
+                            'versandkosten': {'type': 'string'},
+                            'versandkosten_mwst_satz': {'type': 'string'},
+                            'notiz': {'type': 'string'},
+                            'is_historical': {'type': 'boolean'},
+                            'items': {'type': 'array'}
+                        }
+                    }
+                }
+            }
+        }
+    },
+    responses={
+        200: {
+            'type': 'object',
+            'properties': {
+                'success': {'type': 'boolean'},
+                'created_count': {'type': 'integer'},
+                'messages': {
+                    'type': 'array',
+                    'items': {'type': 'string'}
+                }
+            }
+        }
+    },
+    tags=['Import/Export']
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def import_orders(request):
+    """
+    Import orders from JSON data
+    POST /api/orders/import/
+    Body: {"orders": [...]}
+    """
+    orders_data = request.data.get('orders', [])
+    
+    if not isinstance(orders_data, list):
+        return Response(
+            {'error': 'orders must be a list'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        created, messages = OrderImportExport.import_orders(orders_data)
+        return Response({
+            'success': True,
+            'created_count': len(created),
+            'messages': messages
+        })
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+

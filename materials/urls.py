@@ -21,6 +21,10 @@ from .views import (
     material_inventory_correction_view,
     material_products_view,
     toggle_material_deprecated,
+    export_suppliers,
+    import_suppliers,
+    export_orders,
+    import_orders,
 )
 
 urlpatterns = [
@@ -54,4 +58,17 @@ urlpatterns = [
     path("materials/<int:material_id>/toggle-deprecated/",
          toggle_material_deprecated,
          name="toggle-material-deprecated"),
+    # Export/Import endpoints
+    path("suppliers/export/",
+         export_suppliers,
+         name="suppliers-export"),
+    path("suppliers/import/",
+         import_suppliers,
+         name="suppliers-import"),
+    path("orders/export/",
+         export_orders,
+         name="orders-export"),
+    path("orders/import/",
+         import_orders,
+         name="orders-import"),
 ]

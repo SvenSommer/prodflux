@@ -1092,6 +1092,130 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/orders/{id}/deliveries/:
+    get:
+      operationId: orders_deliveries_list
+      description: |-
+        List all deliveries for a specific order.
+        Returns deliveries ordered by created_at descending (newest first).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Delivery'
+          description: ''
+  /api/orders/export/:
+    get:
+      operationId: orders_export_retrieve
+      description: Export orders with items to JSON format
+      summary: Export orders to JSON
+      tags:
+      - Import/Export
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  orders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        order_number:
+                          type: string
+                        supplier_id:
+                          type: integer
+                        supplier_name:
+                          type: string
+                        bestellt_am:
+                          type: string
+                          format: date
+                        versandkosten:
+                          type: string
+                        versandkosten_mwst_satz:
+                          type: string
+                        notiz:
+                          type: string
+                        is_historical:
+                          type: boolean
+                        items:
+                          type: array
+          description: ''
+  /api/orders/import/:
+    post:
+      operationId: orders_import_create
+      description: Import orders with items from JSON data
+      summary: Import orders from JSON
+      tags:
+      - Import/Export
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orders:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      order_number:
+                        type: string
+                      supplier_id:
+                        type: integer
+                      bestellt_am:
+                        type: string
+                        format: date
+                      versandkosten:
+                        type: string
+                      versandkosten_mwst_satz:
+                        type: string
+                      notiz:
+                        type: string
+                      is_historical:
+                        type: boolean
+                      items:
+                        type: array
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  created_count:
+                    type: integer
+                  messages:
+                    type: array
+                    items:
+                      type: string
+          description: ''
   /api/product-materials/:
     get:
       operationId: product_materials_list
@@ -1998,6 +2122,88 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/suppliers/export/:
+    get:
+      operationId: suppliers_export_retrieve
+      description: Export all suppliers to JSON format for backup or transfer
+      summary: Export suppliers to JSON
+      tags:
+      - Import/Export
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  suppliers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        url:
+                          type: string
+                        kundenkonto:
+                          type: string
+                        notes:
+                          type: string
+                        is_active:
+                          type: boolean
+          description: ''
+  /api/suppliers/import/:
+    post:
+      operationId: suppliers_import_create
+      description: Import suppliers from JSON data with deduplication by name
+      summary: Import suppliers from JSON
+      tags:
+      - Import/Export
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                suppliers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      url:
+                        type: string
+                      kundenkonto:
+                        type: string
+                      notes:
+                        type: string
+                      is_active:
+                        type: boolean
+      security:
+      - jwtAuth: []
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  created_count:
+                    type: integer
+                  messages:
+                    type: array
+                    items:
+                      type: string
+          description: ''
   /api/transfers/:
     get:
       operationId: transfers_list
@@ -2348,8 +2554,22 @@ components:
           type: string
           format: date-time
           readOnly: true
+        delivered_at:
+          type: string
+          format: date
+          nullable: true
+          description: Datum der tatsächlichen Lieferung
         note:
           type: string
+        order:
+          type: integer
+          nullable: true
+        order_detail:
+          type: string
+          readOnly: true
+        is_historical:
+          type: boolean
+          description: Historische Lieferungen haben keine Auswirkung auf den Materialbestand
         items:
           type: array
           items:
@@ -2358,6 +2578,7 @@ components:
       - created_at
       - id
       - items
+      - order_detail
       - workshop
     DeliveryItem:
       type: object
@@ -2392,8 +2613,19 @@ components:
       properties:
         workshop:
           type: integer
+        delivered_at:
+          type: string
+          format: date
+          nullable: true
+          description: Datum der tatsächlichen Lieferung
         note:
           type: string
+        order:
+          type: integer
+          nullable: true
+        is_historical:
+          type: boolean
+          description: Historische Lieferungen haben keine Auswirkung auf den Materialbestand
         items:
           type: array
           items:
@@ -2641,28 +2873,44 @@ components:
         id:
           type: integer
           readOnly: true
+        supplier:
+          type: integer
+        order_number:
+          type: string
+          description: Bestellnummer (z.B. ORD-2025-001)
+          maxLength: 50
         bestellt_am:
           type: string
           format: date
         angekommen_am:
           type: string
           format: date
-          nullable: true
+          readOnly: true
         versandkosten:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
+        versandkosten_mwst_satz:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: MwSt.-Satz für Versandkosten in Prozent
         notiz:
           type: string
+        is_historical:
+          type: boolean
+          description: Historische Bestellungen haben keine Auswirkung auf den Materialbestand
         items:
           type: array
           items:
             $ref: '#/components/schemas/OrderItem'
       required:
+      - angekommen_am
       - bestellt_am
       - id
       - items
+      - supplier
     OrderItem:
       type: object
       properties:
@@ -2678,14 +2926,21 @@ components:
         preis_pro_stueck:
           type: string
           format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          description: Netto-Preis pro Stück
+        mwst_satz:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: MwSt.-Satz in Prozent (z.B. 19.00 für 19%)
         preis_pro_stueck_mit_versand:
           type: string
           format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
           nullable: true
-        quelle:
+        artikelnummer:
           type: string
+          description: Artikelnummer des Lieferanten
           maxLength: 255
       required:
       - id
@@ -2704,14 +2959,21 @@ components:
         preis_pro_stueck:
           type: string
           format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
+          description: Netto-Preis pro Stück
+        mwst_satz:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: MwSt.-Satz in Prozent (z.B. 19.00 für 19%)
         preis_pro_stueck_mit_versand:
           type: string
           format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,5}(?:\.\d{0,5})?$
           nullable: true
-        quelle:
+        artikelnummer:
           type: string
+          description: Artikelnummer des Lieferanten
           maxLength: 255
       required:
       - material
@@ -2720,20 +2982,30 @@ components:
     OrderRequest:
       type: object
       properties:
+        supplier:
+          type: integer
+        order_number:
+          type: string
+          description: Bestellnummer (z.B. ORD-2025-001)
+          maxLength: 50
         bestellt_am:
           type: string
           format: date
-        angekommen_am:
-          type: string
-          format: date
-          nullable: true
         versandkosten:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
+        versandkosten_mwst_satz:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: MwSt.-Satz für Versandkosten in Prozent
         notiz:
           type: string
+        is_historical:
+          type: boolean
+          description: Historische Bestellungen haben keine Auswirkung auf den Materialbestand
         items:
           type: array
           items:
@@ -2741,13 +3013,25 @@ components:
       required:
       - bestellt_am
       - items
+      - supplier
     PatchedDeliveryRequest:
       type: object
       properties:
         workshop:
           type: integer
+        delivered_at:
+          type: string
+          format: date
+          nullable: true
+          description: Datum der tatsächlichen Lieferung
         note:
           type: string
+        order:
+          type: integer
+          nullable: true
+        is_historical:
+          type: boolean
+          description: Historische Lieferungen haben keine Auswirkung auf den Materialbestand
         items:
           type: array
           items:
@@ -2824,20 +3108,30 @@ components:
     PatchedOrderRequest:
       type: object
       properties:
+        supplier:
+          type: integer
+        order_number:
+          type: string
+          description: Bestellnummer (z.B. ORD-2025-001)
+          maxLength: 50
         bestellt_am:
           type: string
           format: date
-        angekommen_am:
-          type: string
-          format: date
-          nullable: true
         versandkosten:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
+        versandkosten_mwst_satz:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: MwSt.-Satz für Versandkosten in Prozent
         notiz:
           type: string
+        is_historical:
+          type: boolean
+          description: Historische Bestellungen haben keine Auswirkung auf den Materialbestand
         items:
           type: array
           items:

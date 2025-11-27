@@ -1,0 +1,153 @@
+### Login (get JWT token)
+POST http://localhost:8000/api/auth/login/
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+### Set token variable from login response
+@token = {{login.response.body.access}}
+
+### ============================================================================
+### SUPPLIER EXPORT/IMPORT
+### ============================================================================
+
+### Export all suppliers
+GET http://localhost:8000/api/suppliers/export/
+Authorization: Bearer {{token}}
+
+### Export active suppliers only
+GET http://localhost:8000/api/suppliers/export/?is_active=true
+Authorization: Bearer {{token}}
+
+### Import suppliers (creates new or updates existing by name)
+POST http://localhost:8000/api/suppliers/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "suppliers": [
+    {
+      "name": "Test Supplier GmbH",
+      "url": "https://test-supplier.de",
+      "kundenkonto": "KUNDE-12345",
+      "notes": "Test supplier for import",
+      "is_active": true
+    },
+    {
+      "name": "Another Supplier",
+      "url": "https://another.com",
+      "kundenkonto": "K-999",
+      "notes": "Second test supplier",
+      "is_active": true
+    }
+  ]
+}
+
+### ============================================================================
+### ORDER EXPORT/IMPORT
+### ============================================================================
+
+### Export all orders
+GET http://localhost:8000/api/orders/export/
+Authorization: Bearer {{token}}
+
+### Export orders by supplier
+GET http://localhost:8000/api/orders/export/?supplier_id=1
+Authorization: Bearer {{token}}
+
+### Export historical orders only
+GET http://localhost:8000/api/orders/export/?is_historical=true
+Authorization: Bearer {{token}}
+
+### Import orders (skips duplicates by order_number)
+POST http://localhost:8000/api/orders/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "orders": [
+    {
+      "order_number": "ORD-2025-TEST-001",
+      "supplier_id": 1,
+      "supplier_name": "Name des Lieferanten (nur zur Info)",
+      "bestellt_am": "2025-01-15",
+      "versandkosten": "9.99",
+      "versandkosten_mwst_satz": "19.00",
+      "notiz": "Test-Bestellung aus Import",
+      "is_historical": false,
+      "items": [
+        {
+          "material_id": 1,
+          "material_bezeichnung": "Material Name (nur zur Info)",
+          "quantity": "10",
+          "preis_pro_stueck": "2.50",
+          "mwst_satz": "19.00",
+          "artikelnummer": "ART-123"
+        },
+        {
+          "material_id": 2,
+          "material_bezeichnung": "Anderes Material (nur zur Info)",
+          "quantity": "5",
+          "preis_pro_stueck": "15.00",
+          "mwst_satz": "19.00",
+          "artikelnummer": "ART-456"
+        }
+      ]
+    }
+  ]
+}
+
+### ============================================================================
+### WORKFLOW EXAMPLE: Export from TEST, Import to PROD
+### ============================================================================
+
+### Step 1: Export suppliers from TEST environment
+### Copy the response JSON to a file: suppliers_export.json
+
+### Step 2: Export orders from TEST environment  
+### Copy the response JSON to a file: orders_export.json
+
+### Step 3: In PROD environment, first import suppliers
+### POST /api/suppliers/import/ with suppliers_export.json content
+
+### Step 4: Then import orders
+### POST /api/orders/import/ with orders_export.json content
+
+### ============================================================================
+### ERROR SCENARIOS
+### ============================================================================
+
+### Import order with non-existent supplier (will be skipped)
+POST http://localhost:8000/api/orders/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "orders": [
+    {
+      "order_number": "ORD-FAIL-001",
+      "supplier_id": 99999,
+      "bestellt_am": "2025-01-15",
+      "items": []
+    }
+  ]
+}
+
+### Import order with duplicate order_number (will be skipped)
+POST http://localhost:8000/api/orders/import/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "orders": [
+    {
+      "order_number": "ORD-2025-001",
+      "supplier_id": 1,
+      "bestellt_am": "2025-01-15",
+      "items": []
+    }
+  ]
+}

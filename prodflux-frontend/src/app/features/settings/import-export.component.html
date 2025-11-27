@@ -1,0 +1,224 @@
+<div class="import-export-container">
+  <mat-progress-bar
+    *ngIf="isExporting || isImporting"
+    mode="indeterminate"
+    class="mb-4"
+  ></mat-progress-bar>
+
+  <!-- Info Card -->
+  <mat-card class="info-card mb-4">
+    <mat-card-content>
+      <p class="info-text">
+        Hier kannst du Lieferanten- und Bestelldaten als JSON-Dateien exportieren
+        herunterladen oder solche Dateien importieren. Achte darauf, die
+        Reihenfolge beim Import einzuhalten: Zuerst Lieferanten, dann Bestellungen.
+      </p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Suppliers Section -->
+  <mat-card class="section-card">
+    <mat-card-title>
+      <mat-icon>business</mat-icon>
+      Lieferanten
+    </mat-card-title>
+    <mat-card-content>
+      <p class="section-description">
+        Exportiere und importiere Lieferanten-Daten. Lieferanten mit gleichem
+        Namen werden automatisch aktualisiert.
+      </p>
+
+      <div class="action-buttons">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="exportSuppliers()"
+          [disabled]="isExporting || isImporting"
+        >
+          <mat-icon>download</mat-icon>
+          Exportieren
+        </button>
+
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="fileInputSuppliers.click()"
+          [disabled]="isExporting || isImporting"
+        >
+          <mat-icon>upload</mat-icon>
+          Importieren
+        </button>
+        <input
+          #fileInputSuppliers
+          type="file"
+          accept=".json"
+          style="display: none"
+          (change)="onImportSuppliers($event)"
+        />
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-divider class="my-4"></mat-divider>
+
+  <!-- Orders Section -->
+  <mat-card class="section-card">
+    <mat-card-title>
+      <mat-icon>shopping_cart</mat-icon>
+      Bestellungen
+    </mat-card-title>
+    <mat-card-content>
+      <p class="section-description">
+        Exportiere und importiere Bestellungs-Daten inkl. Positionen.
+        Bestellungen mit gleicher order_number werden übersprungen.
+      </p>
+
+      <div class="action-buttons">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="exportOrders()"
+          [disabled]="isExporting || isImporting"
+        >
+          <mat-icon>download</mat-icon>
+          Exportieren
+        </button>
+
+        <button
+          mat-raised-button
+          color="accent"
+          (click)="fileInputOrders.click()"
+          [disabled]="isExporting || isImporting"
+        >
+          <mat-icon>upload</mat-icon>
+          Importieren
+        </button>
+        <input
+          #fileInputOrders
+          type="file"
+          accept=".json"
+          style="display: none"
+          (change)="onImportOrders($event)"
+        />
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Import Messages -->
+  <mat-expansion-panel *ngIf="showMessages" class="mt-4" [expanded]="true">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>list_alt</mat-icon>
+        Import-Ergebnisse ({{ importMessages.length }})
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <mat-list>
+      <mat-list-item *ngFor="let message of importMessages">
+        <mat-icon
+          matListItemIcon
+          [class.success-icon]="message.startsWith('✓')"
+          [class.warning-icon]="message.startsWith('⚠')"
+        >
+          {{ message.startsWith('✓') ? 'check_circle' : 'warning' }}
+        </mat-icon>
+        <div matListItemTitle>{{ message }}</div>
+      </mat-list-item>
+    </mat-list>
+  </mat-expansion-panel>
+
+  <!-- Documentation Hint -->
+  <mat-expansion-panel class="documentation-panel mt-4">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>help_outline</mat-icon>
+        Ausführliche Anleitung
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <div class="documentation-content">
+      <h3>Fehlerbehandlung</h3>
+
+      <div class="error-section">
+        <h4>"Supplier ID X not found"</h4>
+        <p><strong>Problem:</strong> Lieferant mit dieser ID existiert nicht</p>
+        <p><strong>Lösung:</strong> Lieferanten zuerst importieren oder ID in JSON anpassen</p>
+      </div>
+
+      <div class="error-section">
+        <h4>"Material ID X not found"</h4>
+        <p><strong>Problem:</strong> Material mit dieser ID existiert nicht in der Zielumgebung</p>
+        <p><strong>Lösung:</strong></p>
+        <ul>
+          <li>Material in Zielumgebung anlegen ODER</li>
+          <li>ID in JSON-Datei anpassen</li>
+        </ul>
+      </div>
+
+      <div class="error-section">
+        <h4>"Order XXX already exists"</h4>
+        <p><strong>Problem:</strong> Bestellung mit dieser order_number existiert bereits</p>
+        <p><strong>Lösung:</strong></p>
+        <ul>
+          <li>Duplikat aus JSON entfernen ODER</li>
+          <li>order_number in JSON ändern ODER</li>
+          <li>Warnung ignorieren (Bestellung wird übersprungen)</li>
+        </ul>
+      </div>
+
+      <mat-divider class="my-3"></mat-divider>
+
+      <h3>Dateiformat</h3>
+
+      <h4>Lieferanten (suppliers_export.json)</h4>
+      <pre><code>&#123;
+  "count": 2,
+  "suppliers": [
+    &#123;
+      "name": "Lieferant GmbH",
+      "url": "https://example.com",
+      "kundenkonto": "K-12345",
+      "notes": "Notizen",
+      "is_active": true
+    &#125;
+  ]
+&#125;</code></pre>
+
+      <h4>Bestellungen (orders_export.json)</h4>
+      <pre><code>&#123;
+  "count": 1,
+  "orders": [
+    &#123;
+      "order_number": "ORD-2025-001",
+      "supplier_id": 1,
+      "supplier_name": "Nur zur Info",
+      "bestellt_am": "2025-01-15",
+      "versandkosten": "9.99",
+      "notiz": "Bestellnotiz",
+      "is_historical": false,
+      "items": [
+        &#123;
+          "material_id": 5,
+          "material_bezeichnung": "Nur zur Info",
+          "quantity": "10",
+          "preis_pro_stueck": "2.50",
+          "mwst_satz": "19.00"
+        &#125;
+      ]
+    &#125;
+  ]
+&#125;</code></pre>
+
+      <mat-divider class="my-3"></mat-divider>
+
+      <h3>Wichtige Hinweise</h3>
+      <ul>
+        <li><strong>Reihenfolge:</strong> Immer zuerst Lieferanten, dann Bestellungen importieren</li>
+        <li><strong>Material-IDs:</strong> Müssen in der Zielumgebung existieren</li>
+        <li><strong>Deduplizierung:</strong> Lieferanten mit gleichem Namen werden aktualisiert</li>
+        <li><strong>Deduplizierung:</strong> Bestellungen mit gleicher order_number werden übersprungen</li>
+        <li><strong>Backup:</strong> Immer vor Import in Produktion ein Backup erstellen!</li>
+      </ul>
+    </div>
+  </mat-expansion-panel>
+</div>

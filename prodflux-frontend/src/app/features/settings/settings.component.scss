@@ -1,3 +1,21 @@
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.settings-tabs {
+  height: 100%;
+
+  ::ng-deep .mat-mdc-tab-body-content {
+    overflow-y: auto;
+  }
+}
+
+.tab-content {
+  padding: 1.5rem 0;
+}
+
 .settings-card {
   padding: 1.5rem;
   margin-bottom: 2rem;

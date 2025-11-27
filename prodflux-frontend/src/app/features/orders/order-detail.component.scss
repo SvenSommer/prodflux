@@ -46,6 +46,26 @@
   }
 }
 
+.historical-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  color: #e65100;
+  font-size: 14px;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #ff9800;
+  }
+}
+
 .content-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;

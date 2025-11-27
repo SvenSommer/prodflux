@@ -31,4 +31,21 @@ export class OrdersService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}${id}/`);
   }
+
+  /**
+   * Generiert einen aussagekräftigen Namen für eine Bestellung
+   * Format: "Lieferantname - DD.MM.YYYY - Bestellnr"
+   * @param order Die Bestellung
+   * @param supplierName Name des Lieferanten
+   * @returns Formatierter Bestellname
+   */
+  getOrderDisplayName(order: Order, supplierName?: string): string {
+    const supplier = supplierName || `Lieferant #${order.supplier}`;
+    const date = order.bestellt_am
+      ? new Date(order.bestellt_am).toLocaleDateString('de-DE')
+      : 'Kein Datum';
+    const orderNumber = order.order_number || `#${order.id}`;
+
+    return `${supplier} - ${date} - ${orderNumber}`;
+  }
 }

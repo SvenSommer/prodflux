@@ -239,4 +239,10 @@ export class OrderDetailComponent {
       this.deliveries = deliveries;
     });
   }
+
+  getOrderDisplayName(): string {
+    if (!this.order) return '';
+    const supplier = this.getSupplier(this.order.supplier);
+    return this.ordersService.getOrderDisplayName(this.order, supplier?.name);
+  }
 }

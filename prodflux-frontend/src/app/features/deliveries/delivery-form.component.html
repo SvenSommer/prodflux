@@ -15,15 +15,24 @@
         <input matInput type="date" [(ngModel)]="delivered_at" name="delivered_at" />
       </mat-form-field>
 
-      <!-- NEW: Order dropdown (optional) -->
+      <!-- Order autocomplete (optional) -->
       <mat-form-field appearance="fill" class="full-width">
         <mat-label>Zu Bestellung (optional)</mat-label>
-        <mat-select [(ngModel)]="order" name="order">
+        <input
+          type="text"
+          matInput
+          [formControl]="orderSearchControl"
+          [matAutocomplete]="autoOrder"
+          placeholder="Suche nach Lieferant, Datum oder Bestellnummer...">
+        <mat-icon matSuffix>search</mat-icon>
+        <mat-autocomplete
+          #autoOrder="matAutocomplete"
+          (optionSelected)="onOrderSelected($event.option.value)">
           <mat-option [value]="null">— Keine Zuordnung —</mat-option>
-          <mat-option *ngFor="let o of orders" [value]="o.id">
+          <mat-option *ngFor="let o of filteredOrders" [value]="o">
             {{ getOrderLabel(o) }}
           </mat-option>
-        </mat-select>
+        </mat-autocomplete>
       </mat-form-field>
 
       <mat-form-field appearance="fill" class="full-width">

@@ -11,7 +11,7 @@
     <div class="page-header">
       <h1>
         <mat-icon>receipt</mat-icon>
-        Bestellung #{{ order.id }}
+        {{ getOrderDisplayName() }}
       </h1>
       <div class="header-actions">
         <button mat-stroked-button color="primary" [routerLink]="['/orders', order.id, 'edit']">
@@ -23,6 +23,12 @@
           Löschen
         </button>
       </div>
+    </div>
+
+    <!-- Historical Order Banner -->
+    <div *ngIf="order.is_historical" class="historical-banner">
+      <mat-icon>history</mat-icon>
+      <span>Historische Bestellung - Keine Auswirkung auf Materialbestand</span>
     </div>
 
     <!-- Main Content Grid -->

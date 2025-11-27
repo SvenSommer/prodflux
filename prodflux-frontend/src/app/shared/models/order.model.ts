@@ -18,6 +18,7 @@ export interface Order {
   supplier: number;
   order_number: string;
   bestellt_am: string;
+  supplier_url?: string;
   angekommen_am: string | null; // read-only, derived from deliveries
   versandkosten: number | null;
   versandkosten_mwst_satz?: number;
@@ -30,6 +31,7 @@ export interface CreateOrUpdateOrder {
   supplier: number; // REQUIRED as of Step 02
   order_number?: string; // optional, auto-generated if empty
   bestellt_am: string;
+  supplier_url?: string;
   versandkosten: number | null;
   versandkosten_mwst_satz?: number;
   notiz?: string;

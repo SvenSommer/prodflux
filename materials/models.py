@@ -99,6 +99,15 @@ class Order(models.Model):
         help_text='Bestellnummer (z.B. ORD-2025-001)'
     )
     bestellt_am = models.DateField()
+    supplier_url = models.URLField(
+        max_length=500,
+        blank=True,
+        verbose_name='Lieferanten-URL',
+        help_text=(
+            'URL zur Bestellung beim Lieferanten '
+            '(z.B. Link zur Bestellseite)'
+        )
+    )
     versandkosten = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )

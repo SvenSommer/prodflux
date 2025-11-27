@@ -40,11 +40,6 @@ import { Supplier } from '../../settings/models/supplier.model';
             <span class="value">{{ order.notiz }}</span>
           </div>
         </div>
-
-        <div class="historical-badge" *ngIf="order.is_historical">
-          <mat-icon>history</mat-icon>
-          <span>Historische Bestellung - Keine Auswirkung auf Materialbestand</span>
-        </div>
       </mat-card-content>
     </mat-card>
   `,
@@ -112,30 +107,6 @@ import { Supplier } from '../../settings/models/supplier.model';
           width: 18px;
           height: 18px;
         }
-      }
-    }
-
-    .historical-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      background-color: #fff3e0;
-      border-left: 4px solid #ff9800;
-      border-radius: 4px;
-      margin-top: 16px;
-
-      mat-icon {
-        color: #ff9800;
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-      }
-
-      span {
-        font-size: 14px;
-        color: #e65100;
-        font-weight: 500;
       }
     }
   `]

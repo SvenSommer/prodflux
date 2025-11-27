@@ -1,28 +1,29 @@
+// Container für maximale Breite und Zentrierung
 .form-container {
   max-width: 900px;
-  margin: 32px auto;
-  padding: 0 16px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .delivery-form-card {
-  padding: 24px;
-  position: relative;
+  padding: 32px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  mat-card-title {
+    font-size: 28px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e0e0e0;
+  }
 }
 
-.header-row {
+// Form Sections
+form {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.info-badge {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .full-width {
@@ -30,38 +31,214 @@
 }
 
 .checkbox-container {
-  margin: 16px 0;
+  margin: 8px 0 16px 0;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
+// Material Assignment Section
+.mt-4 {
+  margin-top: 32px;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .info-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #1976d2;
+  }
+}
+
+// Category Headings
+.category-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 32px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-left: 4px solid #1976d2;
+}
+
+// Material Table
 .full-width-table {
   width: 100%;
-  margin-top: 16px;
-}
+  margin-bottom: 32px;
+  background-color: white;
+  border-collapse: collapse;
 
-.quantity-field {
-  width: 80px;
-}
+  th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    border-bottom: 2px solid #e0e0e0;
+  }
 
-.actions {
-  margin-top: 32px;
-  display: flex;
-  justify-content: flex-end;
+  td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+  }
+
+  tr:hover {
+    background-color: #fafafa;
+  }
+
+  a {
+    color: #1976d2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #1565c0;
+      text-decoration: underline;
+    }
+  }
 }
 
 .table-image {
-  max-height: 40px;
-  border-radius: 0.25rem;
+  max-height: 48px;
+  max-width: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-mat-icon-button {
-  margin-right: 0.25rem;
+// Form Fields
+.quantity-field,
+.note-field {
+  margin: 0;
+
+  ::ng-deep .mat-mdc-form-field-wrapper {
+    padding-bottom: 0;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    padding: 0;
+  }
 }
-.category-heading {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #555;
-  margin-top: 2rem;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 0.25rem;
+
+.quantity-field {
+  width: 100px;
+
+  input {
+    text-align: center;
+    font-weight: 500;
+  }
+}
+
+.note-field {
+  width: 100%;
+  max-width: 300px;
+}
+
+// Actions Footer
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #e0e0e0;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 24px;
+    height: 44px;
+    font-size: 15px;
+    font-weight: 500;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 968px) {
+  .form-container {
+    padding: 12px;
+  }
+
+  .delivery-form-card {
+    padding: 20px;
+
+    mat-card-title {
+      font-size: 24px;
+    }
+  }
+
+  .header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .full-width-table {
+    font-size: 12px;
+
+    th, td {
+      padding: 8px;
+    }
+  }
+
+  .quantity-field {
+    width: 70px;
+  }
+
+  .note-field {
+    max-width: 100%;
+  }
+
+  .actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }

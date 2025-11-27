@@ -89,6 +89,52 @@
       margin: 24px 0 0 0;
       font-size: 16px;
     }
+
+    .stats-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      padding: 16px 24px;
+      background-color: #e3f2fd;
+      border-radius: 12px;
+
+      .stats-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1976d2;
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+      }
+
+      .stats-detail {
+        font-size: 14px;
+        color: #666;
+      }
+    }
+  }
+
+  // Loading More Banner
+  .loading-more-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    color: #1565c0;
+    font-size: 14px;
+    font-weight: 500;
   }
 
   // Error State
@@ -181,6 +227,12 @@
           font-size: 24px;
           font-weight: 700;
           color: #333;
+
+          .stat-total {
+            font-size: 14px;
+            font-weight: 400;
+            color: #999;
+          }
         }
 
         .stat-label {
@@ -212,15 +264,24 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 16px;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 500;
       color: #666;
+      margin-bottom: 12px;
 
       mat-icon {
         font-size: 18px;
         width: 18px;
         height: 18px;
+      }
+
+      .loading-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+        font-size: 12px;
+        color: #1976d2;
       }
     }
 
@@ -251,6 +312,11 @@
           border-radius: 10px;
           font-size: 11px;
           font-weight: 600;
+
+          .chip-total {
+            font-weight: 400;
+            color: #999;
+          }
         }
 
         &.active {
@@ -264,6 +330,10 @@
 
           .chip-count {
             background: rgba(255, 255, 255, 0.2);
+
+            .chip-total {
+              color: rgba(255, 255, 255, 0.7);
+            }
           }
         }
 
@@ -461,6 +531,54 @@
         border-radius: 12px;
         font-size: 13px;
         font-weight: 600;
+      }
+
+      .date-cell {
+        font-size: 13px;
+        color: #555;
+        white-space: nowrap;
+      }
+
+      .stock-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .stock-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 2px 6px;
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+
+        .workshop-name {
+          color: #666;
+          font-weight: 400;
+        }
+
+        .stock-value {
+          font-weight: 600;
+        }
+
+        &.no-stock {
+          background-color: #ffebee;
+          color: #c62828;
+
+          .workshop-name {
+            color: #c62828;
+          }
+        }
+      }
+
+      .stock-unknown {
+        color: #999;
+        font-size: 13px;
       }
 
       .status-badge {

@@ -13,7 +13,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   ShopbridgeOrdersSummary,
   ShopbridgeOrdersService,
-  ORDER_STATUS_MAP
+  ORDER_STATUS_MAP,
+  ProductStockInfo,
+  OrderStats
 } from './shopbridgeorder.service';
 
 interface FlattenedOrder {
@@ -37,6 +39,7 @@ interface FlattenedOrder {
   customerCity: string;
   countryFlag: string;
   dateCreated: string;
+  stocks: Record<number, ProductStockInfo>;
 }
 
 interface StatusFilter {
@@ -70,7 +73,15 @@ export class ShopbridgeOrdersComponent implements OnInit {
 
   data: ShopbridgeOrdersSummary | null = null;
   loading = true;
+  loadingMore = false;
   error: string | null = null;
+
+  // Order statistics (loaded first for quick feedback)
+  stats: OrderStats | null = null;
+  statsLoading = true;
+
+  // Loading progress
+  loadingPhase: 'stats' | 'active' | 'completed' | 'other' | 'done' = 'stats';
 
   // Filters
   activeStatusFilter: string | null = null;
@@ -82,10 +93,6 @@ export class ShopbridgeOrdersComponent implements OnInit {
 
   // Product mapping - maps WooCommerce product names to short names
   productNameMapping: Record<string, string> = {
-    'SD-Link Adapter für Porsche PCM 3.0': 'PCM 3.0',
-    'SD-Link Adapter für Porsche PCM 3.1': 'PCM 3.1',
-    'SD-Link Adapter für Porsche CDR-31': 'CDR-31',
-    'SD-Link Adapter für Porsche CDR-30': 'CDR-30',
     'SD-Link Adapter': 'SD-Link',
     // Add more mappings as needed
   };
@@ -100,10 +107,105 @@ export class ShopbridgeOrdersComponent implements OnInit {
   };
 
   // Table columns
-  displayedColumns = ['orderId', 'customer', 'location', 'product', 'quantity', 'status', 'total', 'actions'];
+  displayedColumns = ['orderId', 'date', 'customer', 'location', 'product', 'stock', 'quantity', 'status', 'total', 'actions'];
 
   ngOnInit(): void {
-    this.loadOrders('all'); // Load all orders by default
+    this.loadProgressively();
+  }
+
+  /**
+   * Progressive loading: Stats first, then active orders, then completed, then other
+   */
+  loadProgressively(): void {
+    this.loading = true;
+    this.loadingPhase = 'stats';
+    this.error = null;
+    this.allOrders = [];
+    this.filteredOrders = [];
+    this.data = null;
+    this.stats = null;
+    this.statsLoading = true;
+
+    // Step 1: Load stats first (fast - just counts)
+    this.service.getOrderStats().subscribe({
+      next: (stats) => {
+        this.stats = stats;
+        this.statsLoading = false;
+
+        // Step 2: Load active orders (processing, pending, on-hold)
+        this.loadingPhase = 'active';
+        this.service.getOrders('active').subscribe({
+          next: (activeData) => {
+            this.data = activeData;
+            this.processOrders();
+            this.loading = false;
+
+            // Step 3: Load completed orders in background
+            this.loadingPhase = 'completed';
+            this.loadingMore = true;
+            this.service.getOrders('completed').subscribe({
+              next: (completedData) => {
+                this.mergeOrdersData(completedData);
+
+                // Step 4: Load other orders (cancelled, refunded, failed)
+                this.loadingPhase = 'other';
+                this.service.getOrders('other').subscribe({
+                  next: (otherData) => {
+                    this.mergeOrdersData(otherData);
+                    this.loadingMore = false;
+                    this.loadingPhase = 'done';
+                  },
+                  error: () => {
+                    this.loadingMore = false;
+                    this.loadingPhase = 'done';
+                  }
+                });
+              },
+              error: () => {
+                this.loadingMore = false;
+                this.loadingPhase = 'done';
+              }
+            });
+          },
+          error: (err) => {
+            console.error('Error loading active orders:', err);
+            this.error = 'Fehler beim Laden der Bestellungen';
+            this.loading = false;
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error loading stats:', err);
+        // Continue without stats
+        this.statsLoading = false;
+        this.loadOrders('all');
+      }
+    });
+  }
+
+  /**
+   * Merge additional orders data into existing data
+   */
+  private mergeOrdersData(newData: ShopbridgeOrdersSummary): void {
+    if (!this.data) {
+      this.data = newData;
+    } else {
+      // Merge products
+      Object.entries(newData.products).forEach(([key, value]) => {
+        if (this.data!.products[key]) {
+          this.data!.products[key].orders.push(...value.orders);
+          this.data!.products[key].total_quantity += value.total_quantity;
+        } else {
+          this.data!.products[key] = value;
+        }
+      });
+
+      // Update counts
+      this.data.order_count += newData.order_count;
+      this.data.adapter_count.total += newData.adapter_count.total;
+    }
+
+    this.processOrders();
   }
 
   loadOrders(status?: string): void {
@@ -162,7 +264,8 @@ export class ShopbridgeOrdersComponent implements OnInit {
           customerCountry: order.customer_country || '',
           customerCity: order.customer_city || '',
           countryFlag: this.getCountryFlag(order.customer_country || ''),
-          dateCreated: order.date_created || ''
+          dateCreated: order.date_created || '',
+          stocks: info.stocks || {}
         });
 
         // Count by status
@@ -264,18 +367,16 @@ export class ShopbridgeOrdersComponent implements OnInit {
 
   refresh(): void {
     this.activeStatusFilter = null;
-    this.loading = true;
-    this.error = null;
 
-    // Invalidate cache and reload fresh data from WooCommerce
+    // Invalidate cache and reload progressively
     this.service.invalidateCache().subscribe({
       next: () => {
-        this.loadOrders('all');
+        this.loadProgressively();
       },
       error: (err) => {
         console.error('Error invalidating cache:', err);
         // Still try to load orders even if cache invalidation fails
-        this.loadOrders('all');
+        this.loadProgressively();
       }
     });
   }
@@ -287,5 +388,30 @@ export class ShopbridgeOrdersComponent implements OnInit {
   formatDate(dateStr: string): string {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('de-DE');
+  }
+
+  getTotalStock(stocks: Record<number, ProductStockInfo>): number {
+    if (!stocks) return 0;
+    return Object.values(stocks).reduce((sum, s) => sum + s.bestand, 0);
+  }
+
+  getStockTooltip(stocks: Record<number, ProductStockInfo>): string {
+    if (!stocks || Object.keys(stocks).length === 0) return 'Kein Bestand';
+    return Object.values(stocks)
+      .map(s => `${s.workshop_name}: ${s.bestand}`)
+      .join('\n');
+  }
+
+  getStocksList(stocks: Record<number, ProductStockInfo>): { shortName: string; bestand: number }[] {
+    if (!stocks) return [];
+    return Object.values(stocks).map(s => ({
+      shortName: s.workshop_name,
+      bestand: s.bestand
+    }));
+  }
+
+  getStatCountForStatus(status: string): number {
+    if (!this.stats?.by_status) return 0;
+    return this.stats.by_status[status] || 0;
   }
 }

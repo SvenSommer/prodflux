@@ -3,7 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+// Order statistics (quick counts per status)
+export interface OrderStats {
+  total: number;
+  by_status: Record<string, number>;
+  active: number;
+  completed: number;
+  other: number;
+}
+
 // Aggregated orders summary (for dashboard overview)
+export interface ProductStockInfo {
+  bestand: number;
+  workshop_name: string;
+}
+
 export interface ShopbridgeOrdersSummary {
   order_count: number;
   adapter_count: {
@@ -14,6 +28,7 @@ export interface ShopbridgeOrdersSummary {
     total_quantity: number;
     prodflux_id: number | null;
     prodflux_name: string | null;
+    stocks: Record<number, ProductStockInfo>;
     orders: {
       order_id: number;
       status: string;
@@ -125,6 +140,8 @@ export const ORDER_STATUS_MAP: Record<string, { label: string; color: string; ic
   'cancelled': { label: 'Storniert', color: '#f44336', icon: 'cancel' },
   'refunded': { label: 'Erstattet', color: '#607d8b', icon: 'replay' },
   'failed': { label: 'Fehlgeschlagen', color: '#c62828', icon: 'error' },
+  'checkout-draft': { label: 'Entwurf', color: '#9e9e9e', icon: 'edit_note' },
+  'trash': { label: 'Papierkorb', color: '#795548', icon: 'delete' },
 };
 
 @Injectable({ providedIn: 'root' })
@@ -148,6 +165,10 @@ export class ShopbridgeOrdersService {
     }
 
     return this.http.get<ShopbridgeOrdersSummary>(url);
+  }
+
+  getOrderStats(): Observable<OrderStats> {
+    return this.http.get<OrderStats>(`${this.baseUrl}orders/stats/`);
   }
 
   getOrderDetail(orderId: number, refresh = false): Observable<WooCommerceOrderDetail> {

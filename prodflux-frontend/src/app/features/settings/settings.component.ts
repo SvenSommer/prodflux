@@ -16,6 +16,7 @@ import { VersionsService, ProductVersion } from './versions.service';
 import { VariantsService, ProductVariant } from './variants.service';
 import { MaterialCategoriesService, MaterialCategory } from './material-categories.service';
 import { ImportExportComponent } from './import-export.component';
+import { EmailTemplatesSettingsComponent } from './email-templates-settings.component';
 
 @Component({
   selector: 'app-settings',
@@ -36,6 +37,7 @@ import { ImportExportComponent } from './import-export.component';
     MatTooltipModule,
     MatTabsModule,
     ImportExportComponent,
+    EmailTemplatesSettingsComponent,
   ],
 })
 export class SettingsComponent {

@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { ShopbridgeOrdersService, WooCommerceOrderDetail } from '../shopbridgeorder.service';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
@@ -13,6 +14,7 @@ import { ShopbridgeOrderInfoCardComponent } from './shopbridge-order-info-card/s
 import { ShopbridgeOrderCustomerCardComponent } from './shopbridge-order-customer-card/shopbridge-order-customer-card.component';
 import { ShopbridgeOrderItemsCardComponent } from './shopbridge-order-items-card/shopbridge-order-items-card.component';
 import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financial-card/shopbridge-order-financial-card.component';
+import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complete-order-dialog/complete-order-dialog.component';
 
 @Component({
   selector: 'app-shopbridge-order-detail',
@@ -25,6 +27,7 @@ import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financ
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatDialogModule,
     BreadcrumbComponent,
     ShopbridgeOrderInfoCardComponent,
     ShopbridgeOrderCustomerCardComponent,
@@ -70,6 +73,10 @@ import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financ
             <span class="order-id-hint">WooCommerce ID: {{ order.id }}</span>
           </div>
           <div class="header-actions">
+            <button mat-raised-button color="accent" (click)="openCompleteOrderDialog()">
+              <mat-icon>send</mat-icon>
+              Bestellung abschließen
+            </button>
             <a mat-stroked-button [href]="getWooCommerceEditUrl()" target="_blank" rel="noopener">
               <mat-icon>open_in_new</mat-icon>
               In WooCommerce öffnen
@@ -381,6 +388,7 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
   private router = inject(Router);
   private shopbridgeService = inject(ShopbridgeOrdersService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   order: WooCommerceOrderDetail | null = null;
   loading = true;
@@ -462,6 +470,37 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit'
+    });
+  }
+
+  openCompleteOrderDialog(): void {
+    if (!this.order) return;
+
+    const dialogData: CompleteOrderDialogData = {
+      orderId: this.order.id,
+      orderNumber: this.order.number,
+      customerEmail: this.order.billing?.email || '',
+      customerFirstName: this.order.billing?.first_name || '',
+      customerLastName: this.order.billing?.last_name || '',
+      customerCompany: this.order.billing?.company || undefined,
+      billingCountry: this.order.billing?.country || 'DE'
+    };
+
+    const dialogRef = this.dialog.open(CompleteOrderDialogComponent, {
+      data: dialogData,
+      width: '600px',
+      maxHeight: '90vh',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.sent) {
+        this.snackBar.open(
+          `E-Mail-Programm geöffnet für ${result.email}`,
+          'OK',
+          { duration: 5000 }
+        );
+      }
     });
   }
 }

@@ -1,15 +1,25 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status as http_status
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView
+)
 from woocommerce import API
 from django.core.cache import cache
+from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
+from urllib.parse import quote
 import os
 import re
 import hashlib
 import json
 from collections import defaultdict
 from pathlib import Path
+
+from .models import EmailTemplate, get_language_for_country
+from .serializers import EmailTemplateSerializer, EmailTemplateRenderSerializer
 
 # Nur einmal versuchen, die .env zu laden, falls sie existiert
 _ENV_LOADED = False
@@ -56,7 +66,8 @@ def get_wcapi():
         url=get_env_var("WOOCOMMERCE_API_URL"),
         consumer_key=get_env_var("WOOCOMMERCE_CONSUMER_KEY"),
         consumer_secret=get_env_var("WOOCOMMERCE_CONSUMER_SECRET"),
-        version="wc/v3"
+        version="wc/v3",
+        timeout=30  # Erhöhter Timeout für große Abfragen
     )
 
 
@@ -97,6 +108,37 @@ def get_product_sku_mapping():
             mapping[f"SD-{art}"] = (product.id, product.bezeichnung)
 
     return mapping
+
+
+def get_product_stocks(product_ids: list) -> dict:
+    """
+    Get stock information for given product IDs across all workshops.
+    Returns: {product_id: {workshop_id: stock_value, ...}, ...}
+    """
+    from products.models import ProductStock
+    from core.models import Workshop
+
+    if not product_ids:
+        return {}
+
+    stocks = ProductStock.objects.filter(
+        product_id__in=product_ids
+    ).select_related('workshop', 'product')
+
+    # Get all workshops for reference
+    workshops = {w.id: w.name for w in Workshop.objects.all()}
+
+    result = {}
+    for stock in stocks:
+        pid = stock.product_id
+        if pid not in result:
+            result[pid] = {}
+        result[pid][stock.workshop_id] = {
+            'bestand': float(stock.bestand),
+            'workshop_name': workshops.get(stock.workshop_id, f"Workshop {stock.workshop_id}")
+        }
+
+    return result
 
 
 def normalize_sku(sku):
@@ -154,7 +196,7 @@ def map_woocommerce_to_prodflux(wc_sku, wc_name, sku_mapping):
 
 def fetch_woocommerce_orders(statuses: list) -> tuple:
     """
-    Fetch orders from WooCommerce API with caching.
+    Fetch orders from WooCommerce API with caching and pagination.
     Returns (orders_list, error_response) - error_response is None if success.
     """
     cache_version = get_cache_version()
@@ -165,21 +207,37 @@ def fetch_woocommerce_orders(statuses: list) -> tuple:
     if cached_data is not None:
         return (cached_data, None)
 
-    # Fetch from WooCommerce API
+    # Fetch from WooCommerce API with pagination
     wcapi = get_wcapi()
     all_orders = []
 
     for status in statuses:
-        params = {"status": status, "per_page": 100}
-        response = wcapi.get("orders", params=params)
-        if response.status_code != 200:
-            error = {
-                "detail": f"Fehler bei Status '{status}'.",
-                "status_code": response.status_code,
-                "response": response.text
-            }
-            return (None, error)
-        all_orders.extend(response.json())
+        page = 1
+        per_page = 100  # Maximum allowed by WooCommerce API
+        
+        while True:
+            params = {"status": status, "per_page": per_page, "page": page}
+            response = wcapi.get("orders", params=params)
+            
+            if response.status_code != 200:
+                error = {
+                    "detail": f"Fehler bei Status '{status}' (Seite {page}).",
+                    "status_code": response.status_code,
+                    "response": response.text
+                }
+                return (None, error)
+            
+            orders_page = response.json()
+            all_orders.extend(orders_page)
+            
+            # Check if there are more pages
+            # WooCommerce returns X-WP-TotalPages header
+            total_pages = int(response.headers.get('X-WP-TotalPages', 1))
+            
+            if page >= total_pages:
+                break
+            
+            page += 1
 
     # Store in cache
     cache.set(cache_key, all_orders, CACHE_TIMEOUT_ORDERS)
@@ -225,16 +283,24 @@ def woocommerce_orders_view(request):
     requested_status = request.query_params.get("status")
     force_refresh = request.query_params.get("refresh") == "true"
 
-    # If "all" is passed, fetch all common statuses
+    # Status groups for progressive loading
+    ACTIVE_STATUSES = ["processing", "pending", "on-hold"]
+    COMPLETED_STATUSES = ["completed"]
+    OTHER_STATUSES = ["cancelled", "refunded", "failed", "checkout-draft", "trash"]
+
+    # Determine which statuses to fetch
     if requested_status == "all":
-        statuses = [
-            "processing", "pending", "on-hold",
-            "completed", "cancelled", "refunded", "failed"
-        ]
+        statuses = ACTIVE_STATUSES + COMPLETED_STATUSES + OTHER_STATUSES
+    elif requested_status == "active":
+        statuses = ACTIVE_STATUSES
+    elif requested_status == "completed":
+        statuses = COMPLETED_STATUSES
+    elif requested_status == "other":
+        statuses = OTHER_STATUSES
     elif requested_status:
         statuses = [requested_status]
     else:
-        statuses = ["processing", "pending"]
+        statuses = ACTIVE_STATUSES
 
     # Invalidate cache if refresh is requested
     if force_refresh:
@@ -302,6 +368,24 @@ def woocommerce_orders_view(request):
             total_adapter_count += quantity
             adapter_counter[product_key] += quantity
 
+    # Collect all prodflux_ids for stock lookup
+    prodflux_ids = [
+        info["prodflux_id"]
+        for info in products_summary.values()
+        if info["prodflux_id"] is not None
+    ]
+
+    # Get stock information for all mapped products
+    product_stocks = get_product_stocks(prodflux_ids)
+
+    # Add stock info to each product summary
+    for product_key, info in products_summary.items():
+        pid = info.get("prodflux_id")
+        if pid and pid in product_stocks:
+            info["stocks"] = product_stocks[pid]
+        else:
+            info["stocks"] = {}
+
     return Response({
         "order_count": len(all_orders),
         "adapter_count": {
@@ -337,3 +421,256 @@ def woocommerce_cache_invalidate_view(request):
     """Invalidate all WooCommerce cache entries."""
     invalidate_orders_cache()
     return Response({"message": "Cache invalidiert", "success": True})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def woocommerce_orders_stats_view(request):
+    """
+    Get order statistics (counts per status) quickly.
+    Uses WooCommerce reports API or cached counts.
+    """
+    cache_key = f"{CACHE_KEY_PREFIX}order_stats_v{get_cache_version()}"
+
+    # Try cache first
+    cached_stats = cache.get(cache_key)
+    if cached_stats is not None:
+        return Response(cached_stats)
+
+    wcapi = get_wcapi()
+
+    # Get order counts per status (all WooCommerce statuses)
+    statuses = [
+        "processing", "pending", "on-hold",
+        "completed", "cancelled", "refunded", "failed",
+        "checkout-draft", "trash"
+    ]
+
+    stats = {
+        "total": 0,
+        "by_status": {},
+        "active": 0,
+        "completed": 0,
+        "other": 0
+    }
+
+    for status in statuses:
+        # Use per_page=1 and read total from headers - much faster!
+        response = wcapi.get("orders", params={"status": status, "per_page": 1})
+        if response.status_code == 200:
+            count = int(response.headers.get('X-WP-Total', 0))
+            stats["by_status"][status] = count
+            stats["total"] += count
+
+            if status in ["processing", "pending", "on-hold"]:
+                stats["active"] += count
+            elif status == "completed":
+                stats["completed"] += count
+            else:
+                stats["other"] += count
+
+    # Cache for 5 minutes
+    cache.set(cache_key, stats, CACHE_TIMEOUT_ORDERS)
+
+    return Response(stats)
+
+
+# =============================================================================
+# Email Template Views
+# =============================================================================
+
+class EmailTemplateListCreateView(ListCreateAPIView):
+    """
+    GET: Liste aller Email-Templates
+    POST: Neues Email-Template erstellen
+    """
+    queryset = EmailTemplate.objects.all()
+    serializer_class = EmailTemplateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Filter by language
+        language = self.request.query_params.get('language')
+        if language:
+            queryset = queryset.filter(language=language)
+
+        # Filter by template_type
+        template_type = self.request.query_params.get('template_type')
+        if template_type:
+            queryset = queryset.filter(template_type=template_type)
+
+        # Filter active only
+        active_only = self.request.query_params.get('active')
+        if active_only and active_only.lower() == 'true':
+            queryset = queryset.filter(is_active=True)
+
+        return queryset
+
+
+class EmailTemplateDetailView(RetrieveUpdateDestroyAPIView):
+    """
+    GET: Einzelnes Email-Template abrufen
+    PUT/PATCH: Email-Template aktualisieren
+    DELETE: Email-Template löschen
+    """
+    queryset = EmailTemplate.objects.all()
+    serializer_class = EmailTemplateSerializer
+    permission_classes = [IsAuthenticated]
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def email_template_render_view(request):
+    """
+    Rendert ein Email-Template mit dem gegebenen Kontext.
+    Gibt Subject, Body und mailto-Link zurück.
+
+    POST body:
+    {
+        "template_id": 1,  // oder
+        "language": "de",  // mit template_type
+        "template_type": "order_shipped",
+        "email": "customer@example.com",
+        "first_name": "Max",
+        "last_name": "Mustermann",
+        "order_number": "12345",
+        "tracking_link": "https://...",
+        "company_name": "Firma GmbH"
+    }
+    """
+    serializer = EmailTemplateRenderSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            serializer.errors,
+            status=http_status.HTTP_400_BAD_REQUEST
+        )
+
+    data = serializer.validated_data
+
+    # Template finden
+    template = None
+    if data.get('template_id'):
+        template = get_object_or_404(EmailTemplate, id=data['template_id'])
+    else:
+        # Nach Sprache und Typ suchen (bevorzugt Default-Template)
+        language = data.get('language', 'en')
+        template_type = data.get('template_type', 'order_shipped')
+
+        template = EmailTemplate.objects.filter(
+            language=language,
+            template_type=template_type,
+            is_active=True,
+            is_default=True
+        ).first()
+
+        if not template:
+            # Fallback: irgendein aktives Template dieser Sprache/Typ
+            template = EmailTemplate.objects.filter(
+                language=language,
+                template_type=template_type,
+                is_active=True
+            ).first()
+
+        if not template:
+            # Fallback: englisches Template
+            template = EmailTemplate.objects.filter(
+                language='en',
+                template_type=template_type,
+                is_active=True
+            ).first()
+
+        if not template:
+            return Response(
+                {"error": f"Kein Template für {language}/{template_type}"},
+                status=http_status.HTTP_404_NOT_FOUND
+            )
+
+    # Kontext für Platzhalter erstellen
+    context = {
+        'first_name': data.get('first_name', ''),
+        'last_name': data.get('last_name', ''),
+        'order_number': data.get('order_number', ''),
+        'tracking_link': data.get('tracking_link', ''),
+        'company_name': data.get('company_name', ''),
+    }
+
+    # Template rendern
+    rendered_subject = template.render_subject(context)
+    rendered_body = template.render_body(context)
+
+    # mailto-Link erstellen
+    email = data['email']
+    mailto_link = (
+        f"mailto:{email}"
+        f"?subject={quote(rendered_subject)}"
+        f"&body={quote(rendered_body)}"
+    )
+
+    return Response({
+        'template_id': template.id,
+        'template_name': template.name,
+        'language': template.language,
+        'language_display': template.get_language_display(),
+        'subject': rendered_subject,
+        'body': rendered_body,
+        'email': email,
+        'mailto_link': mailto_link,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def email_template_placeholders_view(request):
+    """Gibt die verfügbaren Platzhalter zurück."""
+    return Response({
+        'placeholders': EmailTemplate.get_available_placeholders()
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def email_template_languages_view(request):
+    """Gibt die verfügbaren Sprachen zurück."""
+    return Response({
+        'languages': EmailTemplate.LANGUAGE_CHOICES,
+        'template_types': EmailTemplate.TEMPLATE_TYPE_CHOICES
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_language_for_country_view(request):
+    """
+    Ermittelt die empfohlene Sprache für ein Land.
+    Query param: country (z.B. "DE", "US", "FR")
+    """
+    country = request.query_params.get('country', '')
+    if not country:
+        return Response(
+            {"error": "Parameter 'country' fehlt"},
+            status=http_status.HTTP_400_BAD_REQUEST
+        )
+
+    language = get_language_for_country(country)
+    return Response({
+        'country': country.upper(),
+        'language': language
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def email_sender_config_view(request):
+    """
+    Gibt die Absender-Konfiguration für E-Mails zurück.
+    Die sensiblen Daten kommen aus den Umgebungsvariablen.
+    """
+    from django.conf import settings
+    return Response({
+        'sender_name': settings.EMAIL_SENDER_NAME,
+        'sender_email': settings.EMAIL_SENDER_EMAIL,
+        'sender_phone': settings.EMAIL_SENDER_PHONE,
+        'company_name': settings.EMAIL_COMPANY_NAME,
+    })

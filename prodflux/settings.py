@@ -234,6 +234,12 @@ CORS_ALLOWED_HEADERS = [
     'x-requested-with',
 ]
 
+# Email Template Configuration (sensitive data from environment)
+EMAIL_SENDER_NAME = os.environ.get("EMAIL_SENDER_NAME", "Team")
+EMAIL_SENDER_EMAIL = os.environ.get("EMAIL_SENDER_EMAIL", "info@example.com")
+EMAIL_SENDER_PHONE = os.environ.get("EMAIL_SENDER_PHONE", "")
+EMAIL_COMPANY_NAME = os.environ.get("EMAIL_COMPANY_NAME", "Company")
+
 # Logging
 LOGGING = {
     'version': 1,

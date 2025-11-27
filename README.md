@@ -119,50 +119,116 @@ npm start
 
 ### 📖 Interactive API Documentation
 
-Prodflux provides comprehensive OpenAPI 3.0 documentation with interactive interfaces:
+Prodflux provides comprehensive **OpenAPI 3.0** documentation with interactive interfaces:
 
-- **🔵 Swagger UI:** http://localhost:8000/api/docs/
-  - **Integriertes Login-Panel** für schnelle Authentifizierung 🆕
+#### 🔵 Swagger UI (Recommended)
+**URL:** http://localhost:8000/api/docs/
+
+**Features:**
+- **🔐 Quick Login Panel** - Integriertes Login-Panel (rechts oben) 🆕
   - Automatische Token-Verwaltung
-  - Interactive API testing
-  - Built-in authentication
-  - Request/Response examples
-  
-- **📘 ReDoc:** http://localhost:8000/api/redoc/
-  - Beautiful, readable documentation
-  - Three-column layout
-  - Detailed schemas
+  - Token bleibt über Browser-Neustarts erhalten (localStorage)
+  - Sichtbare Anzeige des angemeldeten Benutzers
+  - Logout-Funktion
+  - Keyboard-Support (Enter für Login)
+- **Interactive Testing** - Alle API-Endpunkte direkt im Browser testen
+- **Auto-Authorization** - Bearer-Token wird automatisch in allen Requests mitgesendet
+- **Request/Response Examples** - Live-Beispiele für alle Endpunkte
 
-- **📄 OpenAPI Schema:** http://localhost:8000/api/schema/
-  - Download as JSON or YAML
-  - Import into Postman, Insomnia, etc.
-  - Code generation support
+**Quick Start:**
+1. Öffnen Sie http://localhost:8000/api/docs/
+2. Nutzen Sie das "🔐 Quick Login" Panel rechts oben
+3. Username + Password eingeben → "Login & Authorize" klicken
+4. Fertig! Alle API-Endpunkte sind sofort nutzbar ✨
+
+#### 📘 ReDoc (Readable Documentation)
+**URL:** http://localhost:8000/api/redoc/
+
+**Features:**
+- **Integriertes Login-Panel** - Token-Generierung und Anzeige 🆕
+- **Three-Column Layout** - Übersichtliche Darstellung
+- **Detailed Schemas** - Vollständige Modell-Dokumentation
+- **Navigation** - Schneller Zugriff auf alle Endpunkte
+- **Code Examples** - Request/Response-Beispiele
+
+#### 📄 OpenAPI Schema (JSON/YAML)
+**URL:** http://localhost:8000/api/schema/
+
+**Verwendung:**
+```bash
+# Als JSON herunterladen
+curl http://localhost:8000/api/schema/?format=json > openapi.json
+
+# Als YAML herunterladen
+curl http://localhost:8000/api/schema/?format=yaml > openapi.yaml
+```
+
+**Integration:**
+- **Postman:** File → Import → Link → Schema-URL eingeben
+- **Insomnia:** Application → Preferences → Data → Import Data
+- **Code Generation:** OpenAPI Generator für Client-Code
 
 For detailed information, see [OPENAPI.md](docs/OPENAPI.md)
 
-### Key API Endpoints
+### 🔑 Key API Endpoints
 
 #### Authentication
-- `POST /api/auth/login/` - Login and get JWT token
-- `POST /api/auth/refresh/` - Refresh JWT token
-- `GET /api/auth/me/` - Get current user profile
+```
+POST   /api/auth/login/           # JWT Token erhalten
+POST   /api/auth/refresh/         # Token aktualisieren
+GET    /api/auth/me/              # Eigenes Profil
+```
 
-#### Materials
-- `GET|POST /api/materials/` - List/Create materials
-- `GET|PUT|DELETE /api/materials/{id}/` - Material operations
-- `GET|POST /api/materials/{id}/movements/` - Material movements
-- `GET|POST /api/material-categories/` - Material categories
+#### Materials (Materialverwaltung)
+```
+GET    /api/materials/                             # Alle Materialien
+POST   /api/materials/                             # Neues Material
+GET    /api/materials/{id}/                        # Material Details
+PUT    /api/materials/{id}/                        # Material aktualisieren
+DELETE /api/materials/{id}/                        # Material löschen
+GET    /api/materials/{id}/movements/              # Lagerbewegungen
+GET    /api/materials/{id}/stock                   # Lagerbestand
+POST   /api/materials/{id}/inventory-correction/   # Inventurkorrektur
+GET    /api/materials/{id}/alternatives/           # Alternative Materialien
 
-#### Products
-- `GET|POST /api/products/` - List/Create products
-- `GET|PUT|DELETE /api/products/{id}/` - Product operations
-- `GET|POST /api/product-materials/` - Bill of Materials
+GET    /api/material-categories/                   # Materialkategorien
+POST   /api/material-transfers/                    # Transfer zwischen Werkstätten
+GET    /api/orders/                                # Bestellungen
+POST   /api/deliveries/                            # Lieferungen erfassen
+```
 
-#### Workshops
-- `GET|POST /api/workshops/` - Workshop management
-- `GET|PUT|DELETE /api/workshops/{id}/` - Workshop operations
+#### Products (Produktverwaltung)
+```
+GET    /api/products/                              # Alle Produkte
+POST   /api/products/                              # Neues Produkt
+GET    /api/products/{id}/                         # Produkt Details
+GET    /api/products/{id}/requirements/            # Materialanforderungen (BOM)
+GET    /api/products/{id}/stock                    # Produktbestand
+GET    /api/products/{id}/producible               # Produzierbare Einheiten
+POST   /api/manufacture/                           # Produkt fertigen
 
-For complete API documentation, see [DEVELOPMENT.md](docs/DEVELOPMENT.md) and [OPENAPI.md](docs/OPENAPI.md)
+GET    /api/product-materials/                     # Bill of Materials (BOM)
+GET    /api/product-versions/                      # Produktversionen
+GET    /api/product-variants/                      # Produktvarianten
+```
+
+#### Workshops (Werkstattverwaltung)
+```
+GET    /api/workshops/                             # Alle Werkstätten
+POST   /api/workshops/                             # Neue Werkstatt
+GET    /api/workshops/{id}/                        # Werkstatt Details
+GET    /api/workshops/{id}/material-stock/         # Materialbestand
+GET    /api/workshops/{id}/products/overview/      # Produktübersicht
+```
+
+#### Suppliers (Lieferantenverwaltung)
+```
+GET    /api/suppliers/                             # Alle Lieferanten
+POST   /api/suppliers/                             # Neuer Lieferant
+GET    /api/material-supplier-prices/              # Lieferantenpreise
+```
+
+**📚 Complete API documentation:** [OPENAPI.md](docs/OPENAPI.md) | [DEVELOPMENT.md](docs/DEVELOPMENT.md)
 
 ## 🏗️ Project Structure
 
@@ -237,7 +303,51 @@ python manage.py migrate
 python manage.py collectstatic
 ```
 
+### OpenAPI Schema Export
+```bash
+# Export as JSON
+curl http://localhost:8000/api/schema/?format=json > openapi.json
+
+# Export as YAML
+curl http://localhost:8000/api/schema/?format=yaml > openapi.yaml
+
+# Use with code generators
+npm install -g @openapitools/openapi-generator-cli
+openapi-generator-cli generate \
+  -i http://localhost:8000/api/schema/?format=json \
+  -g typescript-axios \
+  -o ./generated-client
+```
+
 ## 📋 Data Model Overview
+
+### API Structure
+
+Die API ist in folgende Module strukturiert:
+
+**Core (Basismodule)**
+- Workshops - Verwaltung von Werkstätten
+- Authentication - JWT-basierte Benutzerauthentifizierung
+
+**Materials (Materialverwaltung)**
+- Materials - Materialstammdaten
+- Material Categories - Materialkategorien
+- Material Movements - Lagerbewegungen (Lieferung, Verbrauch, Transfer)
+- Material Transfers - Transfers zwischen Werkstätten
+- Orders - Bestellungen
+- Deliveries - Lieferungen
+- Suppliers - Lieferantenverwaltung
+
+**Products (Produktverwaltung)**
+- Products - Produktstammdaten
+- Product Versions - Versionsverwaltung
+- Product Variants - Produktvarianten
+- Product Materials - Stückliste (Bill of Materials)
+- Product Stock - Produktbestand pro Werkstatt
+- Manufacturing - Fertigungsanforderungen und -prozesse
+
+**Shopbridge (E-Commerce Integration)**
+- WooCommerce Orders - Integration mit WooCommerce-Shop
 
 ### Core Models
 - **Workshop:** Physical workshop locations
@@ -257,6 +367,28 @@ python manage.py collectstatic
 - **ProductVariant:** Product variants management
 - **ProductMaterial:** Bill of Materials (BOM) relationships
 - **ProductStock:** Product inventory per workshop
+
+### Model Relationships
+
+```
+Workshop
+  ├─> User (1:n)
+  ├─> Material (1:n)
+  ├─> Product (1:n)
+  └─> ProductStock (1:n)
+
+Material
+  ├─> MaterialCategory (n:1)
+  ├─> MaterialMovement (1:n)
+  ├─> Material (n:n) [alternatives]
+  └─> Supplier (n:n) [via MaterialSupplierPrice]
+
+Product
+  ├─> ProductVersion (n:1)
+  ├─> ProductVariant (n:n)
+  ├─> ProductMaterial (1:n) [BOM]
+  └─> ProductStock (1:n)
+```
 
 ## 🚀 Deployment
 

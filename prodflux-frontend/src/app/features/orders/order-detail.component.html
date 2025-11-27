@@ -14,7 +14,7 @@
         <mat-icon>edit</mat-icon> Bearbeiten
       </button>
       <button mat-raised-button color="accent" [routerLink]="['/deliveries/new']" [queryParams]="{orderId: order.id}">
-        <mat-icon>local_shipping</mat-icon> Lieferung erstellen
+        <mat-icon>local_shipping</mat-icon> Lieferung hinzufügen
       </button>
       <button mat-stroked-button color="warn" (click)="deleteOrder()">
         <mat-icon>delete</mat-icon> Löschen
@@ -23,6 +23,13 @@
 
     <p><strong>Bestellt am:</strong> {{ formatDate(order.bestellt_am) }}</p>
     <p><strong>Angekommen am:</strong> {{ formatDate(order.angekommen_am) }}</p>
+    <p *ngIf="getSupplier(order.supplier)">
+      <strong>Lieferant:</strong>
+      <a [routerLink]="['/suppliers', order.supplier]" class="supplier-link">
+        <mat-icon class="link-icon">business</mat-icon>
+        {{ getSupplier(order.supplier)?.name }}
+      </a>
+    </p>
     <div class="versandkosten-section">
       <p>
         <strong>Versandkosten (netto):</strong> {{ formatCurrency(order.versandkosten) }}

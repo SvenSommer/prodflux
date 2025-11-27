@@ -469,7 +469,8 @@ class MaterialSupplierPriceSerializer(serializers.ModelSerializer):
         model = MaterialSupplierPrice
         fields = [
             'id', 'material', 'material_name', 'supplier', 'supplier_name',
-            'price', 'valid_from', 'note', 'created_at', 'updated_at'
+            'price', 'valid_from', 'note', 'material_url',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -488,6 +489,7 @@ class MaterialSupplierPriceOverviewSerializer(serializers.Serializer):
     )
     manual_price_valid_from = serializers.DateField(allow_null=True)
     manual_price_note = serializers.CharField(allow_null=True)
+    material_url = serializers.URLField(allow_null=True)
     last_order_price = serializers.DecimalField(
         max_digits=10,
         decimal_places=5,

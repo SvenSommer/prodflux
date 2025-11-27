@@ -88,6 +88,16 @@ export interface SupplierMaterialPriceDialogData {
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Material-URL (optional)</mat-label>
+          <input matInput type="url" formControlName="material_url" placeholder="https://...">
+          <mat-icon matPrefix>link</mat-icon>
+          <mat-hint>Link zur Produktseite beim Lieferanten</mat-hint>
+          <mat-error *ngIf="form.get('material_url')?.hasError('pattern')">
+            Bitte geben Sie eine gültige URL ein
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Notiz (optional)</mat-label>
           <textarea matInput formControlName="note" rows="3"></textarea>
           <mat-hint>z.B. Mindestbestellmenge, Rabattbedingungen</mat-hint>
@@ -144,12 +154,14 @@ export class SupplierMaterialPriceDialogComponent implements OnInit {
     public dialogRef: MatDialogRef<SupplierMaterialPriceDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: SupplierMaterialPriceDialogData
   ) {
+    const urlPattern = /^https?:\/\/.+/;
     this.form = this.fb.group({
       material: [data.priceData?.material_id || null, Validators.required],
       materialSearch: [''],
       price: [data.priceData?.manual_price || null, [Validators.required, Validators.min(0.01)]],
       valid_from: [data.priceData?.manual_price_valid_from || new Date().toISOString().split('T')[0], Validators.required],
-      note: [data.priceData?.manual_price_note || '']
+      note: [data.priceData?.manual_price_note || ''],
+      material_url: [data.priceData?.material_url || '', Validators.pattern(urlPattern)]
     });
   }
 
@@ -214,7 +226,8 @@ export class SupplierMaterialPriceDialogComponent implements OnInit {
         supplier: this.data.supplierId,
         price: formValue.price,
         valid_from: formValue.valid_from,
-        note: formValue.note
+        note: formValue.note,
+        material_url: formValue.material_url || null
       });
     }
   }

@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { OrdersService, Order } from './orders.service';
 import { MaterialCategoryGroup, MaterialsService, Material } from '../materials/materials.service';
 import { DeliveriesService, Delivery } from '../deliveries/deliveries.service';
+import { SuppliersService } from '../settings/suppliers.service';
+import { Supplier } from '../settings/models/supplier.model';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
@@ -24,6 +26,7 @@ export class OrderDetailComponent {
   private ordersService = inject(OrdersService);
   private materialsService = inject(MaterialsService);
   private deliveriesService = inject(DeliveriesService);
+  private suppliersService = inject(SuppliersService);
 
   orderId = Number(this.route.snapshot.paramMap.get('id'));
   order: Order | undefined;
@@ -31,6 +34,7 @@ export class OrderDetailComponent {
   materialsMap = new Map<number, string>();
   materialsById = new Map<number, Material>();
   materialGroups: MaterialCategoryGroup[] = [];
+  suppliersMap = new Map<number, Supplier>();
 
   materialTableColumns: MaterialTableColumn[] = [
     { key: 'quantity', header: 'Menge', width: '100px' },
@@ -53,6 +57,12 @@ export class OrderDetailComponent {
       });
     });
 
+    this.suppliersService.getAll().subscribe(suppliers => {
+      suppliers.forEach(s => {
+        this.suppliersMap.set(s.id, s);
+      });
+    });
+
     this.ordersService.get(this.orderId).subscribe((o: Order) => {
       this.order = o;
     });
@@ -65,6 +75,10 @@ export class OrderDetailComponent {
 
   getMaterialName(id: number): string {
     return this.materialsMap.get(id) || `#${id}`;
+  }
+
+  getSupplier(id: number): Supplier | undefined {
+    return this.suppliersMap.get(id);
   }
 
   formatCurrency(value: any): string {

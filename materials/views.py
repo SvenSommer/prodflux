@@ -930,6 +930,9 @@ def material_supplier_prices_overview(request, material_id):
                 manual_price.valid_from if manual_price else None
             ),
             'manual_price_note': manual_price.note if manual_price else None,
+            'material_url': (
+                manual_price.material_url if manual_price else None
+            ),
             'last_order_price': (
                 last_order_item.preis_pro_stueck if last_order_item else None
             ),

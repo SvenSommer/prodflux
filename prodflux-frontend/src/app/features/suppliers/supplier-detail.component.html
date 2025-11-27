@@ -100,6 +100,12 @@
                     <div *ngIf="row.data.priceData?.manual_price_note" class="price-shipping">
                       {{ row.data.priceData.manual_price_note }}
                     </div>
+                    <div *ngIf="row.data.priceData?.material_url" class="material-url">
+                      <a [href]="row.data.priceData.material_url" target="_blank" rel="noopener noreferrer" class="url-link">
+                        <mat-icon class="link-icon">open_in_new</mat-icon>
+                        Produktseite
+                      </a>
+                    </div>
                     <button
                       mat-stroked-button
                       color="primary"

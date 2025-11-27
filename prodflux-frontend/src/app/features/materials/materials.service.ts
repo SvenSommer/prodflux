@@ -208,6 +208,7 @@ export interface MaterialSupplierPriceOverview {
   manual_price: number | null;
   manual_price_valid_from: string | null;
   manual_price_note: string | null;
+  material_url?: string | null;
   last_order_price: number | null;
   last_order_price_with_shipping: number | null;
   last_order_shipping_cost?: number | null;
@@ -222,6 +223,7 @@ export interface CreateMaterialSupplierPrice {
   price: number;
   valid_from: string;
   note?: string;
+  material_url?: string;
 }
 
 export interface MaterialSupplierPrice {

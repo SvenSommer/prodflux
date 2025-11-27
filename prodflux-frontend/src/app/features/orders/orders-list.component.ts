@@ -3,13 +3,16 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { OrdersService, Order } from './orders.service';
-import { MaterialCategoryGroup, MaterialsService } from '../materials/materials.service';
+import { MaterialCategoryGroup, MaterialsService, Material } from '../materials/materials.service';
 import { SuppliersService } from '../settings/suppliers.service';
 import { Supplier } from '../../shared/models/supplier.model';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { MaterialTableComponent, MaterialTableRow, MaterialTableColumn } from '../../shared/components/material-table/material-table.component';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-orders-list',
@@ -22,8 +25,17 @@ import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.componen
     MatTableModule,
     MatButtonModule,
     MatIconModule,
+    MatExpansionModule,
     RouterModule,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    MaterialTableComponent
+  ],
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({ height: '0px', minHeight: '0', overflow: 'hidden' })),
+      state('expanded', style({ height: '*' })),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
   ],
 })
 export class OrdersListComponent {
@@ -35,8 +47,17 @@ export class OrdersListComponent {
   orders: Order[] = [];
   materialsMap = new Map<number, string>();
   suppliersMap = new Map<number, string>();
+  materialsById = new Map<number, Material>();
 
   materialGroups: MaterialCategoryGroup[] = [];
+  expandedOrders = new Set<number>();
+
+  materialTableColumns: MaterialTableColumn[] = [
+    { key: 'quantity', header: 'Menge', width: '120px' },
+    { key: 'preis_pro_stueck', header: 'Preis/Stk.', width: '120px' },
+    { key: 'mwst_satz', header: 'MwSt.', width: '100px' },
+    { key: 'gesamt', header: 'Gesamt', width: '120px' }
+  ];
 
   ngOnInit() {
     this.ordersService.getAll().subscribe(list => {
@@ -55,6 +76,7 @@ export class OrdersListComponent {
       groups.forEach(group => {
         group.materials.forEach(m => {
           this.materialsMap.set(m.id, m.bezeichnung);
+          this.materialsById.set(m.id, m);
         });
       });
     });
@@ -84,8 +106,7 @@ export class OrdersListComponent {
   formatCurrency(value: any): string {
     const num = typeof value === 'number' ? value : parseFloat(value);
     if (isNaN(num)) return '—';
-    // Zeige bis zu 5 Dezimalstellen, aber entferne trailing zeros
-    return `${num.toFixed(5).replace(/\.?0+$/, '')} €`;
+    return `${num.toFixed(2)} €`;
   }
 
   getItemsByCategory(
@@ -136,5 +157,49 @@ export class OrdersListComponent {
       return `${items.length} Materialien`;
     }
     return items.map(i => `${i.quantity}× ${this.getMaterialName(i.material)}`).join(', ');
+  }
+
+  toggleOrderExpansion(orderId: number, event: Event): void {
+    event.stopPropagation();
+    if (this.expandedOrders.has(orderId)) {
+      this.expandedOrders.delete(orderId);
+    } else {
+      this.expandedOrders.add(orderId);
+    }
+  }
+
+  isOrderExpanded(orderId: number): boolean {
+    return this.expandedOrders.has(orderId);
+  }
+
+  getMaterialTableRows(order: Order): MaterialTableRow[] {
+    return order.items.map(item => {
+      const material = this.materialsById.get(item.material);
+      const categoryGroup = this.materialGroups.find(g => 
+        g.materials.some(m => m.id === item.material)
+      );
+      const categoryOrder = categoryGroup?.materials.find(m => m.id === item.material)?.category?.order ?? 9999;
+
+      return {
+        materialId: item.material,
+        materialName: material?.bezeichnung || `Material #${item.material}`,
+        materialManufacturerName: material?.hersteller_bezeichnung || undefined,
+        materialImageUrl: material?.bild_url || null,
+        categoryName: categoryGroup?.category_name || 'Ohne Kategorie',
+        categoryOrder: categoryOrder,
+        data: {
+          quantity: item.quantity,
+          preis_pro_stueck: item.preis_pro_stueck,
+          mwst_satz: item.mwst_satz ?? 19,
+          gesamt: this.calculateItemTotal(item)
+        }
+      };
+    });
+  }
+
+  calculateItemTotal(item: Order['items'][0]): number {
+    const netto = item.preis_pro_stueck * item.quantity;
+    const mwst = (item.mwst_satz ?? 19) / 100;
+    return netto * (1 + mwst);
   }
 }

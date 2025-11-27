@@ -18,6 +18,7 @@
       mat-table
       [dataSource]="orders"
       class="mat-elevation-z1 full-width-table clickable-table"
+      multiTemplateDataRows
     >
       <!-- ID -->
       <ng-container matColumnDef="id">
@@ -62,9 +63,49 @@
       <!-- Materialien -->
       <ng-container matColumnDef="materials">
         <th mat-header-cell *matHeaderCellDef>Materialien</th>
-        <td mat-cell *matCellDef="let o">
+        <td mat-cell *matCellDef="let o" (click)="$event.stopPropagation()">
           <div class="materials-list">
-            {{ getMaterialsList(o.items) }}
+            <button 
+              mat-button 
+              (click)="toggleOrderExpansion(o.id, $event)"
+              class="materials-toggle-btn">
+              <mat-icon>{{ isOrderExpanded(o.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+              {{ getMaterialsList(o.items) }}
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Expanded Row for Material Details -->
+      <ng-container matColumnDef="expandedDetail">
+        <td mat-cell *matCellDef="let o" [attr.colspan]="8">
+          <div class="expanded-row-container" 
+               [@detailExpand]="isOrderExpanded(o.id) ? 'expanded' : 'collapsed'"
+               (click)="$event.stopPropagation()">
+            <div class="materials-detail-wrapper">
+              <app-material-table
+                [rows]="getMaterialTableRows(o)"
+                [columns]="materialTableColumns"
+                [showImage]="true"
+                [showCategory]="true">
+                <ng-template #customColumn let-row let-column="column">
+                  @switch (column.key) {
+                    @case ('quantity') {
+                      {{ row.data.quantity | number:'1.0-2' }}
+                    }
+                    @case ('preis_pro_stueck') {
+                      {{ formatCurrency(row.data.preis_pro_stueck) }}
+                    }
+                    @case ('mwst_satz') {
+                      {{ row.data.mwst_satz }}%
+                    }
+                    @case ('gesamt') {
+                      <strong>{{ formatCurrency(row.data.gesamt) }}</strong>
+                    }
+                  }
+                </ng-template>
+              </app-material-table>
+            </div>
           </div>
         </td>
       </ng-container>
@@ -111,11 +152,16 @@
             'materials',
             'total_cost',
             'notiz'
-          ]
+          ];
         "
         (click)="navigateToDetail(row.id)"
         class="clickable-row"
       ></tr>
+      <tr 
+        mat-row 
+        *matRowDef="let row; columns: ['expandedDetail']" 
+        class="expanded-detail-row">
+      </tr>
     </table>
   </div>
 </div>

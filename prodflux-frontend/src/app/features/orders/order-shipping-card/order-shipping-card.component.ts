@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -37,7 +37,7 @@ import { Order } from '../orders.service';
         <!-- Versandkosten -->
         <div class="cost-row">
           <span class="label-column">Versandkosten</span>
-          <span class="value-column">{{ formatCurrency(order.versandkosten) }}</span>
+          <span class="value-column">{{ formatCurrency(shippingNetto) }}</span>
           <span class="value-column">{{ formatCurrency(shippingMwst) }}</span>
           <span class="value-column">{{ formatCurrency(shippingBrutto) }}</span>
         </div>
@@ -122,70 +122,133 @@ import { Order } from '../orders.service';
     }
 
     .total-row {
-      font-weight: 600;
       font-size: 16px;
       border-bottom: none;
 
       .label-column {
+        font-weight: 600;
         color: #1976d2;
       }
 
       .value-column {
-        color: #1976d2;
+        color: #333;
+
+        &:last-child {
+          font-weight: 600;
+          color: #1976d2;
+        }
       }
     }
   `]
 })
-export class OrderCostsCardComponent {
+export class OrderCostsCardComponent implements OnChanges {
   @Input() order!: Order;
+
+  // Cached values
+  private _materialsNetto?: number;
+  private _materialsMwst?: number;
+  private _materialsBrutto?: number;
+  private _shippingBrutto?: number;
+  private _shippingNetto?: number;
+  private _shippingMwst?: number;
+  private _totalNetto?: number;
+  private _totalMwst?: number;
+  private _totalBrutto?: number;
+
+  ngOnChanges() {
+    // Reset cache when order changes
+    this._materialsNetto = undefined;
+    this._materialsMwst = undefined;
+    this._materialsBrutto = undefined;
+    this._shippingBrutto = undefined;
+    this._shippingNetto = undefined;
+    this._shippingMwst = undefined;
+    this._totalNetto = undefined;
+    this._totalMwst = undefined;
+    this._totalBrutto = undefined;
+  }
 
   // Materialkosten berechnet
   get materialsNetto(): number {
-    if (!this.order?.items) return 0;
-    return this.order.items.reduce((sum, item) => {
+    if (this._materialsNetto !== undefined) return this._materialsNetto;
+
+    if (!this.order?.items) {
+      this._materialsNetto = 0;
+      return 0;
+    }
+
+    this._materialsNetto = this.order.items.reduce((sum, item) => {
       return sum + (item.preis_pro_stueck * item.quantity);
     }, 0);
+
+    return this._materialsNetto;
   }
 
   get materialsMwst(): number {
-    if (!this.order?.items) return 0;
-    return this.order.items.reduce((sum, item) => {
+    if (this._materialsMwst !== undefined) return this._materialsMwst;
+
+    if (!this.order?.items) {
+      this._materialsMwst = 0;
+      return 0;
+    }
+
+    this._materialsMwst = this.order.items.reduce((sum, item) => {
       const netto = item.preis_pro_stueck * item.quantity;
       const mwstSatz = item.mwst_satz ?? 19;
       return sum + (netto * (mwstSatz / 100));
     }, 0);
+
+    return this._materialsMwst;
   }
 
   get materialsBrutto(): number {
-    return this.materialsNetto + this.materialsMwst;
+    if (this._materialsBrutto !== undefined) return this._materialsBrutto;
+    this._materialsBrutto = this.materialsNetto + this.materialsMwst;
+    return this._materialsBrutto;
   }
 
-  // Versandkosten berechnet
+  // Versandkosten - versandkosten ist bereits BRUTTO!
+  get shippingBrutto(): number {
+    if (this._shippingBrutto !== undefined) return this._shippingBrutto;
+    // Sicherstellen, dass es eine Zahl ist
+    const value = this.order?.versandkosten ?? 0;
+    this._shippingBrutto = typeof value === 'string' ? parseFloat(value) : value;
+    return this._shippingBrutto;
+  }
+
   get shippingNetto(): number {
-    return this.order?.versandkosten ?? 0;
+    if (this._shippingNetto !== undefined) return this._shippingNetto;
+
+    const brutto = this.shippingBrutto;
+    const mwstSatz = this.order?.versandkosten_mwst_satz ?? 19;
+    this._shippingNetto = brutto / (1 + (mwstSatz / 100));
+
+    return this._shippingNetto;
   }
 
   get shippingMwst(): number {
-    const netto = this.shippingNetto;
-    const mwstSatz = this.order?.versandkosten_mwst_satz ?? 19;
-    return netto * (mwstSatz / 100);
-  }
-
-  get shippingBrutto(): number {
-    return this.shippingNetto + this.shippingMwst;
+    if (this._shippingMwst !== undefined) return this._shippingMwst;
+    this._shippingMwst = this.shippingBrutto - this.shippingNetto;
+    return this._shippingMwst;
   }
 
   // Gesamtkosten
   get totalNetto(): number {
-    return this.materialsNetto + this.shippingNetto;
+    if (this._totalNetto !== undefined) return this._totalNetto;
+    this._totalNetto = this.materialsNetto + this.shippingNetto;
+    return this._totalNetto;
   }
 
   get totalMwst(): number {
-    return this.materialsMwst + this.shippingMwst;
+    if (this._totalMwst !== undefined) return this._totalMwst;
+    this._totalMwst = this.materialsMwst + this.shippingMwst;
+    return this._totalMwst;
   }
 
   get totalBrutto(): number {
-    return this.materialsBrutto + this.shippingBrutto;
+    if (this._totalBrutto !== undefined) return this._totalBrutto;
+    this._totalBrutto = this.materialsBrutto + this.shippingBrutto;
+    return this._totalBrutto;
   }
 
   formatCurrency(value: any): string {

@@ -73,10 +73,20 @@ import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complet
             <span class="order-id-hint">WooCommerce ID: {{ order.id }}</span>
           </div>
           <div class="header-actions">
-            <button mat-raised-button color="accent" (click)="openCompleteOrderDialog()">
+            <!-- Bestellung abschließen - nur bei Status "processing" -->
+            <button
+              *ngIf="order.status === 'processing'"
+              mat-raised-button
+              color="accent"
+              (click)="openCompleteOrderDialog()">
               <mat-icon>send</mat-icon>
               Bestellung abschließen
             </button>
+            <!-- Status-Badge für abgeschlossene Bestellungen -->
+            <div *ngIf="order.status === 'completed'" class="completed-badge">
+              <mat-icon>check_circle</mat-icon>
+              Abgeschlossen
+            </div>
             <a mat-stroked-button [href]="getWooCommerceEditUrl()" target="_blank" rel="noopener">
               <mat-icon>open_in_new</mat-icon>
               In WooCommerce öffnen
@@ -270,12 +280,31 @@ import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complet
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
+        align-items: center;
 
         a, button {
           display: flex;
           align-items: center;
           gap: 6px;
           white-space: nowrap;
+        }
+
+        .completed-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+          color: white;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 600;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
         }
       }
     }
@@ -483,23 +512,33 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
       customerFirstName: this.order.billing?.first_name || '',
       customerLastName: this.order.billing?.last_name || '',
       customerCompany: this.order.billing?.company || undefined,
-      billingCountry: this.order.billing?.country || 'DE'
+      billingCountry: this.order.billing?.country || 'DE',
+      billingStreet: this.order.billing?.address_1 || '',
+      billingPostcode: this.order.billing?.postcode || '',
+      billingCity: this.order.billing?.city || '',
+      orderTotal: this.order.total || '0',
+      shippingTotal: this.order.shipping_total || '0',
+      paymentMethod: this.order.payment_method || '',
+      dateCreated: this.order.date_created || '',
+      lineItems: this.order.line_items || []
     };
 
     const dialogRef = this.dialog.open(CompleteOrderDialogComponent, {
       data: dialogData,
-      width: '600px',
+      width: '700px',
       maxHeight: '90vh',
       disableClose: false
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result?.sent) {
+      if (result?.completed) {
         this.snackBar.open(
-          `E-Mail-Programm geöffnet für ${result.email}`,
+          `Bestellung #${this.order?.number} erfolgreich abgeschlossen!`,
           'OK',
           { duration: 5000 }
         );
+        // Reload the order to reflect the new status
+        this.loadOrder();
       }
     });
   }

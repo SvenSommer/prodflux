@@ -415,6 +415,76 @@ def woocommerce_order_detail_view(request, order_id):
     return Response(order_data)
 
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def woocommerce_order_update_status_view(request, order_id):
+    """
+    Update the status of a WooCommerce order.
+    
+    Request body:
+    {
+        "status": "completed"  // or any valid WooCommerce status
+    }
+    
+    Valid statuses: pending, processing, on-hold, completed, cancelled,
+                    refunded, failed
+    """
+    VALID_STATUSES = [
+        'pending', 'processing', 'on-hold', 'completed',
+        'cancelled', 'refunded', 'failed'
+    ]
+    
+    new_status = request.data.get('status')
+    
+    if not new_status:
+        return Response(
+            {"error": "Status ist erforderlich"},
+            status=http_status.HTTP_400_BAD_REQUEST
+        )
+    
+    if new_status not in VALID_STATUSES:
+        return Response(
+            {
+                "error": f"Ungültiger Status: {new_status}",
+                "valid_statuses": VALID_STATUSES
+            },
+            status=http_status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        wcapi = get_wcapi()
+        response = wcapi.put(f"orders/{order_id}", {"status": new_status})
+        
+        if response.status_code not in [200, 201]:
+            return Response(
+                {
+                    "error": "Fehler beim Aktualisieren des Status",
+                    "status_code": response.status_code,
+                    "response": response.text
+                },
+                status=http_status.HTTP_502_BAD_GATEWAY
+            )
+        
+        # Invalidate caches
+        cache_key = get_cache_key("order_detail", order_id)
+        cache.delete(cache_key)
+        invalidate_orders_cache()
+        
+        updated_order = response.json()
+        
+        return Response({
+            "success": True,
+            "message": f"Status erfolgreich auf '{new_status}' geändert",
+            "order": updated_order
+        })
+        
+    except Exception as e:
+        return Response(
+            {"error": f"Fehler: {str(e)}"},
+            status=http_status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def woocommerce_cache_invalidate_view(request):
@@ -673,4 +743,90 @@ def email_sender_config_view(request):
         'sender_email': settings.EMAIL_SENDER_EMAIL,
         'sender_phone': settings.EMAIL_SENDER_PHONE,
         'company_name': settings.EMAIL_COMPANY_NAME,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sales_excel_config_view(request):
+    """
+    Gibt die URL zur Verkaufs-Excel-Tabelle zurück.
+    """
+    from django.conf import settings
+    return Response({
+        'excel_url': settings.SALES_EXCEL_URL,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def order_serial_numbers_create_view(request):
+    """
+    Speichert Seriennummern für eine Bestellung.
+    Body: {
+        "order_id": 12345,
+        "order_number": "12345",
+        "serial_numbers": ["SN-001", "SN-002"]
+    }
+    """
+    from .models import OrderSerialNumber
+
+    order_id = request.data.get('order_id')
+    order_number = request.data.get('order_number')
+    serial_numbers = request.data.get('serial_numbers', [])
+
+    if not order_id or not order_number:
+        return Response(
+            {"error": "order_id und order_number sind erforderlich"},
+            status=http_status.HTTP_400_BAD_REQUEST
+        )
+
+    if not serial_numbers:
+        return Response(
+            {"error": "Mindestens eine Seriennummer erforderlich"},
+            status=http_status.HTTP_400_BAD_REQUEST
+        )
+
+    created = []
+    for sn in serial_numbers:
+        if sn.strip():
+            obj = OrderSerialNumber.objects.create(
+                woocommerce_order_id=order_id,
+                woocommerce_order_number=str(order_number),
+                serial_number=sn.strip()
+            )
+            created.append({
+                'id': obj.id,
+                'serial_number': obj.serial_number
+            })
+
+    return Response({
+        'success': True,
+        'message': f'{len(created)} Seriennummer(n) gespeichert',
+        'created': created
+    }, status=http_status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_serial_numbers_list_view(request, order_id):
+    """
+    Gibt alle Seriennummern für eine Bestellung zurück.
+    """
+    from .models import OrderSerialNumber
+
+    serial_numbers = OrderSerialNumber.objects.filter(
+        woocommerce_order_id=order_id
+    ).order_by('created_at')
+
+    return Response({
+        'order_id': order_id,
+        'serial_numbers': [
+            {
+                'id': sn.id,
+                'serial_number': sn.serial_number,
+                'created_at': sn.created_at.isoformat()
+            }
+            for sn in serial_numbers
+        ]
     })

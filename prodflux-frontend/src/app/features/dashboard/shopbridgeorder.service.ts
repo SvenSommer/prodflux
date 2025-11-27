@@ -179,10 +179,64 @@ export class ShopbridgeOrdersService {
     return this.http.get<WooCommerceOrderDetail>(url);
   }
 
+  /**
+   * Update the status of a WooCommerce order
+   */
+  updateOrderStatus(orderId: number, status: string): Observable<{
+    success: boolean;
+    message: string;
+    order: WooCommerceOrderDetail;
+  }> {
+    return this.http.put<{
+      success: boolean;
+      message: string;
+      order: WooCommerceOrderDetail;
+    }>(`${this.baseUrl}orders/${orderId}/status/`, { status });
+  }
+
   invalidateCache(): Observable<{ message: string; success: boolean }> {
     return this.http.post<{ message: string; success: boolean }>(
       `${this.baseUrl}cache/invalidate/`,
       {}
     );
+  }
+
+  /**
+   * Get the sales Excel URL from configuration
+   */
+  getSalesExcelUrl(): Observable<{ excel_url: string }> {
+    return this.http.get<{ excel_url: string }>(`${this.baseUrl}config/sales-excel/`);
+  }
+
+  /**
+   * Save serial numbers for an order
+   */
+  saveSerialNumbers(orderId: number, orderNumber: string, serialNumbers: string[]): Observable<{
+    success: boolean;
+    message: string;
+    created: { id: number; serial_number: string }[];
+  }> {
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      created: { id: number; serial_number: string }[];
+    }>(`${this.baseUrl}orders/serial-numbers/`, {
+      order_id: orderId,
+      order_number: orderNumber,
+      serial_numbers: serialNumbers
+    });
+  }
+
+  /**
+   * Get serial numbers for an order
+   */
+  getSerialNumbers(orderId: number): Observable<{
+    order_id: number;
+    serial_numbers: { id: number; serial_number: string; created_at: string }[];
+  }> {
+    return this.http.get<{
+      order_id: number;
+      serial_numbers: { id: number; serial_number: string; created_at: string }[];
+    }>(`${this.baseUrl}orders/${orderId}/serial-numbers/`);
   }
 }

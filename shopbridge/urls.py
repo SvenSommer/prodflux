@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     woocommerce_orders_view,
     woocommerce_order_detail_view,
+    woocommerce_order_update_status_view,
     woocommerce_cache_invalidate_view,
     woocommerce_orders_stats_view,
     EmailTemplateListCreateView,
@@ -11,6 +12,9 @@ from .views import (
     email_template_languages_view,
     get_language_for_country_view,
     email_sender_config_view,
+    sales_excel_config_view,
+    order_serial_numbers_create_view,
+    order_serial_numbers_list_view,
 )
 
 urlpatterns = [
@@ -29,6 +33,11 @@ urlpatterns = [
         "orders/<int:order_id>/",
         woocommerce_order_detail_view,
         name="woocommerce-order-detail"
+    ),
+    path(
+        "orders/<int:order_id>/status/",
+        woocommerce_order_update_status_view,
+        name="woocommerce-order-update-status"
     ),
     path(
         "cache/invalidate/",
@@ -71,5 +80,24 @@ urlpatterns = [
         "email-templates/sender-config/",
         email_sender_config_view,
         name="email-sender-config"
+    ),
+
+    # Sales Excel Configuration
+    path(
+        "config/sales-excel/",
+        sales_excel_config_view,
+        name="sales-excel-config"
+    ),
+
+    # Order Serial Numbers
+    path(
+        "orders/serial-numbers/",
+        order_serial_numbers_create_view,
+        name="order-serial-numbers-create"
+    ),
+    path(
+        "orders/<int:order_id>/serial-numbers/",
+        order_serial_numbers_list_view,
+        name="order-serial-numbers-list"
     ),
 ]

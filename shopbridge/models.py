@@ -171,3 +171,32 @@ COUNTRY_LANGUAGE_MAP = {
 def get_language_for_country(country_code: str) -> str:
     """Ermittelt die Sprache basierend auf dem Ländercode."""
     return COUNTRY_LANGUAGE_MAP.get(country_code.upper(), 'en')
+
+
+class OrderSerialNumber(models.Model):
+    """
+    Speichert Seriennummern von versendeten Adaptern mit Zuordnung zur Bestellnummer.
+    """
+    woocommerce_order_id = models.IntegerField(
+        verbose_name='WooCommerce Bestellungs-ID',
+        db_index=True
+    )
+    woocommerce_order_number = models.CharField(
+        max_length=50,
+        verbose_name='WooCommerce Bestellnummer',
+        help_text='Die Bestellnummer aus WooCommerce (z.B. #12345)'
+    )
+    serial_number = models.CharField(
+        max_length=100,
+        verbose_name='Seriennummer',
+        help_text='Seriennummer des versendeten Adapters'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Seriennummer'
+        verbose_name_plural = 'Seriennummern'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"#{self.woocommerce_order_number} - {self.serial_number}"

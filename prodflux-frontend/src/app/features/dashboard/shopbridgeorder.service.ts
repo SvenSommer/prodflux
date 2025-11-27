@@ -12,12 +12,21 @@ export interface ShopbridgeOrdersSummary {
   };
   products: Record<string, {
     total_quantity: number;
+    prodflux_id: number | null;
+    prodflux_name: string | null;
     orders: {
       order_id: number;
       status: string;
       quantity: number;
       total: string;
       currency: string;
+      customer_name: string;
+      customer_country: string;
+      customer_city: string;
+      date_created: string;
+      wc_product_name: string;
+      wc_sku: string;
+      match_type: string | null;
     }[];
   }>;
 }
@@ -121,14 +130,38 @@ export const ORDER_STATUS_MAP: Record<string, { label: string; color: string; ic
 @Injectable({ providedIn: 'root' })
 export class ShopbridgeOrdersService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiUrl}/api/shopbridge/orders/`;
+  private baseUrl = `${environment.apiUrl}/api/shopbridge/`;
 
-  getOrders(status?: string): Observable<ShopbridgeOrdersSummary> {
-    const url = status ? `${this.baseUrl}?status=${status}` : this.baseUrl;
+  getOrders(status?: string, refresh = false): Observable<ShopbridgeOrdersSummary> {
+    let url = `${this.baseUrl}orders/`;
+    const params: string[] = [];
+
+    if (status) {
+      params.push(`status=${status}`);
+    }
+    if (refresh) {
+      params.push('refresh=true');
+    }
+
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+
     return this.http.get<ShopbridgeOrdersSummary>(url);
   }
 
-  getOrderDetail(orderId: number): Observable<WooCommerceOrderDetail> {
-    return this.http.get<WooCommerceOrderDetail>(`${this.baseUrl}${orderId}/`);
+  getOrderDetail(orderId: number, refresh = false): Observable<WooCommerceOrderDetail> {
+    let url = `${this.baseUrl}orders/${orderId}/`;
+    if (refresh) {
+      url += '?refresh=true';
+    }
+    return this.http.get<WooCommerceOrderDetail>(url);
+  }
+
+  invalidateCache(): Observable<{ message: string; success: boolean }> {
+    return this.http.post<{ message: string; success: boolean }>(
+      `${this.baseUrl}cache/invalidate/`,
+      {}
+    );
   }
 }

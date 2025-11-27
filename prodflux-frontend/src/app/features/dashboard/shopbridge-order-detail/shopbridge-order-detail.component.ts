@@ -74,7 +74,7 @@ import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financ
               <mat-icon>open_in_new</mat-icon>
               In WooCommerce öffnen
             </a>
-            <button mat-stroked-button (click)="loadOrder()">
+            <button mat-raised-button color="primary" (click)="refresh()">
               <mat-icon>refresh</mat-icon>
               Aktualisieren
             </button>
@@ -436,6 +436,22 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
       return `https://sdlink.de/wp-admin/admin.php?page=wc-orders&action=edit&id=${this.order.id}`;
     }
     return '#';
+  }
+
+  refresh(): void {
+    this.loading = true;
+    this.error = null;
+
+    // Invalidate cache and reload fresh data from WooCommerce
+    this.shopbridgeService.invalidateCache().subscribe({
+      next: () => {
+        this.loadOrder();
+      },
+      error: (err) => {
+        console.error('Error invalidating cache:', err);
+        this.loadOrder();
+      }
+    });
   }
 
   formatDateTime(dateStr: string | null): string {

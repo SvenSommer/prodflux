@@ -1,5 +1,36 @@
+import re
 from django.db import models
 from django.conf import settings
+
+
+def normalize_sku(sku):
+    """
+    Normalize WooCommerce SKU to match Prodflux artikelnummer/product_identifier.
+    Handles variants like -LEFT, -RIGHT, -1, -2, -3, -E, etc.
+    
+    This function is used for matching WooCommerce SKUs to both:
+    - Prodflux products (artikelnummer)
+    - Product manuals (product_identifier)
+    """
+    if not sku:
+        return None
+
+    # Remove variant suffixes: -LEFT, -RIGHT, -1, -2, -3, -SL, etc.
+    normalized = re.sub(r'-(LEFT|RIGHT|[0-9]+|SL)$', '', sku.upper())
+
+    # Fix underscore to hyphen
+    normalized = normalized.replace('_', '-')
+
+    # Handle special cases for adapter variants
+    # SD-AR620X-E-NG -> SD-AR620X-NG
+    normalized = normalized.replace('-E-NG', '-NG')
+    # SD-GENERIC-E-DS -> SD-GENERIC-DS
+    normalized = normalized.replace('-E-DS', '-DS')
+    # SD-KRT2-E -> SD-KRT2, SD-ATR833-E -> SD-ATR833, etc.
+    normalized = re.sub(r'-E$', '', normalized)
+    # SD-ATR833-A (angled) stays as is - no change needed
+
+    return normalized
 
 
 def get_email_signature():
@@ -430,3 +461,185 @@ class ShippingCountryConfig(models.Model):
             return config.dhl_product
         # Fallback: Warenpost für DE, International für andere
         return 'V62WP' if country_code.upper() == 'DE' else 'V66WPI'
+
+
+class ProductManual(models.Model):
+    """
+    Handbücher/Anleitungen für Produkte, organisiert nach Sprache.
+    
+    Ermöglicht das Zuordnen von PDF-Links zu bestimmten Produkten
+    und Sprachen für die Anzeige auf der Bestellseite.
+    """
+    
+    LANGUAGE_CHOICES = [
+        ('de', 'Deutsch'),
+        ('en', 'English'),
+        ('fr', 'Français'),
+        ('es', 'Español'),
+    ]
+    
+    MANUAL_TYPE_CHOICES = [
+        ('installation', 'Installationsanleitung'),
+        ('configuration', 'Einrichtungsanleitung'),
+        ('quickstart', 'Schnellstartanleitung'),
+        ('other', 'Sonstiges'),
+    ]
+    
+    # Produkt-Name (SKU oder WooCommerce-Produktname)
+    # Flexibel gehalten, damit verschiedene Produktbezeichnungen unterstützt werden
+    product_identifier = models.CharField(
+        max_length=200,
+        verbose_name='Produkt-Bezeichnung',
+        help_text='SKU oder Produktname (z.B. SD-KRT2, SD-ATR833)'
+    )
+    
+    language = models.CharField(
+        max_length=5,
+        choices=LANGUAGE_CHOICES,
+        default='de',
+        verbose_name='Sprache'
+    )
+    
+    manual_type = models.CharField(
+        max_length=50,
+        choices=MANUAL_TYPE_CHOICES,
+        default='installation',
+        verbose_name='Anleitungstyp'
+    )
+    
+    title = models.CharField(
+        max_length=255,
+        verbose_name='Titel',
+        help_text='Angezeigter Titel der Anleitung'
+    )
+    
+    pdf_url = models.URLField(
+        max_length=500,
+        verbose_name='PDF-URL',
+        help_text='Link zur PDF-Datei'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Aktiv'
+    )
+    
+    # Für alle Bestellungen anzeigen (z.B. Einrichtungsanleitungen)
+    applies_to_all = models.BooleanField(
+        default=False,
+        verbose_name='Für alle Bestellungen',
+        help_text='Wenn aktiviert, wird dieses Handbuch bei jeder Bestellung angezeigt'
+    )
+    
+    # Optionale Sortierreihenfolge
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Reihenfolge',
+        help_text='Kleinere Zahlen werden zuerst angezeigt'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Produkthandbuch'
+        verbose_name_plural = 'Produkthandbücher'
+        ordering = ['product_identifier', 'language', 'order', 'title']
+    
+    def __str__(self):
+        return f"{self.product_identifier} - {self.get_language_display()} - {self.title}"
+    
+    @classmethod
+    def get_manuals_for_product_and_language(cls, product_identifier: str, language: str):
+        """
+        Holt alle aktiven Handbücher für ein Produkt in einer bestimmten Sprache.
+        Verwendet die gleiche SKU-Normalisierungslogik wie das WooCommerce-Produkt-Mapping.
+        Fallback auf Englisch wenn keine Handbücher in der gewünschten Sprache vorhanden.
+        """
+        # Normalisiere die SKU für besseres Matching
+        # z.B. SD-KRT2-E-1 -> SD-KRT2, SD-AR620X-E-NG-LEFT -> SD-AR620X-NG
+        normalized = normalize_sku(product_identifier)
+        
+        # Versuche erst exaktes Match mit normalisierter SKU
+        manuals = cls.objects.filter(
+            product_identifier__iexact=normalized if normalized else product_identifier,
+            language=language,
+            is_active=True,
+            applies_to_all=False
+        )
+        
+        # Falls kein exaktes Match, versuche Teil-Match
+        if not manuals.exists():
+            # Suche nach Produkt (case-insensitive Teilmatch)
+            manuals = cls.objects.filter(
+                product_identifier__icontains=normalized if normalized else product_identifier,
+                language=language,
+                is_active=True,
+                applies_to_all=False
+            )
+        
+        # Fallback auf Englisch
+        if not manuals.exists() and language != 'en':
+            manuals = cls.objects.filter(
+                product_identifier__iexact=normalized if normalized else product_identifier,
+                language='en',
+                is_active=True,
+                applies_to_all=False
+            )
+            if not manuals.exists():
+                manuals = cls.objects.filter(
+                    product_identifier__icontains=normalized if normalized else product_identifier,
+                    language='en',
+                    is_active=True,
+                    applies_to_all=False
+                )
+        
+        return manuals
+    
+    @classmethod
+    def get_manuals_for_order(cls, product_identifiers: list, country_code: str):
+        """
+        Holt alle relevanten Handbücher für eine Bestellung basierend auf
+        den Produkten und dem Zielland.
+        """
+        # Sprache basierend auf Land ermitteln
+        language = get_language_for_country(country_code)
+        
+        # Fallback-Mapping für Sprachen die wir für Handbücher unterstützen
+        if language not in ['de', 'en', 'fr', 'es']:
+            language = 'en'
+        
+        all_manuals = []
+        
+        # 1. Produkt-spezifische Handbücher
+        for product_id in product_identifiers:
+            manuals = cls.get_manuals_for_product_and_language(product_id, language)
+            all_manuals.extend(list(manuals))
+        
+        # 2. Handbücher die für alle Bestellungen gelten (z.B. Einrichtungsanleitungen)
+        universal_manuals = cls.objects.filter(
+            applies_to_all=True,
+            language=language,
+            is_active=True
+        )
+        # Fallback auf Englisch für universelle Handbücher
+        if not universal_manuals.exists() and language != 'en':
+            universal_manuals = cls.objects.filter(
+                applies_to_all=True,
+                language='en',
+                is_active=True
+            )
+        all_manuals.extend(list(universal_manuals))
+        
+        # Duplikate entfernen (basierend auf ID)
+        seen_ids = set()
+        unique_manuals = []
+        for manual in all_manuals:
+            if manual.id not in seen_ids:
+                seen_ids.add(manual.id)
+                unique_manuals.append(manual)
+        
+        # Sortieren: Installationsanleitungen zuerst, dann nach order
+        unique_manuals.sort(key=lambda m: (m.order, m.title))
+        
+        return unique_manuals

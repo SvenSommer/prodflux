@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { EmailTemplatesSettingsComponent } from '../email-templates-settings.component';
 import { ShippingConfigSettingsComponent } from '../shipping-config-settings/shipping-config-settings.component';
+import { ProductManualsSettingsComponent } from '../product-manuals-settings/product-manuals-settings.component';
 
 @Component({
   selector: 'app-shipping-settings',
@@ -17,6 +18,7 @@ import { ShippingConfigSettingsComponent } from '../shipping-config-settings/shi
     MatIconModule,
     EmailTemplatesSettingsComponent,
     ShippingConfigSettingsComponent,
+    ProductManualsSettingsComponent,
   ],
   template: `
     <div class="page-container">
@@ -39,6 +41,13 @@ import { ShippingConfigSettingsComponent } from '../shipping-config-settings/shi
         <mat-tab label="E-Mail Templates">
           <div class="tab-content">
             <app-email-templates-settings></app-email-templates-settings>
+          </div>
+        </mat-tab>
+
+        <!-- Handbücher Tab -->
+        <mat-tab label="Handbücher">
+          <div class="tab-content">
+            <app-product-manuals-settings></app-product-manuals-settings>
           </div>
         </mat-tab>
       </mat-tab-group>

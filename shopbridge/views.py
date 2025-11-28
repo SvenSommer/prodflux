@@ -12,17 +12,23 @@ from django.shortcuts import get_object_or_404
 from dotenv import load_dotenv
 from urllib.parse import quote
 import os
-import re
 import hashlib
 import json
 from collections import defaultdict
 from pathlib import Path
 
-from .models import EmailTemplate, get_language_for_country, ShippingCountryConfig
+from .models import (
+    EmailTemplate,
+    get_language_for_country,
+    ShippingCountryConfig,
+    ProductManual,
+    normalize_sku,
+)
 from .serializers import (
     EmailTemplateSerializer,
     EmailTemplateRenderSerializer,
-    ShippingCountryConfigSerializer
+    ShippingCountryConfigSerializer,
+    ProductManualSerializer
 )
 
 # Nur einmal versuchen, die .env zu laden, falls sie existiert
@@ -154,29 +160,6 @@ def get_product_stocks(product_ids: list) -> dict:
     return result
 
 
-def normalize_sku(sku):
-    """
-    Normalize WooCommerce SKU to match Prodflux artikelnummer.
-    Handles variants like -LEFT, -RIGHT, -1, -2, -3, etc.
-    """
-    if not sku:
-        return None
-
-    # Remove variant suffixes: -LEFT, -RIGHT, -1, -2, -3, -SL, etc.
-    normalized = re.sub(r'-(LEFT|RIGHT|[0-9]+|SL)$', '', sku.upper())
-
-    # Fix underscore to hyphen
-    normalized = normalized.replace('_', '-')
-
-    # Handle special cases
-    # SD-AR620X-E-NG -> SD-AR620X-NG
-    normalized = normalized.replace('-E-NG', '-NG')
-    # SD-GENERIC-E-DS -> SD-GENERIC-DS
-    normalized = normalized.replace('-E-DS', '-DS')
-
-    return normalized
-
-
 def map_woocommerce_to_prodflux(wc_sku, wc_name, sku_mapping):
     """
     Map a WooCommerce product to a Prodflux product.
@@ -197,7 +180,7 @@ def map_woocommerce_to_prodflux(wc_sku, wc_name, sku_mapping):
         return (prod_id, prod_name, 'normalized')
 
     # Try without SD- prefix
-    if normalized and normalized.startswith('SD-'):
+    if normalized and normalized.startswith('Einrichtungsanleitungen'):
         without_prefix = normalized[3:]
         if without_prefix in sku_mapping:
             prod_id, prod_name = sku_mapping[without_prefix]
@@ -1068,4 +1051,133 @@ def shipping_config_defaults(request):
             {'code': 'SE', 'name': 'Schweden'},
         ],
         'default_external_link': 'https://www.dhl.de/de/privatkunden.html'
+    })
+
+
+# =============================================================================
+# Product Manuals Views
+# =============================================================================
+
+class ProductManualListCreateView(ListCreateAPIView):
+    """
+    Liste aller Produkthandbücher oder neues Handbuch erstellen.
+    
+    GET: Alle Handbücher abrufen (optional gefiltert nach Produkt/Sprache)
+    POST: Neues Handbuch erstellen
+    """
+    queryset = ProductManual.objects.all()
+    serializer_class = ProductManualSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Optionale Filter
+        product = self.request.query_params.get('product')
+        language = self.request.query_params.get('language')
+        manual_type = self.request.query_params.get('type')
+        active_only = self.request.query_params.get('active', 'true')
+        
+        if product:
+            queryset = queryset.filter(product_identifier__icontains=product)
+        if language:
+            queryset = queryset.filter(language=language)
+        if manual_type:
+            queryset = queryset.filter(manual_type=manual_type)
+        if active_only.lower() == 'true':
+            queryset = queryset.filter(is_active=True)
+        
+        return queryset
+
+
+class ProductManualDetailView(RetrieveUpdateDestroyAPIView):
+    """
+    Einzelnes Produkthandbuch abrufen, aktualisieren oder löschen.
+    """
+    queryset = ProductManual.objects.all()
+    serializer_class = ProductManualSerializer
+    permission_classes = [IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def product_manuals_for_order(request, order_id):
+    """
+    Holt alle relevanten Handbücher für eine Bestellung.
+    
+    Ermittelt basierend auf den Produkten in der Bestellung und dem
+    Zielland die passenden Anleitungen.
+    """
+    # WooCommerce Order laden
+    order_data, error = fetch_woocommerce_order_detail(order_id)
+    if error:
+        return Response(
+            {'error': 'Bestellung nicht gefunden'},
+            status=http_status.HTTP_404_NOT_FOUND
+        )
+    
+    # Produkt-Identifiers aus Line Items extrahieren
+    product_identifiers = []
+    for item in order_data.get('line_items', []):
+        # SKU oder Produktname verwenden
+        if item.get('sku'):
+            product_identifiers.append(item['sku'])
+        if item.get('name'):
+            product_identifiers.append(item['name'])
+    
+    # Zielland aus Versandadresse
+    country_code = order_data.get('shipping', {}).get('country', 'DE')
+    
+    # Handbücher abrufen
+    manuals = ProductManual.get_manuals_for_order(
+        product_identifiers,
+        country_code
+    )
+    
+    serializer = ProductManualSerializer(manuals, many=True)
+    
+    return Response({
+        'order_id': order_id,
+        'country_code': country_code,
+        'language': get_language_for_country(country_code),
+        'product_identifiers': list(set(product_identifiers)),
+        'manuals': serializer.data,
+        'manual_count': len(manuals)
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def product_manual_defaults(request):
+    """
+    Gibt die verfügbaren Optionen für Handbücher zurück.
+    """
+    return Response({
+        'languages': [
+            {'code': 'de', 'name': 'Deutsch'},
+            {'code': 'en', 'name': 'English'},
+            {'code': 'fr', 'name': 'Français'},
+            {'code': 'es', 'name': 'Español'},
+        ],
+        'manual_types': [
+            {'code': 'installation', 'name': 'Installationsanleitung'},
+            {'code': 'configuration', 'name': 'Einrichtungsanleitung'},
+            {'code': 'quickstart', 'name': 'Schnellstartanleitung'},
+            {'code': 'other', 'name': 'Sonstiges'},
+        ],
+        'common_products': [
+            'SD-KRT2',
+            'SD-KRT2-A',
+            'SD-KRT2-DS',
+            'SD-AR620X',
+            'SD-AR620X-NG',
+            'SD-ATR833',
+            'SD-ATR833-A',
+            'SD-ATR833-DS',
+            'SD-GENERIC',
+            'SD-GENERIC-DS',
+            'SD-TY9X',
+            'SD-TY96/TY97-DS',
+            'SD-AV-30-E',
+        ]
     })

@@ -1,0 +1,156 @@
+### Product Manuals API Tests
+### Base URL: http://localhost:8000/api/shopbridge
+
+# Variables
+@baseUrl = http://localhost:8000/api/shopbridge
+@token = {{$dotenv JWT_TOKEN}}
+
+### ==========================================
+### Product Manuals - CRUD
+### ==========================================
+
+### Get all product manuals
+GET {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+
+### Get product manuals filtered by product
+GET {{baseUrl}}/product-manuals/?product=SD-KRT2
+Authorization: Bearer {{token}}
+
+### Get product manuals filtered by language
+GET {{baseUrl}}/product-manuals/?language=de
+Authorization: Bearer {{token}}
+
+### Get product manuals filtered by type
+GET {{baseUrl}}/product-manuals/?type=installation
+Authorization: Bearer {{token}}
+
+### Get product manual defaults (languages, types, common products)
+GET {{baseUrl}}/product-manuals/defaults/
+Authorization: Bearer {{token}}
+
+### Get manuals for a specific order
+GET {{baseUrl}}/product-manuals/for-order/12345/
+Authorization: Bearer {{token}}
+
+### Create new product manual (German)
+POST {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "product_identifier": "SD-KRT2",
+  "language": "de",
+  "manual_type": "installation",
+  "title": "Installationsanleitung SD-KRT2",
+  "pdf_url": "https://sdlink.de/wp-content/uploads/2025/01/Installation-SD-KRT2-E-V1.1.pdf",
+  "is_active": true,
+  "order": 0
+}
+
+### Create new product manual (English)
+POST {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "product_identifier": "SD-KRT2",
+  "language": "en",
+  "manual_type": "installation",
+  "title": "Installation instructions for SD-KRT2",
+  "pdf_url": "https://sdlink.de/wp-content/uploads/2025/02/Installation-SD-KRT2-E-V1.1-EN.pdf",
+  "is_active": true,
+  "order": 0
+}
+
+### Update product manual
+PATCH {{baseUrl}}/product-manuals/1/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "is_active": false
+}
+
+### Delete product manual
+DELETE {{baseUrl}}/product-manuals/1/
+Authorization: Bearer {{token}}
+
+### ==========================================
+### Bulk Create Examples - All Manuals
+### ==========================================
+
+### SD-KRT2 German
+POST {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "product_identifier": "SD-KRT2",
+  "language": "de",
+  "manual_type": "installation",
+  "title": "Installationsanleitung SD-KRT2",
+  "pdf_url": "https://sdlink.de/wp-content/uploads/2025/01/Installation-SD-KRT2-E-V1.1.pdf",
+  "is_active": true,
+  "order": 0
+}
+
+### SD-KRT2 Angled German
+POST {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "product_identifier": "SD-KRT2-A",
+  "language": "de",
+  "manual_type": "installation",
+  "title": "Installationsanleitung SD-KRT2 angled",
+  "pdf_url": "https://sdlink.de/wp-content/uploads/2025/01/Installation-SD-KRT2-A-V1.1.pdf",
+  "is_active": true,
+  "order": 0
+}
+
+### SD-KRT2 Dual Source German
+POST {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "product_identifier": "SD-KRT2-DS",
+  "language": "de",
+  "manual_type": "installation",
+  "title": "Installationsanleitung SD-KRT2 Dual Source",
+  "pdf_url": "https://sdlink.de/wp-content/uploads/2025/09/Installation-SD-KRT2-DS-V2.0.pdf",
+  "is_active": true,
+  "order": 0
+}
+
+### SkyDemon Configuration German
+POST {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "product_identifier": "SD-",
+  "language": "de",
+  "manual_type": "configuration",
+  "title": "Anleitung Einrichtung neuer BLE Geräte in SkyDemon",
+  "pdf_url": "https://sdlink.de/wp-content/uploads/2025/04/Wie-konfiguriere-ich-in-SkyDemon-einen-neuen-SD.pdf",
+  "is_active": true,
+  "order": 100
+}
+
+### SkyDemon Configuration English
+POST {{baseUrl}}/product-manuals/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "product_identifier": "SD-",
+  "language": "en",
+  "manual_type": "configuration",
+  "title": "How to add a new BLE adapter in Skydemon",
+  "pdf_url": "https://sdlink.de/wp-content/uploads/2025/02/How-to-Configure-a-New-SD-BLE-Adapter-in-SkyDemon-EN.pdf",
+  "is_active": true,
+  "order": 100
+}

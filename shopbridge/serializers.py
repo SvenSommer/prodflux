@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import EmailTemplate, ShippingCountryConfig
+from .models import EmailTemplate, ShippingCountryConfig, ProductManual
 
 
 class EmailTemplateSerializer(serializers.ModelSerializer):
@@ -126,3 +126,42 @@ class ShippingCountryConfigSerializer(serializers.ModelSerializer):
                 })
         
         return data
+
+
+class ProductManualSerializer(serializers.ModelSerializer):
+    """Serializer für Produkthandbücher."""
+    
+    language_display = serializers.CharField(
+        source='get_language_display',
+        read_only=True
+    )
+    manual_type_display = serializers.CharField(
+        source='get_manual_type_display',
+        read_only=True
+    )
+
+    class Meta:
+        model = ProductManual
+        fields = [
+            'id',
+            'product_identifier',
+            'language',
+            'language_display',
+            'manual_type',
+            'manual_type_display',
+            'title',
+            'pdf_url',
+            'is_active',
+            'applies_to_all',
+            'order',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate_pdf_url(self, value):
+        """PDF-URL validieren."""
+        if value and not value.lower().endswith('.pdf'):
+            # Warnung, aber kein Fehler - manche URLs sind dynamisch
+            pass
+        return value

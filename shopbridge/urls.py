@@ -20,6 +20,10 @@ from .views import (
     ShippingCountryConfigDetailView,
     shipping_config_for_country,
     shipping_config_defaults,
+    ProductManualListCreateView,
+    ProductManualDetailView,
+    product_manuals_for_order,
+    product_manual_defaults,
 )
 
 urlpatterns = [
@@ -134,5 +138,27 @@ urlpatterns = [
         "shipping-config/defaults/",
         shipping_config_defaults,
         name="shipping-config-defaults"
+    ),
+
+    # Product Manuals
+    path(
+        "product-manuals/",
+        ProductManualListCreateView.as_view(),
+        name="product-manual-list"
+    ),
+    path(
+        "product-manuals/<int:pk>/",
+        ProductManualDetailView.as_view(),
+        name="product-manual-detail"
+    ),
+    path(
+        "product-manuals/for-order/<int:order_id>/",
+        product_manuals_for_order,
+        name="product-manuals-for-order"
+    ),
+    path(
+        "product-manuals/defaults/",
+        product_manual_defaults,
+        name="product-manual-defaults"
     ),
 ]

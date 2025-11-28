@@ -15,6 +15,7 @@ import { ShopbridgeOrderCustomerCardComponent } from './shopbridge-order-custome
 import { ShopbridgeOrderItemsCardComponent } from './shopbridge-order-items-card/shopbridge-order-items-card.component';
 import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financial-card/shopbridge-order-financial-card.component';
 import { ShopbridgeOrderLabelsCardComponent } from './shopbridge-order-labels-card/shopbridge-order-labels-card.component';
+import { ShopbridgeOrderManualsCardComponent } from './shopbridge-order-manuals-card/shopbridge-order-manuals-card.component';
 import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complete-order-dialog/complete-order-dialog.component';
 import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-label-dialog/create-label-dialog.component';
 import { EditAddressDialogComponent, EditAddressDialogData } from './edit-address-dialog/edit-address-dialog.component';
@@ -37,7 +38,8 @@ import { EditNotesDialogComponent, EditNotesDialogData } from './edit-notes-dial
     ShopbridgeOrderCustomerCardComponent,
     ShopbridgeOrderItemsCardComponent,
     ShopbridgeOrderFinancialCardComponent,
-    ShopbridgeOrderLabelsCardComponent
+    ShopbridgeOrderLabelsCardComponent,
+    ShopbridgeOrderManualsCardComponent
   ],
   template: `
     <div class="page-container">
@@ -138,6 +140,10 @@ import { EditNotesDialogComponent, EditNotesDialogData } from './edit-notes-dial
               [orderId]="order.id"
               (createLabel)="openCreateLabelDialog()">
             </app-shopbridge-order-labels-card>
+            <!-- Handbücher zum Ausdruck -->
+            <app-shopbridge-order-manuals-card
+              [orderId]="order.id">
+            </app-shopbridge-order-manuals-card>
           </div>
         </div>
 

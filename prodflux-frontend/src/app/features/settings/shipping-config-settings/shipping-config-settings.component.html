@@ -1,0 +1,224 @@
+<mat-card class="settings-card">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>local_shipping</mat-icon>
+      Versandkonfiguration pro Land
+    </mat-card-title>
+    <mat-card-subtitle>
+      Definieren Sie, welches Versandprodukt für jedes Land verwendet werden soll
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Info Banner -->
+    <div class="info-banner">
+      <mat-icon>info</mat-icon>
+      <div class="info-content">
+        <strong>Konfigurationshinweise:</strong>
+        <ul>
+          <li><strong>DHL Produkt:</strong> Automatische Labelerstellung mit dem gewählten Produkt</li>
+          <li><strong>Externer Link:</strong> Zeigt einen Link zur manuellen Versandabwicklung (z.B. DHL Privatkunden)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Add New Configuration -->
+    <div class="add-section">
+      <h3>
+        <mat-icon>add_circle</mat-icon>
+        {{ editingConfig ? 'Konfiguration bearbeiten' : 'Neue Konfiguration' }}
+      </h3>
+
+      <form (ngSubmit)="saveConfig()" class="config-form">
+        <div class="form-row">
+          <!-- Country Selection -->
+          <mat-form-field appearance="outline">
+            <mat-label>Land</mat-label>
+            <mat-select
+              [(ngModel)]="formData.country_code"
+              name="country_code"
+              [disabled]="!!editingConfig"
+              (selectionChange)="onCountryChange($event.value)"
+              required>
+              <mat-option *ngFor="let country of availableCountries" [value]="country.code">
+                {{ country.name }} ({{ country.code }})
+              </mat-option>
+            </mat-select>
+            <mat-hint *ngIf="editingConfig">Land kann nicht geändert werden</mat-hint>
+          </mat-form-field>
+
+          <!-- Shipping Type -->
+          <mat-form-field appearance="outline">
+            <mat-label>Versandart</mat-label>
+            <mat-select
+              [(ngModel)]="formData.shipping_type"
+              name="shipping_type"
+              (selectionChange)="onShippingTypeChange($event.value)"
+              required>
+              <mat-option *ngFor="let type of defaults?.shipping_types" [value]="type.code">
+                {{ type.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- DHL Product Selection (nur bei shipping_type = dhl_product) -->
+        <div class="form-row" *ngIf="formData.shipping_type === 'dhl_product'">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>DHL Produkt</mat-label>
+            <mat-select [(ngModel)]="formData.dhl_product" name="dhl_product" required>
+              <mat-option *ngFor="let product of defaults?.dhl_products" [value]="product.code">
+                <mat-icon class="product-icon">{{ getProductIcon(product.code) }}</mat-icon>
+                {{ product.name }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Dieses Produkt wird bei der Labelerstellung vorausgewählt</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- External Link (nur bei shipping_type = external_link) -->
+        <div class="form-row" *ngIf="formData.shipping_type === 'external_link'">
+          <mat-form-field appearance="outline" class="grow">
+            <mat-label>Externer Link (URL)</mat-label>
+            <input matInput [(ngModel)]="formData.external_link" name="external_link" type="url" required>
+            <mat-icon matPrefix>link</mat-icon>
+            <mat-hint>z.B. https://www.dhl.de/de/privatkunden.html</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Button-Beschriftung</mat-label>
+            <input matInput [(ngModel)]="formData.external_link_label" name="external_link_label">
+            <mat-hint>Text für den Button</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notizen (optional)</mat-label>
+            <textarea matInput [(ngModel)]="formData.notes" name="notes" rows="2"></textarea>
+            <mat-icon matPrefix>notes</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <!-- Active Toggle -->
+        <div class="form-row toggle-row">
+          <mat-checkbox [(ngModel)]="formData.is_active" name="is_active" color="primary">
+            Konfiguration aktiv
+          </mat-checkbox>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button
+            mat-button
+            type="button"
+            (click)="cancelEdit()"
+            *ngIf="editingConfig">
+            Abbrechen
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="!isFormValid()">
+            <mat-icon>{{ editingConfig ? 'save' : 'add' }}</mat-icon>
+            {{ editingConfig ? 'Speichern' : 'Hinzufügen' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Existing Configurations Table -->
+    <div class="configs-section" *ngIf="configs.length > 0">
+      <h3>
+        <mat-icon>list</mat-icon>
+        Konfigurierte Länder ({{ configs.length }})
+      </h3>
+
+      <table mat-table [dataSource]="configs" class="mat-elevation-z1 configs-table">
+        <!-- Country Column -->
+        <ng-container matColumnDef="country">
+          <th mat-header-cell *matHeaderCellDef>Land</th>
+          <td mat-cell *matCellDef="let config">
+            <div class="country-cell">
+              <span class="country-flag">{{ getCountryFlag(config.country_code) }}</span>
+              <div class="country-info">
+                <span class="country-name">{{ config.country_name }}</span>
+                <span class="country-code">{{ config.country_code }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Shipping Type Column -->
+        <ng-container matColumnDef="shipping_type">
+          <th mat-header-cell *matHeaderCellDef>Versandart</th>
+          <td mat-cell *matCellDef="let config">
+            <div class="shipping-type-cell" [class.dhl]="config.shipping_type === 'dhl_product'" [class.external]="config.shipping_type === 'external_link'">
+              <mat-icon>{{ config.shipping_type === 'dhl_product' ? 'local_shipping' : 'open_in_new' }}</mat-icon>
+              <span>{{ config.shipping_type_display }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Product/Link Column -->
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>Produkt / Link</th>
+          <td mat-cell *matCellDef="let config">
+            <span *ngIf="config.shipping_type === 'dhl_product'" class="product-badge">
+              {{ config.dhl_product_display || config.dhl_product }}
+            </span>
+            <a *ngIf="config.shipping_type === 'external_link'"
+               [href]="config.external_link"
+               target="_blank"
+               class="external-link">
+              <mat-icon>link</mat-icon>
+              {{ config.external_link_label || 'Link öffnen' }}
+            </a>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let config">
+            <span class="status-badge" [class.active]="config.is_active" [class.inactive]="!config.is_active">
+              <mat-icon>{{ config.is_active ? 'check_circle' : 'cancel' }}</mat-icon>
+              {{ config.is_active ? 'Aktiv' : 'Inaktiv' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+          <td mat-cell *matCellDef="let config">
+            <button mat-icon-button color="primary" (click)="editConfig(config)" matTooltip="Bearbeiten">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteConfig(config)" matTooltip="Löschen">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="configs.length === 0 && !loading">
+      <mat-icon>inventory_2</mat-icon>
+      <h4>Keine Konfigurationen vorhanden</h4>
+      <p>Fügen Sie oben die erste Versandkonfiguration hinzu.</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Lade Konfigurationen...</p>
+    </div>
+  </mat-card-content>
+</mat-card>

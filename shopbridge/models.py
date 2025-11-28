@@ -323,3 +323,110 @@ class DHLLabel(models.Model):
         self.deleted_at = timezone.now()
         self.label_pdf_base64 = ''  # PDF nicht mehr speichern
         self.save(update_fields=['status', 'deleted_at', 'label_pdf_base64'])
+
+
+class ShippingCountryConfig(models.Model):
+    """
+    Konfiguration für Versandmethoden pro Land.
+    
+    Definiert, welches DHL-Produkt oder welcher externe Link
+    für ein bestimmtes Land verwendet werden soll.
+    """
+    
+    SHIPPING_TYPE_CHOICES = [
+        ('dhl_product', 'DHL Produkt (Label erstellen)'),
+        ('external_link', 'Externer Link (manuell)'),
+    ]
+    
+    DHL_PRODUCT_CHOICES = [
+        ('V62WP', 'Warenpost National'),
+        ('V66WPI', 'Warenpost International'),
+        ('V62KP', 'DHL Kleinpaket'),
+        ('V01PAK', 'DHL Paket'),
+    ]
+    
+    country_code = models.CharField(
+        max_length=2,
+        unique=True,
+        verbose_name='Ländercode (ISO)',
+        help_text='2-stelliger ISO-Ländercode (z.B. DE, AT, CH)'
+    )
+    
+    country_name = models.CharField(
+        max_length=100,
+        verbose_name='Ländername',
+        help_text='Anzeigename des Landes'
+    )
+    
+    shipping_type = models.CharField(
+        max_length=20,
+        choices=SHIPPING_TYPE_CHOICES,
+        default='dhl_product',
+        verbose_name='Versandart'
+    )
+    
+    dhl_product = models.CharField(
+        max_length=20,
+        choices=DHL_PRODUCT_CHOICES,
+        blank=True,
+        null=True,
+        verbose_name='DHL Produkt',
+        help_text='Nur relevant wenn Versandart = DHL Produkt'
+    )
+    
+    external_link = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name='Externer Link',
+        help_text='Link zur externen Versandseite (z.B. DHL Privatkunden)'
+    )
+    
+    external_link_label = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        default='Manuell versenden',
+        verbose_name='Link-Beschriftung',
+        help_text='Text für den Button/Link'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Aktiv'
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Notizen',
+        help_text='Interne Notizen zur Konfiguration'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Versandkonfiguration'
+        verbose_name_plural = 'Versandkonfigurationen'
+        ordering = ['country_name']
+    
+    def __str__(self):
+        return f"{self.country_name} ({self.country_code})"
+    
+    @classmethod
+    def get_config_for_country(cls, country_code: str):
+        """Holt die Konfiguration für ein Land oder None."""
+        try:
+            return cls.objects.get(country_code=country_code.upper(), is_active=True)
+        except cls.DoesNotExist:
+            return None
+    
+    @classmethod
+    def get_default_dhl_product(cls, country_code: str) -> str:
+        """Gibt das Standard-DHL-Produkt für ein Land zurück."""
+        config = cls.get_config_for_country(country_code)
+        if config and config.shipping_type == 'dhl_product' and config.dhl_product:
+            return config.dhl_product
+        # Fallback: Warenpost für DE, International für andere
+        return 'V62WP' if country_code.upper() == 'DE' else 'V66WPI'

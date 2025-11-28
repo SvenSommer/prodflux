@@ -72,6 +72,10 @@ export const routes: Routes = [
         path: 'settings',
         loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent)
       },
+      {
+        path: 'shipping-settings',
+        loadComponent: () => import('./features/settings/shipping-settings/shipping-settings.component').then(m => m.ShippingSettingsComponent)
+      },
 
       // LIEFERANTEN - geschützt
       {

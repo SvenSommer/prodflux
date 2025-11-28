@@ -16,6 +16,10 @@ from .views import (
     sales_excel_config_view,
     order_serial_numbers_create_view,
     order_serial_numbers_list_view,
+    ShippingCountryConfigListView,
+    ShippingCountryConfigDetailView,
+    shipping_config_for_country,
+    shipping_config_defaults,
 )
 
 urlpatterns = [
@@ -109,4 +113,26 @@ urlpatterns = [
 
     # DHL Shipping
     path("dhl/", include("shopbridge.dhl.urls")),
+
+    # Shipping Country Configuration
+    path(
+        "shipping-config/",
+        ShippingCountryConfigListView.as_view(),
+        name="shipping-config-list"
+    ),
+    path(
+        "shipping-config/<int:pk>/",
+        ShippingCountryConfigDetailView.as_view(),
+        name="shipping-config-detail"
+    ),
+    path(
+        "shipping-config/country/<str:country_code>/",
+        shipping_config_for_country,
+        name="shipping-config-for-country"
+    ),
+    path(
+        "shipping-config/defaults/",
+        shipping_config_defaults,
+        name="shipping-config-defaults"
+    ),
 ]

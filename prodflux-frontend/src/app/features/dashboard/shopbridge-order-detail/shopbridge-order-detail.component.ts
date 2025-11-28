@@ -17,7 +17,8 @@ import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financ
 import { ShopbridgeOrderLabelsCardComponent } from './shopbridge-order-labels-card/shopbridge-order-labels-card.component';
 import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complete-order-dialog/complete-order-dialog.component';
 import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-label-dialog/create-label-dialog.component';
-import { EditOrderDialogComponent, EditOrderDialogData } from './edit-order-dialog/edit-order-dialog.component';
+import { EditAddressDialogComponent, EditAddressDialogData } from './edit-address-dialog/edit-address-dialog.component';
+import { EditNotesDialogComponent, EditNotesDialogData } from './edit-notes-dialog/edit-notes-dialog.component';
 
 @Component({
   selector: 'app-shopbridge-order-detail',
@@ -77,48 +78,37 @@ import { EditOrderDialogComponent, EditOrderDialogData } from './edit-order-dial
             <span class="order-id-hint">WooCommerce ID: {{ order.id }}</span>
           </div>
           <div class="header-actions">
-            <!-- Bestellung bearbeiten -->
-            <button
-              mat-stroked-button
-              color="primary"
-              (click)="openEditOrderDialog()">
-              <mat-icon>edit</mat-icon>
-              Bearbeiten
-            </button>
-            <!-- DHL Label erstellen -->
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="openCreateLabelDialog()">
-              <mat-icon>local_shipping</mat-icon>
-              DHL Label
-            </button>
-            <!-- Bestellung abschließen - nur bei Status "processing" -->
-            <button
-              *ngIf="order.status === 'processing'"
-              mat-raised-button
-              color="accent"
-              (click)="openCompleteOrderDialog()">
-              <mat-icon>send</mat-icon>
-              Bestellung abschließen
-            </button>
-            <!-- Status-Badge für abgeschlossene Bestellungen -->
-            <div *ngIf="order.status === 'completed'" class="completed-badge">
-              <mat-icon>check_circle</mat-icon>
-              Abgeschlossen
-            </div>
-            <a mat-stroked-button [href]="getWooCommerceEditUrl()" target="_blank" rel="noopener">
-              <mat-icon>open_in_new</mat-icon>
-              In WooCommerce öffnen
-            </a>
-            <button mat-raised-button color="primary" (click)="refresh()">
-              <mat-icon>refresh</mat-icon>
-              Aktualisieren
-            </button>
-            <button mat-stroked-button color="primary" [routerLink]="['/dashboard']">
+            <!-- Links: Zurück zum Dashboard -->
+            <button mat-stroked-button color="primary" [routerLink]="['/dashboard']" class="back-button">
               <mat-icon>arrow_back</mat-icon>
               Zurück zum Dashboard
             </button>
+
+            <!-- Rechts: Aktionen -->
+            <div class="right-actions">
+              <!-- Bestellung abschließen - nur bei Status "processing" -->
+              <button
+                *ngIf="order.status === 'processing'"
+                mat-raised-button
+                color="accent"
+                (click)="openCompleteOrderDialog()">
+                <mat-icon>send</mat-icon>
+                Bestellung abschließen
+              </button>
+              <!-- Status-Badge für abgeschlossene Bestellungen -->
+              <div *ngIf="order.status === 'completed'" class="completed-badge">
+                <mat-icon>check_circle</mat-icon>
+                Abgeschlossen
+              </div>
+              <a mat-stroked-button [href]="getWooCommerceEditUrl()" target="_blank" rel="noopener">
+                <mat-icon>open_in_new</mat-icon>
+                In WooCommerce öffnen
+              </a>
+              <button mat-raised-button color="primary" (click)="refresh()">
+                <mat-icon>refresh</mat-icon>
+                Aktualisieren
+              </button>
+            </div>
           </div>
         </div>
 
@@ -126,20 +116,28 @@ import { EditOrderDialogComponent, EditOrderDialogData } from './edit-order-dial
         <div class="content-grid">
           <!-- Left Column: Main Information -->
           <div class="left-column">
-            <app-shopbridge-order-info-card [order]="order"></app-shopbridge-order-info-card>
+            <app-shopbridge-order-info-card
+              [order]="order"
+              (editNotes)="openEditNotesDialog()">
+            </app-shopbridge-order-info-card>
             <app-shopbridge-order-items-card [lineItems]="order.line_items"></app-shopbridge-order-items-card>
-            <!-- DHL Labels -->
+            <!-- Finanzen (vorher rechts, jetzt hier) -->
+            <app-shopbridge-order-financial-card [order]="order"></app-shopbridge-order-financial-card>
+          </div>
+
+          <!-- Right Column: Customer & Labels -->
+          <div class="right-column">
+            <app-shopbridge-order-customer-card
+              [order]="order"
+              (editBilling)="openEditBillingDialog()"
+              (editShipping)="openEditShippingDialog()">
+            </app-shopbridge-order-customer-card>
+            <!-- DHL Labels (vorher links, jetzt hier) -->
             <app-shopbridge-order-labels-card
               #labelsCard
               [orderId]="order.id"
               (createLabel)="openCreateLabelDialog()">
             </app-shopbridge-order-labels-card>
-          </div>
-
-          <!-- Right Column: Customer & Financial -->
-          <div class="right-column">
-            <app-shopbridge-order-customer-card [order]="order"></app-shopbridge-order-customer-card>
-            <app-shopbridge-order-financial-card [order]="order"></app-shopbridge-order-financial-card>
           </div>
         </div>
 
@@ -245,12 +243,10 @@ import { EditOrderDialogComponent, EditOrderDialogData } from './edit-order-dial
     // Page Header
     .page-header {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      flex-direction: column;
       padding-bottom: 20px;
       border-bottom: 2px solid #e0e0e0;
-      gap: 24px;
-      flex-wrap: wrap;
+      gap: 16px;
 
       .header-title {
         display: flex;
@@ -304,15 +300,32 @@ import { EditOrderDialogComponent, EditOrderDialogData } from './edit-order-dial
 
       .header-actions {
         display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
+        justify-content: space-between;
         align-items: center;
+        width: 100%;
+        margin-top: 16px;
+        gap: 12px;
 
-        a, button {
+        .back-button {
           display: flex;
           align-items: center;
           gap: 6px;
           white-space: nowrap;
+        }
+
+        .right-actions {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: flex-end;
+
+          a, button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+          }
         }
 
         .completed-badge {
@@ -598,29 +611,74 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
     });
   }
 
-  openEditOrderDialog(): void {
+  openEditBillingDialog(): void {
     if (!this.order) return;
 
-    const dialogData: EditOrderDialogData = {
-      order: this.order
+    const dialogData: EditAddressDialogData = {
+      orderId: this.order.id,
+      orderNumber: this.order.number,
+      type: 'billing',
+      address: this.order.billing,
     };
 
-    const dialogRef = this.dialog.open(EditOrderDialogComponent, {
+    const dialogRef = this.dialog.open(EditAddressDialogComponent, {
       data: dialogData,
-      width: '650px',
+      width: '600px',
       maxHeight: '90vh',
-      disableClose: false
+      disableClose: false,
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // result is the updated order from the API
         this.order = result;
-        this.snackBar.open(
-          `Bestellung #${this.order?.number} erfolgreich aktualisiert!`,
-          'OK',
-          { duration: 3000 }
-        );
+      }
+    });
+  }
+
+  openEditShippingDialog(): void {
+    if (!this.order) return;
+
+    const dialogData: EditAddressDialogData = {
+      orderId: this.order.id,
+      orderNumber: this.order.number,
+      type: 'shipping',
+      address: this.order.shipping,
+      billingAddress: this.order.billing,
+    };
+
+    const dialogRef = this.dialog.open(EditAddressDialogComponent, {
+      data: dialogData,
+      width: '600px',
+      maxHeight: '90vh',
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.order = result;
+      }
+    });
+  }
+
+  openEditNotesDialog(): void {
+    if (!this.order) return;
+
+    const dialogData: EditNotesDialogData = {
+      orderId: this.order.id,
+      orderNumber: this.order.number,
+      customerNote: this.order.customer_note || '',
+    };
+
+    const dialogRef = this.dialog.open(EditNotesDialogComponent, {
+      data: dialogData,
+      width: '550px',
+      maxHeight: '90vh',
+      disableClose: false,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.order = result;
       }
     });
   }

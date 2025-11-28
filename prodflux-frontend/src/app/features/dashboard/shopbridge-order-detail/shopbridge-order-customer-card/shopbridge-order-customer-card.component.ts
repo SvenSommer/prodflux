@@ -1,14 +1,15 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 import { WooCommerceOrderDetail, WooCommerceBillingAddress, WooCommerceAddress } from '../../shopbridgeorder.service';
 
 @Component({
   selector: 'app-shopbridge-order-customer-card',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatTooltipModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatTooltipModule, MatButtonModule],
   template: `
     <mat-card class="customer-card">
       <mat-card-header>
@@ -24,6 +25,13 @@ import { WooCommerceOrderDetail, WooCommerceBillingAddress, WooCommerceAddress }
             <div class="address-header">
               <mat-icon>receipt</mat-icon>
               <span>Rechnungsadresse</span>
+              <button
+                mat-icon-button
+                class="address-edit-btn"
+                matTooltip="Rechnungsadresse bearbeiten"
+                (click)="editBilling.emit()">
+                <mat-icon>edit</mat-icon>
+              </button>
             </div>
             <div class="address-content">
               <div class="customer-name">
@@ -60,6 +68,13 @@ import { WooCommerceOrderDetail, WooCommerceBillingAddress, WooCommerceAddress }
                 <mat-icon>check</mat-icon>
                 Identisch
               </span>
+              <button
+                mat-icon-button
+                class="address-edit-btn"
+                matTooltip="Lieferadresse bearbeiten"
+                (click)="editShipping.emit()">
+                <mat-icon>edit</mat-icon>
+              </button>
             </div>
             <div class="address-content" *ngIf="!isSameAddress()">
               <div class="customer-name">
@@ -112,7 +127,7 @@ import { WooCommerceOrderDetail, WooCommerceBillingAddress, WooCommerceAddress }
           font-weight: 500;
           color: #333;
 
-          mat-icon {
+          mat-icon:first-child {
             color: #1976d2;
           }
         }
@@ -150,14 +165,13 @@ import { WooCommerceOrderDetail, WooCommerceBillingAddress, WooCommerceAddress }
       text-transform: uppercase;
       letter-spacing: 0.5px;
 
-      mat-icon {
+      mat-icon:first-child {
         font-size: 20px;
         width: 20px;
         height: 20px;
       }
 
       .same-badge {
-        margin-left: auto;
         display: flex;
         align-items: center;
         gap: 4px;
@@ -172,6 +186,26 @@ import { WooCommerceOrderDetail, WooCommerceBillingAddress, WooCommerceAddress }
           font-size: 14px;
           width: 14px;
           height: 14px;
+        }
+      }
+
+      .address-edit-btn {
+        margin-left: auto;
+        color: #999;
+        transition: color 0.2s ease, background-color 0.2s ease;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+
+        &:hover {
+          color: #1976d2;
+          background-color: rgba(25, 118, 210, 0.1);
         }
       }
     }
@@ -287,6 +321,8 @@ import { WooCommerceOrderDetail, WooCommerceBillingAddress, WooCommerceAddress }
 })
 export class ShopbridgeOrderCustomerCardComponent {
   @Input() order!: WooCommerceOrderDetail;
+  @Output() editBilling = new EventEmitter<void>();
+  @Output() editShipping = new EventEmitter<void>();
 
   isSameAddress(): boolean {
     const b = this.order.billing;

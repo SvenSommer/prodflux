@@ -18,8 +18,12 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from .models import EmailTemplate, get_language_for_country
-from .serializers import EmailTemplateSerializer, EmailTemplateRenderSerializer
+from .models import EmailTemplate, get_language_for_country, ShippingCountryConfig
+from .serializers import (
+    EmailTemplateSerializer,
+    EmailTemplateRenderSerializer,
+    ShippingCountryConfigSerializer
+)
 
 # Nur einmal versuchen, die .env zu laden, falls sie existiert
 _ENV_LOADED = False
@@ -960,4 +964,108 @@ def order_serial_numbers_list_view(request, order_id):
             }
             for sn in serial_numbers
         ]
+    })
+
+
+# =============================================================================
+# Shipping Country Config Views
+# =============================================================================
+
+class ShippingCountryConfigListView(ListCreateAPIView):
+    """
+    Liste aller Versandkonfigurationen oder neue erstellen.
+    
+    GET: Alle Konfigurationen abrufen
+    POST: Neue Konfiguration erstellen
+    """
+    queryset = ShippingCountryConfig.objects.all()
+    serializer_class = ShippingCountryConfigSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class ShippingCountryConfigDetailView(RetrieveUpdateDestroyAPIView):
+    """
+    Einzelne Versandkonfiguration abrufen, aktualisieren oder löschen.
+    """
+    queryset = ShippingCountryConfig.objects.all()
+    serializer_class = ShippingCountryConfigSerializer
+    permission_classes = [IsAuthenticated]
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def shipping_config_for_country(request, country_code):
+    """
+    Holt die Versandkonfiguration für ein bestimmtes Land.
+    
+    Gibt zurück:
+    - shipping_type: 'dhl_product' oder 'external_link'
+    - Für dhl_product: dhl_product code
+    - Für external_link: URL und Label
+    """
+    config = ShippingCountryConfig.get_config_for_country(country_code)
+    
+    if not config:
+        # Fallback: Standard-Konfiguration
+        is_domestic = country_code.upper() == 'DE'
+        return Response({
+            'country_code': country_code.upper(),
+            'country_name': country_code.upper(),
+            'shipping_type': 'dhl_product',
+            'dhl_product': 'V62WP' if is_domestic else 'V66WPI',
+            'dhl_product_name': 'Warenpost' if is_domestic else 'Warenpost International',
+            'is_configured': False
+        })
+    
+    response_data = {
+        'country_code': config.country_code,
+        'country_name': config.country_name,
+        'shipping_type': config.shipping_type,
+        'is_configured': True
+    }
+    
+    if config.shipping_type == 'dhl_product':
+        response_data['dhl_product'] = config.dhl_product
+        response_data['dhl_product_name'] = config.get_dhl_product_display()
+    else:
+        response_data['external_link'] = config.external_link
+        response_data['external_link_label'] = config.external_link_label
+    
+    return Response(response_data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def shipping_config_defaults(request):
+    """
+    Gibt die verfügbaren Optionen für die Konfiguration zurück.
+    """
+    return Response({
+        'shipping_types': [
+            {'code': 'dhl_product', 'name': 'DHL Produkt (Label erstellen)'},
+            {'code': 'external_link', 'name': 'Externer Link (manuell)'},
+        ],
+        'dhl_products': [
+            {'code': 'V62WP', 'name': 'Warenpost National'},
+            {'code': 'V66WPI', 'name': 'Warenpost International'},
+            {'code': 'V62KP', 'name': 'DHL Kleinpaket'},
+            {'code': 'V01PAK', 'name': 'DHL Paket'},
+        ],
+        'default_countries': [
+            {'code': 'DE', 'name': 'Deutschland'},
+            {'code': 'AT', 'name': 'Österreich'},
+            {'code': 'CH', 'name': 'Schweiz'},
+            {'code': 'BE', 'name': 'Belgien'},
+            {'code': 'CZ', 'name': 'Tschechien'},
+            {'code': 'DK', 'name': 'Dänemark'},
+            {'code': 'ES', 'name': 'Spanien'},
+            {'code': 'FR', 'name': 'Frankreich'},
+            {'code': 'GB', 'name': 'Großbritannien'},
+            {'code': 'IT', 'name': 'Italien'},
+            {'code': 'LU', 'name': 'Luxemburg'},
+            {'code': 'NL', 'name': 'Niederlande'},
+            {'code': 'PL', 'name': 'Polen'},
+            {'code': 'SE', 'name': 'Schweden'},
+        ],
+        'default_external_link': 'https://www.dhl.de/de/privatkunden.html'
     })

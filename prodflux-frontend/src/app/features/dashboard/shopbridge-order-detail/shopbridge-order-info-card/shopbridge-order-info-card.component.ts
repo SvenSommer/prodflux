@@ -1,14 +1,16 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { WooCommerceOrderDetail, ORDER_STATUS_MAP } from '../../shopbridgeorder.service';
 
 @Component({
   selector: 'app-shopbridge-order-info-card',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatChipsModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatChipsModule, MatButtonModule, MatTooltipModule],
   template: `
     <mat-card class="info-card">
       <mat-card-header>
@@ -73,14 +75,26 @@ import { WooCommerceOrderDetail, ORDER_STATUS_MAP } from '../../shopbridgeorder.
           </div>
         </div>
 
-        <div class="divider" *ngIf="order.customer_note"></div>
+        <div class="divider"></div>
 
-        <div class="customer-note" *ngIf="order.customer_note">
+        <!-- Kundennotiz Section - immer anzeigen -->
+        <div class="customer-note" [class.empty]="!order.customer_note">
           <div class="note-header">
             <mat-icon>note</mat-icon>
             <span>Kundennotiz</span>
+            <button
+              mat-icon-button
+              class="note-edit-btn"
+              matTooltip="Kundennotiz bearbeiten"
+              (click)="editNotes.emit()">
+              <mat-icon>edit</mat-icon>
+            </button>
           </div>
-          <p class="note-content">{{ order.customer_note }}</p>
+          <p class="note-content" *ngIf="order.customer_note">{{ order.customer_note }}</p>
+          <p class="note-empty" *ngIf="!order.customer_note">
+            <mat-icon>info_outline</mat-icon>
+            Keine Kundennotiz vorhanden
+          </p>
         </div>
       </mat-card-content>
     </mat-card>
@@ -191,6 +205,11 @@ import { WooCommerceOrderDetail, ORDER_STATUS_MAP } from '../../shopbridgeorder.
       border-radius: 8px;
       padding: 16px;
 
+      &.empty {
+        background: #f5f5f5;
+        border-color: #e0e0e0;
+      }
+
       .note-header {
         display: flex;
         align-items: center;
@@ -199,10 +218,30 @@ import { WooCommerceOrderDetail, ORDER_STATUS_MAP } from '../../shopbridgeorder.
         font-weight: 600;
         margin-bottom: 8px;
 
-        mat-icon {
+        mat-icon:first-child {
           font-size: 20px;
           width: 20px;
           height: 20px;
+        }
+
+        .note-edit-btn {
+          margin-left: auto;
+          color: #999;
+          transition: color 0.2s ease, background-color 0.2s ease;
+          width: 32px;
+          height: 32px;
+          line-height: 32px;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+
+          &:hover {
+            color: #e65100;
+            background-color: rgba(230, 81, 0, 0.1);
+          }
         }
       }
 
@@ -212,12 +251,30 @@ import { WooCommerceOrderDetail, ORDER_STATUS_MAP } from '../../shopbridgeorder.
         font-size: 14px;
         line-height: 1.5;
         font-style: italic;
+        white-space: pre-wrap;
+      }
+
+      .note-empty {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: #999;
+        font-size: 14px;
+        font-style: italic;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
       }
     }
   `]
 })
 export class ShopbridgeOrderInfoCardComponent {
   @Input() order!: WooCommerceOrderDetail;
+  @Output() editNotes = new EventEmitter<void>();
 
   getStatusLabel(): string {
     return ORDER_STATUS_MAP[this.order.status]?.label || this.order.status;

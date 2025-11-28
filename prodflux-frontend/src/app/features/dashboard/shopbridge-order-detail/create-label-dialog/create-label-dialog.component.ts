@@ -28,6 +28,7 @@ import {
   AddressValidationResult,
 } from '../../dhl.service';
 import { WooCommerceOrderDetail } from '../../shopbridgeorder.service';
+import { ShippingConfigService, CountryShippingInfo } from '../../../settings/shipping-config.service';
 
 export interface CreateLabelDialogData {
   order: WooCommerceOrderDetail;
@@ -83,7 +84,33 @@ export interface CreateLabelDialogResult {
         </div>
       </div>
 
-      <!-- Product Selection -->
+      <!-- Loading Config -->
+      <div *ngIf="loadingConfig" class="loading-config">
+        <mat-spinner diameter="24"></mat-spinner>
+        <span>Versandkonfiguration wird geladen...</span>
+      </div>
+
+      <!-- External Link Mode (e.g., Switzerland, UK) -->
+      <div *ngIf="!loadingConfig && shippingConfig?.shipping_type === 'external_link'" class="external-link-section">
+        <div class="external-info">
+          <mat-icon>info</mat-icon>
+          <div class="external-text">
+            <strong>Externer Versanddienstleister</strong>
+            <p>Für {{ shippingConfig?.country_name || data.order.shipping.country }} wird ein externer Versanddienstleister verwendet.</p>
+          </div>
+        </div>
+        <a
+          [href]="shippingConfig?.external_link || 'https://www.dhl.de/de/privatkunden.html'"
+          target="_blank"
+          class="external-link-button">
+          <mat-icon>open_in_new</mat-icon>
+          {{ shippingConfig?.external_link_label || 'DHL Privatkunden Portal öffnen' }}
+        </a>
+      </div>
+
+      <!-- DHL Product Mode (Normal Label Creation) -->
+      <ng-container *ngIf="!loadingConfig && (!shippingConfig || shippingConfig.shipping_type === 'dhl_product')">
+        <!-- Product Selection -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>DHL Produkt</mat-label>
         <mat-select [(ngModel)]="selectedProduct" (selectionChange)="onProductChange()">
@@ -217,6 +244,7 @@ export interface CreateLabelDialogResult {
           <li *ngFor="let warning of result?.warnings">{{ warning }}</li>
         </ul>
       </div>
+      </ng-container>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
@@ -252,11 +280,11 @@ export interface CreateLabelDialogResult {
       </button>
 
       <button
-        *ngIf="!result?.success"
+        *ngIf="!result?.success && (!shippingConfig || shippingConfig.shipping_type === 'dhl_product')"
         mat-raised-button
         color="primary"
         (click)="createLabel()"
-        [disabled]="loading || validating">
+        [disabled]="loading || validating || loadingConfig">
         <mat-spinner *ngIf="loading || validating" diameter="20"></mat-spinner>
         <mat-icon *ngIf="!loading && !validating">local_shipping</mat-icon>
         {{ validating ? 'Prüfe Adresse...' : (loading ? 'Wird erstellt...' : 'Label erstellen') }}
@@ -307,6 +335,79 @@ export interface CreateLabelDialogResult {
         font-size: 14px;
         line-height: 1.5;
         color: #333;
+      }
+    }
+
+    .loading-config {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 20px;
+
+      span {
+        color: #666;
+        font-size: 14px;
+      }
+    }
+
+    .external-link-section {
+      padding: 20px;
+      background: #fff3e0;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #ff9800;
+
+      .external-info {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+
+        mat-icon {
+          color: #ff9800;
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+
+        .external-text {
+          strong {
+            display: block;
+            color: #e65100;
+            margin-bottom: 4px;
+          }
+
+          p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+          }
+        }
+      }
+
+      .external-link-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: #ff9800;
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.2s;
+
+        &:hover {
+          background: #f57c00;
+        }
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
       }
     }
 
@@ -545,6 +646,7 @@ export interface CreateLabelDialogResult {
 })
 export class CreateLabelDialogComponent {
   private dhlService = inject(DHLService);
+  private shippingConfigService = inject(ShippingConfigService);
   private snackBar = inject(MatSnackBar);
 
   // Configuration options
@@ -565,18 +667,47 @@ export class CreateLabelDialogComponent {
   loading = false;
   validating = false;
   loadingServices = true;
+  loadingConfig = true;
   error: string | null = null;
   result: LabelResult | null = null;
   validationResult: AddressValidationResult | null = null;
+
+  // Shipping config for this country
+  shippingConfig: CountryShippingInfo | null = null;
 
   constructor(
     public dialogRef: MatDialogRef<CreateLabelDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CreateLabelDialogData
   ) {
-    // Auto-detect product based on shipping method
-    this.detectProduct();
+    // Load shipping config for country, then detect product
+    this.loadShippingConfig();
     // Load services from backend
     this.loadServices();
+  }
+
+  private loadShippingConfig(): void {
+    const countryCode = this.data.order.shipping.country || 'DE';
+    this.loadingConfig = true;
+
+    this.shippingConfigService.getConfigForCountry(countryCode).subscribe({
+      next: (config) => {
+        this.shippingConfig = config;
+        this.loadingConfig = false;
+
+        // Set product from config if it's a DHL product type
+        if (config.shipping_type === 'dhl_product' && config.dhl_product) {
+          this.selectedProduct = config.dhl_product as DHLProduct;
+        } else {
+          // Fallback detection
+          this.detectProduct();
+        }
+      },
+      error: () => {
+        this.loadingConfig = false;
+        // Fallback to auto-detection
+        this.detectProduct();
+      }
+    });
   }
 
   private loadServices(): void {

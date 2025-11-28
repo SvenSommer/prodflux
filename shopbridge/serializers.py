@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import EmailTemplate
+from .models import EmailTemplate, ShippingCountryConfig
 
 
 class EmailTemplateSerializer(serializers.ModelSerializer):
@@ -72,4 +72,57 @@ class EmailTemplateRenderSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Entweder 'template_id' oder 'language' muss angegeben werden."
             )
+        return data
+
+
+class ShippingCountryConfigSerializer(serializers.ModelSerializer):
+    """Serializer für Versandkonfiguration pro Land."""
+    
+    shipping_type_display = serializers.CharField(
+        source='get_shipping_type_display',
+        read_only=True
+    )
+    dhl_product_display = serializers.CharField(
+        source='get_dhl_product_display',
+        read_only=True
+    )
+
+    class Meta:
+        model = ShippingCountryConfig
+        fields = [
+            'id',
+            'country_code',
+            'country_name',
+            'shipping_type',
+            'shipping_type_display',
+            'dhl_product',
+            'dhl_product_display',
+            'external_link',
+            'external_link_label',
+            'is_active',
+            'notes',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate_country_code(self, value):
+        """Ländercode in Großbuchstaben umwandeln."""
+        return value.upper() if value else value
+
+    def validate(self, data):
+        """Validiert die Konfiguration basierend auf dem Versandtyp."""
+        shipping_type = data.get('shipping_type', 'dhl_product')
+        
+        if shipping_type == 'dhl_product':
+            if not data.get('dhl_product'):
+                raise serializers.ValidationError({
+                    'dhl_product': 'DHL Produkt ist erforderlich.'
+                })
+        elif shipping_type == 'external_link':
+            if not data.get('external_link'):
+                raise serializers.ValidationError({
+                    'external_link': 'Externer Link ist erforderlich.'
+                })
+        
         return data

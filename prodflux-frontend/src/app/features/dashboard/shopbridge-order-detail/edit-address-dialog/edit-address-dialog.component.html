@@ -1,0 +1,116 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon>{{ data.type === 'billing' ? 'receipt' : 'local_shipping' }}</mat-icon>
+  {{ data.type === 'billing' ? 'Rechnungsadresse' : 'Lieferadresse' }} bearbeiten
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="addressForm" class="address-form">
+    <!-- Name Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <mat-icon>person</mat-icon>
+        Name
+      </h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Vorname</mat-label>
+          <input matInput formControlName="first_name" placeholder="Max">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Nachname</mat-label>
+          <input matInput formControlName="last_name" placeholder="Mustermann">
+        </mat-form-field>
+      </div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Firma (optional)</mat-label>
+        <input matInput formControlName="company" placeholder="Firma GmbH">
+        <mat-icon matPrefix>business</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Address Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <mat-icon>location_on</mat-icon>
+        Adresse
+      </h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Straße und Hausnummer</mat-label>
+        <input matInput formControlName="address_1" placeholder="Musterstraße 123">
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Adresszusatz (optional)</mat-label>
+        <input matInput formControlName="address_2" placeholder="Apartment, Suite, etc.">
+      </mat-form-field>
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="postcode-field">
+          <mat-label>PLZ</mat-label>
+          <input matInput formControlName="postcode" placeholder="12345">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="city-field">
+          <mat-label>Stadt</mat-label>
+          <input matInput formControlName="city" placeholder="Berlin">
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Bundesland/Region</mat-label>
+          <input matInput formControlName="state" placeholder="Berlin">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Land</mat-label>
+          <mat-select formControlName="country">
+            <mat-option *ngFor="let country of countries" [value]="country.code">
+              {{ country.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Contact Section (only for billing) -->
+    <div class="form-section" *ngIf="data.type === 'billing'">
+      <h3 class="section-title">
+        <mat-icon>contact_phone</mat-icon>
+        Kontakt
+      </h3>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>E-Mail</mat-label>
+        <input matInput formControlName="email" type="email" placeholder="email@example.com">
+        <mat-icon matPrefix>email</mat-icon>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Telefon</mat-label>
+        <input matInput formControlName="phone" type="tel" placeholder="+49 123 456789">
+        <mat-icon matPrefix>phone</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Copy from Billing Button (only for shipping) -->
+    <div class="copy-section" *ngIf="data.type === 'shipping'">
+      <button
+        mat-stroked-button
+        color="primary"
+        type="button"
+        (click)="copyFromBilling()">
+        <mat-icon>content_copy</mat-icon>
+        Von Rechnungsadresse übernehmen
+      </button>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">
+    Abbrechen
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="saving || !hasChanges()"
+    (click)="onSave()">
+    <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
+    <mat-icon *ngIf="!saving">save</mat-icon>
+    {{ saving ? 'Speichern...' : 'Speichern' }}
+  </button>
+</mat-dialog-actions>

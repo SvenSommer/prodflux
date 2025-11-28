@@ -171,7 +171,7 @@ export interface CreateLabelDialogResult {
 
     <mat-dialog-actions align="end">
       <button mat-button (click)="cancel()" [disabled]="loading">
-        Abbrechen
+        {{ result?.success ? 'Schließen' : 'Abbrechen' }}
       </button>
 
       <button
@@ -180,16 +180,25 @@ export interface CreateLabelDialogResult {
         color="primary"
         (click)="openLabel()">
         <mat-icon>open_in_new</mat-icon>
-        Label anzeigen
+        Anzeigen
+      </button>
+
+      <button
+        *ngIf="result?.success && result?.label_pdf_base64"
+        mat-stroked-button
+        color="primary"
+        (click)="downloadLabel()">
+        <mat-icon>download</mat-icon>
+        Herunterladen
       </button>
 
       <button
         *ngIf="result?.success && result?.label_pdf_base64"
         mat-raised-button
         color="accent"
-        (click)="downloadLabel()">
-        <mat-icon>download</mat-icon>
-        Label herunterladen
+        (click)="printLabel()">
+        <mat-icon>print</mat-icon>
+        Drucken
       </button>
 
       <button
@@ -376,8 +385,8 @@ export class CreateLabelDialogComponent {
   services = [...DHL_SERVICES];
 
   // Form state
-  selectedProduct: DHLProduct = 'V62WP';
-  selectedPrintFormat = '910-300-400';
+  selectedProduct: DHLProduct = 'V62KP';
+  selectedPrintFormat = '910-300-356';  // Thermodrucker 100x150mm (empfohlen)
   weightKg = 0.5;
   validateOnly = false;
   preferredLocation = '';
@@ -399,15 +408,13 @@ export class CreateLabelDialogComponent {
     const shippingLines = this.data.order.shipping_lines || [];
     const methodTitle = shippingLines[0]?.method_title?.toLowerCase() || '';
 
-    if (methodTitle.includes('warenpost') || methodTitle.includes('brief')) {
-      this.selectedProduct = 'V62WP';
-      this.selectedPrintFormat = '910-300-400';
-    } else if (methodTitle.includes('international')) {
+    if (methodTitle.includes('international')) {
       this.selectedProduct = 'V66WPI';
     } else {
-      this.selectedProduct = 'V01PAK';
-      this.selectedPrintFormat = '910-300-710';
+      // Default: DHL Kleinpaket für Deutschland
+      this.selectedProduct = 'V62KP';
     }
+    // Keep default print format: 910-300-356 (100x150 Thermo)
   }
 
   getService(key: string) {
@@ -443,6 +450,8 @@ export class CreateLabelDialogComponent {
       reference: `WC-${this.data.order.number}`,
       print_format: this.selectedPrintFormat,
       services: this.buildServices(),
+      woocommerce_order_id: this.data.order.id,
+      woocommerce_order_number: this.data.order.number,
     };
 
     this.dhlService.createLabel(request).subscribe({
@@ -531,6 +540,39 @@ export class CreateLabelDialogComponent {
     if (this.result?.label_pdf_base64) {
       const filename = `DHL-Label-${this.data.order.number}-${this.result.shipment_number}.pdf`;
       this.dhlService.downloadLabel(this.result.label_pdf_base64, filename);
+    }
+  }
+
+  printLabel(): void {
+    if (this.result?.label_pdf_base64) {
+      // Convert base64 to blob and open print dialog
+      const byteCharacters = atob(this.result.label_pdf_base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      // Open in iframe and print
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+
+      iframe.onload = () => {
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+          // Clean up after printing
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            URL.revokeObjectURL(url);
+          }, 1000);
+        }, 500);
+      };
+
+      this.snackBar.open('Druckdialog wird geöffnet...', '', { duration: 2000 });
     }
   }
 

@@ -91,9 +91,10 @@ class Shipment:
             "details": self.details.to_dict(),
         }
         
-        # Use shipperRef (profile) in production, shipper address in sandbox
+        # Shipper can be either an address OR a reference to a GKP profile
+        # According to OpenAPI spec: shipper: { shipperRef: "..." } OR shipper: { name1, addressStreet, ... }
         if self.shipper_ref:
-            data["shipperRef"] = self.shipper_ref
+            data["shipper"] = {"shipperRef": self.shipper_ref}
         else:
             data["shipper"] = self.shipper.to_dict()
         

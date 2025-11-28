@@ -13,6 +13,7 @@ from .serializers import (
     LabelResultSerializer,
     DHLConfigSerializer,
 )
+from shopbridge.models import DHLLabel
 
 
 @api_view(['GET'])
@@ -118,12 +119,29 @@ def dhl_create_label_view(request):
     # Get print format
     print_format = data.get('print_format', '910-300-710')
     
+    # Get WooCommerce order info if provided
+    woocommerce_order_id = data.get('woocommerce_order_id')
+    woocommerce_order_number = data.get('woocommerce_order_number')
+    
     # Create label
     result = service.create_label(shipment, print_format)
     
     response_serializer = LabelResultSerializer(result.__dict__)
     
     if result.success:
+        # Save label to database
+        DHLLabel.objects.create(
+            shipment_number=result.shipment_number,
+            woocommerce_order_id=woocommerce_order_id,
+            woocommerce_order_number=woocommerce_order_number,
+            product=data.get('product', 'V01PAK'),
+            reference=data.get('reference'),
+            label_pdf_base64=result.label_b64,
+            label_format='PDF',
+            print_format=print_format,
+            routing_code=result.routing_code,
+            status='created',
+        )
         return Response(response_serializer.data)
     else:
         return Response(
@@ -137,12 +155,97 @@ def dhl_create_label_view(request):
 def dhl_delete_shipment_view(request, shipment_number):
     """Delete/cancel a DHL shipment."""
     service = ShipmentService()
-    success = service.delete_shipment(shipment_number)
+    result = service.delete_shipment(shipment_number)
     
-    if success:
+    if result.get('success'):
+        # Mark label as deleted in database
+        try:
+            label = DHLLabel.objects.get(shipment_number=shipment_number)
+            label.mark_as_deleted()
+        except DHLLabel.DoesNotExist:
+            pass  # Label not in our DB, but deletion at DHL was successful
+        
         return Response({"status": "deleted"})
     else:
         return Response(
-            {"error": "Failed to delete shipment"},
+            {"error": result.get('error', 'Failed to delete shipment')},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dhl_labels_by_order_view(request, order_id):
+    """Get all DHL labels for a WooCommerce order."""
+    labels = DHLLabel.objects.filter(
+        woocommerce_order_id=order_id,
+        status__in=['created', 'printed']  # Exclude deleted
+    ).order_by('-created_at')
+    
+    labels_data = []
+    for label in labels:
+        labels_data.append({
+            'id': label.id,
+            'shipment_number': label.shipment_number,
+            'product': label.product,
+            'reference': label.reference,
+            'print_format': label.print_format,
+            'routing_code': label.routing_code,
+            'status': label.status,
+            'created_at': label.created_at.isoformat(),
+            'printed_at': label.printed_at.isoformat() if label.printed_at else None,
+            'has_pdf': bool(label.label_pdf_base64),
+        })
+    
+    return Response({
+        'order_id': order_id,
+        'labels': labels_data,
+        'count': len(labels_data),
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dhl_label_pdf_view(request, label_id):
+    """Get the PDF data for a specific label."""
+    try:
+        label = DHLLabel.objects.get(id=label_id)
+    except DHLLabel.DoesNotExist:
+        return Response(
+            {"error": "Label not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    if not label.label_pdf_base64:
+        return Response(
+            {"error": "No PDF data available for this label"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    return Response({
+        'id': label.id,
+        'shipment_number': label.shipment_number,
+        'label_b64': label.label_pdf_base64,
+        'print_format': label.print_format,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def dhl_label_mark_printed_view(request, label_id):
+    """Mark a label as printed."""
+    try:
+        label = DHLLabel.objects.get(id=label_id)
+    except DHLLabel.DoesNotExist:
+        return Response(
+            {"error": "Label not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    label.mark_as_printed()
+    
+    return Response({
+        'id': label.id,
+        'status': label.status,
+        'printed_at': label.printed_at.isoformat(),
+    })

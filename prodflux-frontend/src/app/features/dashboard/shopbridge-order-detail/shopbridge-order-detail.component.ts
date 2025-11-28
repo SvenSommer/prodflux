@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +14,7 @@ import { ShopbridgeOrderInfoCardComponent } from './shopbridge-order-info-card/s
 import { ShopbridgeOrderCustomerCardComponent } from './shopbridge-order-customer-card/shopbridge-order-customer-card.component';
 import { ShopbridgeOrderItemsCardComponent } from './shopbridge-order-items-card/shopbridge-order-items-card.component';
 import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financial-card/shopbridge-order-financial-card.component';
+import { ShopbridgeOrderLabelsCardComponent } from './shopbridge-order-labels-card/shopbridge-order-labels-card.component';
 import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complete-order-dialog/complete-order-dialog.component';
 import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-label-dialog/create-label-dialog.component';
 
@@ -33,7 +34,8 @@ import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-labe
     ShopbridgeOrderInfoCardComponent,
     ShopbridgeOrderCustomerCardComponent,
     ShopbridgeOrderItemsCardComponent,
-    ShopbridgeOrderFinancialCardComponent
+    ShopbridgeOrderFinancialCardComponent,
+    ShopbridgeOrderLabelsCardComponent
   ],
   template: `
     <div class="page-container">
@@ -117,6 +119,12 @@ import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-labe
           <div class="left-column">
             <app-shopbridge-order-info-card [order]="order"></app-shopbridge-order-info-card>
             <app-shopbridge-order-items-card [lineItems]="order.line_items"></app-shopbridge-order-items-card>
+            <!-- DHL Labels -->
+            <app-shopbridge-order-labels-card 
+              #labelsCard
+              [orderId]="order.id"
+              (createLabel)="openCreateLabelDialog()">
+            </app-shopbridge-order-labels-card>
           </div>
 
           <!-- Right Column: Customer & Financial -->
@@ -428,6 +436,8 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
+  @ViewChild('labelsCard') labelsCard?: ShopbridgeOrderLabelsCardComponent;
+
   order: WooCommerceOrderDetail | null = null;
   loading = true;
   error: string | null = null;
@@ -573,6 +583,8 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
           'OK',
           { duration: 5000 }
         );
+        // Refresh the labels card
+        this.labelsCard?.loadLabels();
       }
     });
   }

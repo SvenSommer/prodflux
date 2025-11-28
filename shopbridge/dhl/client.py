@@ -56,12 +56,14 @@ class DHLClient:
         except requests.RequestException as e:
             raise DHLClientError(f"Request failed: {str(e)}")
     
-    def delete(self, endpoint: str) -> dict:
+    def delete(self, endpoint: str, params: dict = None) -> dict:
         """Make DELETE request to DHL API."""
         url = f"{self.config.base_url}{endpoint}"
         
         try:
-            response = self._session.delete(url, timeout=self.TIMEOUT)
+            response = self._session.delete(
+                url, params=params, timeout=self.TIMEOUT
+            )
             return self._handle_response(response)
         except requests.RequestException as e:
             raise DHLClientError(f"Request failed: {str(e)}")
@@ -72,6 +74,20 @@ class DHLClient:
             data = response.json()
         except ValueError:
             data = {"raw": response.text}
+        
+        # HTTP 400 with only warnings is acceptable (validation passes)
+        if response.status_code == 400:
+            items = data.get("items", [])
+            has_only_warnings = all(
+                all(
+                    msg.get("validationState") == "Warning"
+                    for msg in item.get("validationMessages", [])
+                )
+                for item in items
+            )
+            if has_only_warnings and items:
+                # Return data - it's just warnings, not errors
+                return data
         
         if response.status_code >= 400:
             # Log full error for debugging

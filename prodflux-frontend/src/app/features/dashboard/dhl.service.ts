@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 // DHL Products
-export type DHLProduct = 'V01PAK' | 'V62WP' | 'V66WPI';
+export type DHLProduct = 'V01PAK' | 'V62KP' | 'V62WP' | 'V66WPI';
 
 export interface DHLProductInfo {
   code: DHLProduct;
@@ -13,6 +13,7 @@ export interface DHLProductInfo {
 }
 
 export const DHL_PRODUCTS: DHLProductInfo[] = [
+  { code: 'V62KP', name: 'DHL Kleinpaket', description: 'DHL Kleinpaket bis 25 kg (Standard)' },
   { code: 'V01PAK', name: 'DHL Paket', description: 'Standard DHL Paket bis 31,5 kg' },
   { code: 'V62WP', name: 'Warenpost', description: 'Warenpost National bis 1 kg' },
   { code: 'V66WPI', name: 'Warenpost International', description: 'Warenpost International' },
@@ -26,6 +27,8 @@ export interface PrintFormat {
 }
 
 export const PRINT_FORMATS: PrintFormat[] = [
+  { code: '910-300-356', name: '100x150 Thermo', description: 'Thermodrucker 100 x 150 mm (empfohlen)' },
+  { code: '910-300-300', name: '100x200 Thermo', description: 'Thermodrucker 100 x 150 mm (Standard)' },
   { code: '910-300-700', name: 'A4', description: 'DIN A4 (210 x 297 mm)' },
   { code: '910-300-710', name: '100x200', description: 'Label 100 x 200 mm' },
   { code: '910-300-600', name: '103x199', description: 'Label 103 x 199 mm' },
@@ -72,6 +75,8 @@ export interface CreateLabelRequest {
   reference?: string;
   print_format?: string;
   services?: Record<string, boolean | string>;
+  woocommerce_order_id?: number;
+  woocommerce_order_number?: string;
 }
 
 export interface LabelResult {
@@ -83,6 +88,32 @@ export interface LabelResult {
   reference: string | null;
   warnings: string[];
   error: string | null;
+}
+
+export interface StoredLabel {
+  id: number;
+  shipment_number: string;
+  product: string;
+  reference: string | null;
+  print_format: string;
+  routing_code: string | null;
+  status: 'created' | 'printed' | 'deleted';
+  created_at: string;
+  printed_at: string | null;
+  has_pdf: boolean;
+}
+
+export interface LabelsByOrderResponse {
+  order_id: number;
+  labels: StoredLabel[];
+  count: number;
+}
+
+export interface LabelPdfResponse {
+  id: number;
+  shipment_number: string;
+  label_b64: string;
+  print_format: string;
 }
 
 export interface DHLConfigStatus {
@@ -130,6 +161,34 @@ export class DHLService {
   deleteShipment(shipmentNumber: string): Observable<{ status: string }> {
     return this.http.delete<{ status: string }>(
       `${this.baseUrl}/shipments/${shipmentNumber}/`
+    );
+  }
+
+  /**
+   * Get all labels for a WooCommerce order
+   */
+  getLabelsByOrder(orderId: number): Observable<LabelsByOrderResponse> {
+    return this.http.get<LabelsByOrderResponse>(
+      `${this.baseUrl}/labels/order/${orderId}/`
+    );
+  }
+
+  /**
+   * Get PDF data for a specific label
+   */
+  getLabelPdf(labelId: number): Observable<LabelPdfResponse> {
+    return this.http.get<LabelPdfResponse>(
+      `${this.baseUrl}/labels/${labelId}/pdf/`
+    );
+  }
+
+  /**
+   * Mark a label as printed
+   */
+  markLabelPrinted(labelId: number): Observable<{ id: number; status: string; printed_at: string }> {
+    return this.http.post<{ id: number; status: string; printed_at: string }>(
+      `${this.baseUrl}/labels/${labelId}/printed/`,
+      {}
     );
   }
 

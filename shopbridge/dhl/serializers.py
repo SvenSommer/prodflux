@@ -33,27 +33,35 @@ class CreateLabelRequestSerializer(serializers.Serializer):
     details = ShipmentDetailsSerializer()
     product = serializers.ChoiceField(
         choices=[
+            ("V62KP", "DHL Kleinpaket"),
             ("V01PAK", "DHL Paket"),
             ("V62WP", "Warenpost National"),
             ("V66WPI", "Warenpost International"),
         ],
-        default="V01PAK"
+        default="V62KP"
     )
     reference = serializers.CharField(max_length=35, required=False)
     shipper = AddressSerializer(required=False)
     print_format = serializers.ChoiceField(
         choices=[
+            ("910-300-356", "100x150 Thermo"),
+            ("910-300-300", "100x200 Thermo"),
             ("910-300-700", "A4"),
             ("910-300-710", "100x200"),
             ("910-300-600", "103x199"),
             ("910-300-400", "100x70 (Warenpost)"),
         ],
-        default="910-300-710",
+        default="910-300-356",
         required=False
     )
     services = serializers.DictField(
         child=serializers.JSONField(),
         required=False
+    )
+    # Optional WooCommerce order tracking
+    woocommerce_order_id = serializers.IntegerField(required=False)
+    woocommerce_order_number = serializers.CharField(
+        max_length=50, required=False, allow_blank=True
     )
 
 
@@ -79,11 +87,12 @@ class CreateLabelFromOrderSerializer(serializers.Serializer):
     order_id = serializers.IntegerField()
     product = serializers.ChoiceField(
         choices=[
+            ("V62KP", "DHL Kleinpaket"),
             ("V01PAK", "DHL Paket"),
             ("V62WP", "Warenpost National"),
             ("V66WPI", "Warenpost International"),
         ],
-        default="V01PAK"
+        default="V62KP"
     )
     weight_kg = serializers.FloatField(min_value=0.01, default=0.5)
 

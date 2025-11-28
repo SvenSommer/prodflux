@@ -19,19 +19,17 @@ class ShipmentService:
     
     @property
     def profile(self) -> str:
-        """Get shipper profile name.
+        """Get request profile name.
         
-        In sandbox mode, always use the default test profile.
-        In production, use the configured shipper profile.
+        Always use STANDARD_GRUPPENPROFIL for the request-level profile.
+        The shipper profile (shipperRef) is set on shipment level instead.
         """
-        if self.config.is_sandbox:
-            return self.DEFAULT_PROFILE
-        return self.shipper_profile or self.DEFAULT_PROFILE
+        return self.DEFAULT_PROFILE
     
     def create_label(
         self,
         shipment: Shipment,
-        print_format: str = "910-300-300"  # 100x200mm for thermal printers
+        print_format: str = "910-300-356"  # 100x150mm for thermal printers
     ) -> LabelResult:
         """Create a single shipment label."""
         results = self.create_labels([shipment], print_format)
@@ -43,16 +41,24 @@ class ShipmentService:
     def create_labels(
         self,
         shipments: List[Shipment],
-        print_format: str = "910-300-300"  # 100x200mm for thermal printers
+        print_format: str = "910-300-356",  # 100x150mm for thermal printers
     ) -> List[LabelResult]:
-        """Create multiple shipment labels in one request."""
+        """Create multiple shipment labels in one request.
+        
+        Args:
+            shipments: List of shipments to create labels for
+            print_format: DHL label format code (default: 100x150mm thermal)
+        
+        In production, if DHL_SHIPPER_PROFILE is configured, it will be used
+        instead of the shipper address. The profile must be set up in GKP.
+        """
         # Set billing number and shipper reference if not provided
         for shipment in shipments:
             if not shipment.billing_number:
                 shipment.billing_number = self._get_billing_number(
                     shipment.product
                 )
-            # In production, use shipper profile reference instead of address
+            # In production, use shipper profile if configured
             if not self.config.is_sandbox and self.shipper_profile:
                 shipment.shipper_ref = self.shipper_profile
         
@@ -72,6 +78,54 @@ class ShipmentService:
                 reference=s.reference
             ) for s in shipments]
     
+    def delete_shipment(self, shipment_number: str) -> dict:
+        """Delete a shipment that has not been manifested yet.
+        
+        Args:
+            shipment_number: The DHL shipment number to delete
+            
+        Returns:
+            Dict with status information
+            
+        Raises:
+            DHLClientError: If deletion fails
+        """
+        params = {
+            "profile": self.profile,
+            "shipment": shipment_number
+        }
+        return self.client.delete("/orders", params=params)
+    
+    def delete_shipments(self, shipment_numbers: List[str]) -> dict:
+        """Delete multiple shipments that have not been manifested yet.
+        
+        Args:
+            shipment_numbers: List of DHL shipment numbers to delete (max 30)
+            
+        Returns:
+            Dict with status information for each shipment
+        """
+        import requests
+        import base64
+        
+        # DHL API accepts multiple shipment params with same name
+        param_list = [("profile", self.profile)]
+        for num in shipment_numbers[:30]:  # Max 30
+            param_list.append(("shipment", num))
+        
+        url = f"{self.client.config.base_url}/orders"
+        auth_string = f"{self.config.user}:{self.config.password}"
+        auth_bytes = base64.b64encode(auth_string.encode()).decode()
+        
+        headers = {
+            "dhl-api-key": self.config.api_key,
+            "Authorization": f"Basic {auth_bytes}",
+            "Accept": "application/json",
+        }
+        
+        response = requests.delete(url, params=param_list, headers=headers)
+        return response.json()
+    
     def _parse_response(self, response: dict) -> List[LabelResult]:
         """Parse API response into LabelResult objects."""
         results = []
@@ -86,11 +140,12 @@ class ShipmentService:
         # Product code mapping
         product_codes = {
             "V01PAK": "01",   # DHL Paket
+            "V62KP": "62",    # DHL Kleinpaket
             "V62WP": "62",    # Warenpost National
             "V66WPI": "66",   # Warenpost International
         }
         
-        product_code = product_codes.get(product, "01")
+        product_code = product_codes.get(product, "62")  # Default: Kleinpaket
         participation = self._get_participation(product)
         
         return f"{ekp}{product_code}{participation}"
@@ -99,18 +154,11 @@ class ShipmentService:
         """Get participation number for product."""
         participation_map = {
             "V01PAK": os.getenv("DHL_PARTICIPATION_PAKET", "01"),
+            "V62KP": os.getenv("DHL_PARTICIPATION_KLEINPAKET", "01"),
             "V62WP": os.getenv("DHL_PARTICIPATION_WARENPOST", "01"),
             "V66WPI": os.getenv("DHL_PARTICIPATION_WARENPOST_INT", "01"),
         }
         return participation_map.get(product, "01")
-    
-    def delete_shipment(self, shipment_number: str) -> bool:
-        """Delete/cancel a shipment."""
-        try:
-            self.client.delete(f"/orders/{shipment_number}")
-            return True
-        except DHLClientError:
-            return False
     
     def get_default_shipper(self) -> Address:
         """Get default shipper address from environment."""

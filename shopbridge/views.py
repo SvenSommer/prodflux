@@ -424,6 +424,110 @@ def woocommerce_order_detail_view(request, order_id):
     return Response(order_data)
 
 
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def woocommerce_order_update_view(request, order_id):
+    """
+    Update any field of a WooCommerce order.
+    
+    Supports both PUT (full update) and PATCH (partial update).
+    
+    Editable fields include:
+    - status: Order status
+    - billing: Billing address object
+    - shipping: Shipping address object
+    - customer_note: Customer's note
+    - meta_data: Order metadata
+    
+    Example request body:
+    {
+        "billing": {
+            "first_name": "Max",
+            "last_name": "Mustermann",
+            "company": "",
+            "address_1": "Musterstraße 123",
+            "address_2": "",
+            "city": "Berlin",
+            "state": "",
+            "postcode": "12345",
+            "country": "DE",
+            "email": "max@example.com",
+            "phone": "+49123456789"
+        },
+        "shipping": {
+            "first_name": "Max",
+            "last_name": "Mustermann",
+            "company": "",
+            "address_1": "Musterstraße 123",
+            "address_2": "",
+            "city": "Berlin",
+            "state": "",
+            "postcode": "12345",
+            "country": "DE"
+        },
+        "customer_note": "Bitte als Geschenk verpacken"
+    }
+    """
+    # Fields that can be updated via WooCommerce API
+    ALLOWED_FIELDS = [
+        'status',
+        'billing',
+        'shipping',
+        'customer_note',
+        'meta_data',
+        'payment_method',
+        'payment_method_title',
+        'transaction_id',
+        'set_paid',
+    ]
+    
+    # Build update payload with only allowed fields
+    update_data = {}
+    for field in ALLOWED_FIELDS:
+        if field in request.data:
+            update_data[field] = request.data[field]
+    
+    if not update_data:
+        return Response(
+            {"error": "Keine gültigen Felder zum Aktualisieren angegeben"},
+            status=http_status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        wcapi = get_wcapi()
+        response = wcapi.put(f"orders/{order_id}", update_data)
+        
+        if response.status_code not in [200, 201]:
+            return Response(
+                {
+                    "error": "Fehler beim Aktualisieren der Bestellung",
+                    "status_code": response.status_code,
+                    "response": response.text
+                },
+                status=http_status.HTTP_502_BAD_GATEWAY
+            )
+        
+        # Invalidate caches
+        cache_key = get_cache_key("order_detail", order_id)
+        cache.delete(cache_key)
+        invalidate_orders_cache()
+        
+        updated_order = response.json()
+        
+        return Response({
+            "success": True,
+            "message": "Bestellung erfolgreich aktualisiert",
+            "updated_fields": list(update_data.keys()),
+            "order": updated_order
+        })
+        
+    except Exception as e:
+        return Response(
+            {"error": f"Fehler: {str(e)}"},
+            status=http_status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def woocommerce_order_update_status_view(request, order_id):

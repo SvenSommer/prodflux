@@ -2,6 +2,7 @@ from django.urls import path, include
 from .views import (
     woocommerce_orders_view,
     woocommerce_order_detail_view,
+    woocommerce_order_update_view,
     woocommerce_order_update_status_view,
     woocommerce_cache_invalidate_view,
     woocommerce_orders_stats_view,
@@ -33,6 +34,11 @@ urlpatterns = [
         "orders/<int:order_id>/",
         woocommerce_order_detail_view,
         name="woocommerce-order-detail"
+    ),
+    path(
+        "orders/<int:order_id>/edit/",
+        woocommerce_order_update_view,
+        name="woocommerce-order-update"
     ),
     path(
         "orders/<int:order_id>/status/",

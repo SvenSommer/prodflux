@@ -194,6 +194,24 @@ export class ShopbridgeOrdersService {
     }>(`${this.baseUrl}orders/${orderId}/status/`, { status });
   }
 
+  /**
+   * Update any field of a WooCommerce order
+   * Supports billing, shipping, customer_note, status, and meta_data
+   */
+  updateOrder(orderId: number, data: Partial<WooCommerceOrderUpdateData>): Observable<{
+    success: boolean;
+    message: string;
+    updated_fields: string[];
+    order: WooCommerceOrderDetail;
+  }> {
+    return this.http.put<{
+      success: boolean;
+      message: string;
+      updated_fields: string[];
+      order: WooCommerceOrderDetail;
+    }>(`${this.baseUrl}orders/${orderId}/edit/`, data);
+  }
+
   invalidateCache(): Observable<{ message: string; success: boolean }> {
     return this.http.post<{ message: string; success: boolean }>(
       `${this.baseUrl}cache/invalidate/`,
@@ -239,4 +257,17 @@ export class ShopbridgeOrdersService {
       serial_numbers: { id: number; serial_number: string; created_at: string }[];
     }>(`${this.baseUrl}orders/${orderId}/serial-numbers/`);
   }
+}
+
+// Interface for order update data
+export interface WooCommerceOrderUpdateData {
+  status?: string;
+  billing?: Partial<WooCommerceBillingAddress>;
+  shipping?: Partial<WooCommerceAddress>;
+  customer_note?: string;
+  meta_data?: { key: string; value: string }[];
+  payment_method?: string;
+  payment_method_title?: string;
+  transaction_id?: string;
+  set_paid?: boolean;
 }

@@ -17,6 +17,7 @@ import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financ
 import { ShopbridgeOrderLabelsCardComponent } from './shopbridge-order-labels-card/shopbridge-order-labels-card.component';
 import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complete-order-dialog/complete-order-dialog.component';
 import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-label-dialog/create-label-dialog.component';
+import { EditOrderDialogComponent, EditOrderDialogData } from './edit-order-dialog/edit-order-dialog.component';
 
 @Component({
   selector: 'app-shopbridge-order-detail',
@@ -76,6 +77,14 @@ import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-labe
             <span class="order-id-hint">WooCommerce ID: {{ order.id }}</span>
           </div>
           <div class="header-actions">
+            <!-- Bestellung bearbeiten -->
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="openEditOrderDialog()">
+              <mat-icon>edit</mat-icon>
+              Bearbeiten
+            </button>
             <!-- DHL Label erstellen -->
             <button
               mat-raised-button
@@ -585,6 +594,33 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
         );
         // Refresh the labels card
         this.labelsCard?.loadLabels();
+      }
+    });
+  }
+
+  openEditOrderDialog(): void {
+    if (!this.order) return;
+
+    const dialogData: EditOrderDialogData = {
+      order: this.order
+    };
+
+    const dialogRef = this.dialog.open(EditOrderDialogComponent, {
+      data: dialogData,
+      width: '650px',
+      maxHeight: '90vh',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // result is the updated order from the API
+        this.order = result;
+        this.snackBar.open(
+          `Bestellung #${this.order?.number} erfolgreich aktualisiert!`,
+          'OK',
+          { duration: 3000 }
+        );
       }
     });
   }

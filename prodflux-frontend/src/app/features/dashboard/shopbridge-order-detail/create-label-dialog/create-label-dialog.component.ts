@@ -701,11 +701,15 @@ export class CreateLabelDialogComponent {
           // Fallback detection
           this.detectProduct();
         }
+        // Update services after product is set
+        this.updateServicesForProduct();
       },
       error: () => {
         this.loadingConfig = false;
         // Fallback to auto-detection
         this.detectProduct();
+        // Update services after product is set
+        this.updateServicesForProduct();
       }
     });
   }
@@ -731,12 +735,12 @@ export class CreateLabelDialogComponent {
   }
 
   updateServicesForProduct(): void {
-    // Filter services based on selected product
+    // Filter services based on selected product and set default enabled state
     this.services = this.allServices
       .filter(s => !s.products || s.products.includes(this.selectedProduct))
       .map(s => ({
         ...s,
-        enabled: s.enabled  // Preserve enabled state
+        enabled: s.defaultEnabled || false  // Reset to default when product changes
       }));
   }
 

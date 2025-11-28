@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import (
     woocommerce_orders_view,
     woocommerce_order_detail_view,
@@ -100,4 +100,7 @@ urlpatterns = [
         order_serial_numbers_list_view,
         name="order-serial-numbers-list"
     ),
+
+    # DHL Shipping
+    path("dhl/", include("shopbridge.dhl.urls")),
 ]

@@ -1,23 +1,27 @@
 #!/bin/bash
 # Complete ProdFlux Development Setup
 
+# Port Configuration (change these to avoid conflicts with other projects)
+BACKEND_PORT=8001
+FRONTEND_PORT=4201
+
 echo "🚀 Starting Complete ProdFlux Development Environment..."
 
 # Kill any existing servers first
 echo "🧹 Cleaning up existing servers..."
 
-# Kill Django (Python) processes on port 8000
-DJANGO_PIDS=$(lsof -ti:8000 2>/dev/null || true)
+# Kill Django (Python) processes on configured port
+DJANGO_PIDS=$(lsof -ti:$BACKEND_PORT 2>/dev/null || true)
 if [ -n "$DJANGO_PIDS" ]; then
     echo "$DJANGO_PIDS" | xargs kill -9 2>/dev/null || true
-    echo "✓ Stopped existing Django server"
+    echo "✓ Stopped existing Django server on port $BACKEND_PORT"
 fi
 
-# Kill Angular (Node) processes on port 4200
-ANGULAR_PIDS=$(lsof -ti:4200 2>/dev/null || true)
+# Kill Angular (Node) processes on configured port
+ANGULAR_PIDS=$(lsof -ti:$FRONTEND_PORT 2>/dev/null || true)
 if [ -n "$ANGULAR_PIDS" ]; then
     echo "$ANGULAR_PIDS" | xargs kill -9 2>/dev/null || true
-    echo "✓ Stopped existing Angular server"
+    echo "✓ Stopped existing Angular server on port $FRONTEND_PORT"
 fi
 
 # Also kill any processes named "python manage.py runserver" or "ng serve"
@@ -40,23 +44,23 @@ trap cleanup INT TERM
 # Navigate to project directory
 cd /Users/Shared/dev/prodflux
 
-echo "📡 Starting Backend (Django) at http://localhost:8000..."
-/Users/Shared/dev/prodflux/venv/bin/python manage.py runserver 0.0.0.0:8000 &
+echo "📡 Starting Backend (Django) at http://localhost:$BACKEND_PORT..."
+/Users/Shared/dev/prodflux/venv/bin/python manage.py runserver 0.0.0.0:$BACKEND_PORT &
 BACKEND_PID=$!
 
 # Wait a moment for backend to start
 sleep 2
 
-echo "🌐 Starting Frontend (Angular) at http://localhost:4200..."
+echo "🌐 Starting Frontend (Angular) at http://localhost:$FRONTEND_PORT..."
 cd prodflux-frontend
-ng serve --host 0.0.0.0 --port 4200 &
+ng serve --host 0.0.0.0 --port $FRONTEND_PORT &
 FRONTEND_PID=$!
 
 echo ""
 echo "✅ Both services are starting..."
-echo "🌐 Frontend: http://localhost:4200"
-echo "📡 Backend API: http://localhost:8000/api/"
-echo "🔧 Admin: http://localhost:8000/admin/"
+echo "🌐 Frontend: http://localhost:$FRONTEND_PORT"
+echo "📡 Backend API: http://localhost:$BACKEND_PORT/api/"
+echo "🔧 Admin: http://localhost:$BACKEND_PORT/admin/"
 echo ""
 echo "🛑 Press CTRL+C to stop both services"
 

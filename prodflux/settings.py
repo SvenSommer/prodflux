@@ -5,6 +5,7 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / '.env')
+load_dotenv(dotenv_path=BASE_DIR / 'shopbridge' / '.env')  # DHL and WooCommerce config
 
 # Beispiel-Zugriff auf die Variablen
 WOOCOMMERCE_API_URL = os.getenv('WOOCOMMERCE_API_URL')
@@ -217,6 +218,7 @@ if RENDER:
 else:
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:4200",
+        "http://localhost:4201",
     ]
     CORS_ALLOW_ALL_ORIGINS = False
 

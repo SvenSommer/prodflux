@@ -15,6 +15,7 @@ import { ShopbridgeOrderCustomerCardComponent } from './shopbridge-order-custome
 import { ShopbridgeOrderItemsCardComponent } from './shopbridge-order-items-card/shopbridge-order-items-card.component';
 import { ShopbridgeOrderFinancialCardComponent } from './shopbridge-order-financial-card/shopbridge-order-financial-card.component';
 import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complete-order-dialog/complete-order-dialog.component';
+import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-label-dialog/create-label-dialog.component';
 
 @Component({
   selector: 'app-shopbridge-order-detail',
@@ -73,6 +74,14 @@ import { CompleteOrderDialogComponent, CompleteOrderDialogData } from './complet
             <span class="order-id-hint">WooCommerce ID: {{ order.id }}</span>
           </div>
           <div class="header-actions">
+            <!-- DHL Label erstellen -->
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="openCreateLabelDialog()">
+              <mat-icon>local_shipping</mat-icon>
+              DHL Label
+            </button>
             <!-- Bestellung abschließen - nur bei Status "processing" -->
             <button
               *ngIf="order.status === 'processing'"
@@ -539,6 +548,31 @@ export class ShopbridgeOrderDetailComponent implements OnInit {
         );
         // Reload the order to reflect the new status
         this.loadOrder();
+      }
+    });
+  }
+
+  openCreateLabelDialog(): void {
+    if (!this.order) return;
+
+    const dialogData: CreateLabelDialogData = {
+      order: this.order
+    };
+
+    const dialogRef = this.dialog.open(CreateLabelDialogComponent, {
+      data: dialogData,
+      width: '550px',
+      maxHeight: '90vh',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.snackBar.open(
+          `DHL Label erstellt: ${result.result?.shipment_number}`,
+          'OK',
+          { duration: 5000 }
+        );
       }
     });
   }

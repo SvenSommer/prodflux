@@ -31,16 +31,16 @@ import { DHLService, StoredLabel } from '../../dhl.service';
           Versandlabels
           <span class="label-count" *ngIf="labels.length > 0">({{ labels.length }})</span>
         </mat-card-title>
-        <button 
-          mat-stroked-button 
-          color="primary" 
+        <button
+          mat-stroked-button
+          color="primary"
           (click)="createLabel.emit()"
           class="create-btn">
           <mat-icon>add</mat-icon>
           Neues Label
         </button>
       </mat-card-header>
-      
+
       <mat-card-content>
         <!-- Loading State -->
         <div *ngIf="loading" class="loading-state">
@@ -64,7 +64,7 @@ import { DHLService, StoredLabel } from '../../dhl.service';
             <div class="label-icon" [class.printed]="label.status === 'printed'">
               <mat-icon>{{ label.status === 'printed' ? 'check_circle' : 'local_shipping' }}</mat-icon>
             </div>
-            
+
             <div class="label-info">
               <div class="label-header">
                 <span class="shipment-number">{{ label.shipment_number }}</span>
@@ -79,43 +79,43 @@ import { DHLService, StoredLabel } from '../../dhl.service';
             </div>
 
             <div class="label-actions">
-              <button 
-                mat-icon-button 
+              <button
+                mat-icon-button
                 matTooltip="Label drucken"
                 color="primary"
                 (click)="printLabel(label)"
                 [disabled]="labelLoading[label.id]">
                 <mat-icon>print</mat-icon>
               </button>
-              
-              <button 
+
+              <button
                 mat-icon-button
                 matTooltip="Anzeigen"
                 (click)="openLabel(label)"
                 [disabled]="labelLoading[label.id]">
                 <mat-icon>open_in_new</mat-icon>
               </button>
-              
-              <button 
-                mat-icon-button 
+
+              <button
+                mat-icon-button
                 matTooltip="Herunterladen"
                 (click)="downloadLabel(label)"
                 [disabled]="labelLoading[label.id]">
                 <mat-icon>download</mat-icon>
               </button>
-              
-              <button 
-                mat-icon-button 
+
+              <button
+                mat-icon-button
                 matTooltip="Löschen"
                 color="warn"
                 (click)="deleteLabel(label)"
                 [disabled]="labelLoading[label.id]">
                 <mat-icon>delete</mat-icon>
               </button>
-              
-              <mat-spinner 
-                *ngIf="labelLoading[label.id]" 
-                diameter="24" 
+
+              <mat-spinner
+                *ngIf="labelLoading[label.id]"
+                diameter="24"
                 class="action-spinner">
               </mat-spinner>
             </div>

@@ -120,7 +120,7 @@ import { CreateLabelDialogComponent, CreateLabelDialogData } from './create-labe
             <app-shopbridge-order-info-card [order]="order"></app-shopbridge-order-info-card>
             <app-shopbridge-order-items-card [lineItems]="order.line_items"></app-shopbridge-order-items-card>
             <!-- DHL Labels -->
-            <app-shopbridge-order-labels-card 
+            <app-shopbridge-order-labels-card
               #labelsCard
               [orderId]="order.id"
               (createLabel)="openCreateLabelDialog()">

@@ -57,11 +57,13 @@ export interface DHLServicesResponse {
 // Fallback services if backend is unavailable
 export const DHL_SERVICES: DHLServiceOption[] = [
   { key: 'goGreen', name: 'GoGreen', description: 'Klimaneutraler Versand', enabled: true },
+  { key: 'premium', name: 'Premium', description: 'Premium-Versand (schnellere Zustellung)', enabled: true },
+  { key: 'economy', name: 'Economy', description: 'Economy-Versand (günstigere Option)', enabled: false },
   { key: 'goGreenPlus', name: 'GoGreen Plus', description: 'Erweiterter Klimaschutz', enabled: false },
   { key: 'parcelOutletRouting', name: 'Filialrouting', description: 'Zustellung an Filiale', enabled: false },
   { key: 'neighbourDelivery', name: 'Nachbar', description: 'Abgabe beim Nachbarn erlaubt', enabled: false },
   { key: 'preferredLocation', name: 'Ablageort', description: 'Wunschablageort', enabled: false },
-  { key: 'endorsement', name: 'Beilageretoure', description: 'Retoure beilegen', enabled: false },
+  { key: 'endorsement', name: 'Rücksendung', description: 'Bei Unzustellbarkeit zurücksenden', enabled: false },
 ];
 
 // Request/Response Types

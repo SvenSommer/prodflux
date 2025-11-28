@@ -27,6 +27,22 @@ DHL_SERVICES = [
         'inputType': 'boolean',
     },
     {
+        'key': 'premium',
+        'name': 'Premium',
+        'description': 'Premium-Versand (schnellere Zustellung)',
+        'defaultEnabled': True,
+        'products': ['V66WPI', 'V53WPAK'],
+        'inputType': 'boolean',
+    },
+    {
+        'key': 'economy',
+        'name': 'Economy',
+        'description': 'Economy-Versand (günstigere Option)',
+        'defaultEnabled': False,
+        'products': ['V66WPI', 'V53WPAK'],
+        'inputType': 'boolean',
+    },
+    {
         'key': 'goGreenPlus',
         'name': 'GoGreen Plus',
         'description': 'Erweiterter Klimaschutz (kostenpflichtig)',

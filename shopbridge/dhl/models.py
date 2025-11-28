@@ -152,6 +152,18 @@ class Shipment:
                         # Only for international products
                         if self.product in international_products:
                             services_dict['endorsement'] = 'RETURN'
+                    elif key == 'premium':
+                        # Premium delivery for international products
+                        if self.product in international_products:
+                            services_dict['premium'] = True
+                    elif key == 'economy':
+                        # Economy delivery for international products
+                        # Note: premium and economy are mutually exclusive
+                        # economy=True means NOT premium
+                        if self.product in international_products:
+                            # If economy is enabled, we DON'T set premium
+                            # Premium is the default, so we explicitly set to False
+                            services_dict['premium'] = False
                     else:
                         # Unknown service - skip to avoid errors
                         pass

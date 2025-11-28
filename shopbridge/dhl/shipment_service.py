@@ -1,10 +1,13 @@
 """DHL Shipment Service for label creation."""
 from typing import List
 import os
+import logging
 
 from .config import DHLConfig
 from .client import DHLClient, DHLClientError
 from .models import Shipment, LabelResult, Address, ShipmentDetails
+
+logger = logging.getLogger(__name__)
 
 
 class ShipmentService:
@@ -26,6 +29,80 @@ class ShipmentService:
         """
         return self.DEFAULT_PROFILE
     
+    def validate_address(
+        self,
+        shipment: Shipment,
+    ) -> dict:
+        """Validate a shipment address without creating a label.
+        
+        Uses DHL's validate=true parameter to check if the address
+        is valid and can be shipped to.
+        
+        Returns:
+            dict with 'valid' (bool), 'warnings' (list), 'errors' (list)
+        """
+        # Set billing number if not provided
+        if not shipment.billing_number:
+            shipment.billing_number = self._get_billing_number(shipment.product)
+        
+        # In production, use shipper profile if configured
+        if not self.config.is_sandbox and self.shipper_profile:
+            shipment.shipper_ref = self.shipper_profile
+        
+        request_data = {
+            "profile": self.profile,
+            "shipments": [shipment.to_dict()],
+        }
+        
+        try:
+            # Use validate=true to only validate, not create
+            response = self.client.post(
+                "/orders", 
+                request_data, 
+                params={"validate": "true"}
+            )
+            
+            items = response.get("items", [])
+            if not items:
+                return {"valid": False, "errors": ["No response from DHL"]}
+            
+            item = items[0]
+            status = item.get("sstatus", {})
+            status_code = status.get("statusCode", 500)
+            
+            warnings = []
+            errors = []
+            
+            for msg in item.get("validationMessages", []):
+                if msg.get("validationState") == "Warning":
+                    warnings.append(msg.get("validationMessage", ""))
+                elif msg.get("validationState") == "Error":
+                    errors.append(msg.get("validationMessage", ""))
+            
+            # Status 200 means valid
+            is_valid = status_code == 200 and len(errors) == 0
+            
+            return {
+                "valid": is_valid,
+                "warnings": warnings,
+                "errors": errors,
+                "status_code": status_code,
+                "status_detail": status.get("detail", "")
+            }
+            
+        except DHLClientError as e:
+            # Parse error response for validation messages
+            if e.response:
+                items = e.response.get("items", [])
+                errors = []
+                for item in items:
+                    for msg in item.get("validationMessages", []):
+                        if msg.get("validationState") == "Error":
+                            errors.append(msg.get("validationMessage", ""))
+                if errors:
+                    return {"valid": False, "errors": errors, "warnings": []}
+            return {"valid": False, "errors": [str(e)], "warnings": []}
+
     def create_label(
         self,
         shipment: Shipment,
@@ -68,6 +145,9 @@ class ShipmentService:
             "labelFormat": print_format,
         }
         
+        # Debug logging to see what's being sent to DHL
+        logger.info(f"DHL Request: {request_data}")
+        
         try:
             response = self.client.post("/orders", request_data)
             return self._parse_response(response)
@@ -86,15 +166,54 @@ class ShipmentService:
             
         Returns:
             Dict with status information
-            
-        Raises:
-            DHLClientError: If deletion fails
         """
         params = {
             "profile": self.profile,
             "shipment": shipment_number
         }
-        return self.client.delete("/orders", params=params)
+        try:
+            result = self.client.delete("/orders", params=params)
+            # Check if deletion was successful
+            status = result.get("status", {})
+            if status.get("statusCode") == 200:
+                return {"success": True, "result": result}
+            # Also check items array for status
+            items = result.get("items", [])
+            if items:
+                item_status = items[0].get("sstatus", {})
+                status_code = item_status.get("statusCode")
+                if status_code == 200:
+                    return {"success": True, "result": result}
+                # Already deleted or unknown - still count as success for our DB
+                if status_code == 204:
+                    return {
+                        "success": True,
+                        "already_deleted": True,
+                        "result": result
+                    }
+                return {
+                    "success": False,
+                    "error": item_status.get("detail", "Unknown error"),
+                    "result": result
+                }
+            return {
+                "success": False,
+                "error": "Unknown response format",
+                "result": result
+            }
+        except DHLClientError as e:
+            # Check if it's a "not found" type error
+            if e.response and isinstance(e.response, dict):
+                items = e.response.get("items", [])
+                if items:
+                    item_status = items[0].get("sstatus", {})
+                    if item_status.get("statusCode") == 204:
+                        return {
+                            "success": True,
+                            "already_deleted": True,
+                            "result": e.response
+                        }
+            return {"success": False, "error": str(e)}
     
     def delete_shipments(self, shipment_numbers: List[str]) -> dict:
         """Delete multiple shipments that have not been manifested yet.

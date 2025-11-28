@@ -349,7 +349,7 @@ export class ShopbridgeOrderLabelsCardComponent implements OnInit {
       next: (response) => {
         this.labelLoading[label.id] = false;
 
-        // Convert base64 to blob and print
+        // Convert base64 to blob
         const byteCharacters = atob(response.label_b64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
@@ -359,28 +359,36 @@ export class ShopbridgeOrderLabelsCardComponent implements OnInit {
         const blob = new Blob([byteArray], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
 
-        // Open in iframe and print
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = url;
-        document.body.appendChild(iframe);
+        // Create a hidden iframe for printing
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = 'none';
+        printFrame.src = url;
+        document.body.appendChild(printFrame);
 
-        iframe.onload = () => {
+        // Wait for PDF to load, then print
+        printFrame.onload = () => {
           setTimeout(() => {
-            iframe.contentWindow?.print();
-            // Mark as printed
-            this.dhlService.markLabelPrinted(label.id).subscribe({
-              next: () => {
-                label.status = 'printed';
-                label.printed_at = new Date().toISOString();
-              },
-            });
-            // Clean up after printing
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-              URL.revokeObjectURL(url);
-            }, 1000);
-          }, 500);
+            try {
+              printFrame.contentWindow?.focus();
+              printFrame.contentWindow?.print();
+              // Mark as printed
+              this.dhlService.markLabelPrinted(label.id).subscribe({
+                next: () => {
+                  label.status = 'printed';
+                  label.printed_at = new Date().toISOString();
+                },
+              });
+            } catch (e) {
+              // Fallback: open in new tab
+              window.open(url, '_blank');
+              this.snackBar.open('Bitte drucken Sie das PDF manuell (Strg+P)', 'OK', { duration: 5000 });
+            }
+          }, 100);
         };
 
         this.snackBar.open('Druckdialog wird geöffnet...', '', { duration: 2000 });

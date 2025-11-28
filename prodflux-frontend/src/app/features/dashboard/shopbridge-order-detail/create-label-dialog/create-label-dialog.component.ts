@@ -25,6 +25,7 @@ import {
   DHLServiceOption,
   CreateLabelRequest,
   LabelResult,
+  AddressValidationResult,
 } from '../../dhl.service';
 import { WooCommerceOrderDetail } from '../../shopbridgeorder.service';
 
@@ -85,7 +86,7 @@ export interface CreateLabelDialogResult {
       <!-- Product Selection -->
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>DHL Produkt</mat-label>
-        <mat-select [(ngModel)]="selectedProduct">
+        <mat-select [(ngModel)]="selectedProduct" (selectionChange)="onProductChange()">
           <mat-option *ngFor="let product of products" [value]="product.code">
             {{ product.name }}
             <span class="product-desc">– {{ product.description }}</span>
@@ -110,11 +111,27 @@ export interface CreateLabelDialogResult {
         </mat-select>
       </mat-form-field>
 
-      <!-- Validate Address Only -->
+      <!-- Validate Address First -->
       <div class="checkbox-row">
-        <mat-checkbox [(ngModel)]="validateOnly">
-          Nur valide Adressen
+        <mat-checkbox [(ngModel)]="validateFirst">
+          Adresse vor Erstellung prüfen
         </mat-checkbox>
+      </div>
+
+      <!-- Validation Result -->
+      <div *ngIf="validationResult" class="validation-result"
+           [class.valid]="validationResult.valid"
+           [class.invalid]="!validationResult.valid">
+        <mat-icon>{{ validationResult.valid ? 'check_circle' : 'error' }}</mat-icon>
+        <div class="validation-content">
+          <strong>{{ validationResult.valid ? 'Adresse gültig' : 'Adresse ungültig' }}</strong>
+          <ul *ngIf="validationResult.errors?.length">
+            <li *ngFor="let err of validationResult.errors">{{ err }}</li>
+          </ul>
+          <ul *ngIf="validationResult.warnings?.length" class="warnings">
+            <li *ngFor="let warn of validationResult.warnings">{{ warn }}</li>
+          </ul>
+        </div>
       </div>
 
       <!-- Additional Services -->
@@ -123,26 +140,46 @@ export interface CreateLabelDialogResult {
           <mat-panel-title>
             <mat-icon>settings</mat-icon>
             Zusatzservices
+            <span *ngIf="loadingServices" class="loading-hint">(lädt...)</span>
           </mat-panel-title>
         </mat-expansion-panel-header>
 
-        <div class="services-grid">
-          <mat-checkbox
-            *ngFor="let service of services"
-            [(ngModel)]="service.enabled">
-            {{ service.name }}
-            <span class="service-desc">– {{ service.description }}</span>
-          </mat-checkbox>
+        <div *ngIf="services.length === 0 && !loadingServices" class="no-services">
+          <mat-icon>info</mat-icon>
+          Keine Zusatzservices für dieses Produkt verfügbar.
         </div>
 
-        <!-- Preferred Location Input -->
-        <mat-form-field
-          *ngIf="getService('preferredLocation')?.enabled"
-          appearance="outline"
-          class="full-width">
-          <mat-label>Ablageort</mat-label>
-          <input matInput [(ngModel)]="preferredLocation" placeholder="z.B. Garage, Terrasse">
-        </mat-form-field>
+        <div class="services-grid">
+          <ng-container *ngFor="let service of services">
+            <!-- Boolean services (checkbox only) -->
+            <mat-checkbox
+              *ngIf="service.inputType === 'boolean' || !service.inputType"
+              [(ngModel)]="service.enabled">
+              {{ service.name }}
+              <span class="service-desc">– {{ service.description }}</span>
+            </mat-checkbox>
+
+            <!-- Text/Email services (checkbox + input) -->
+            <div *ngIf="service.inputType === 'text' || service.inputType === 'email'" class="service-with-input">
+              <mat-checkbox [(ngModel)]="service.enabled">
+                {{ service.name }}
+                <span class="service-desc">– {{ service.description }}</span>
+              </mat-checkbox>
+              <mat-form-field
+                *ngIf="service.enabled"
+                appearance="outline"
+                class="service-input">
+                <mat-label>{{ service.name }}</mat-label>
+                <input
+                  matInput
+                  [type]="service.inputType === 'email' ? 'email' : 'text'"
+                  [(ngModel)]="serviceInputValues[service.key]"
+                  [placeholder]="service.placeholder || ''"
+                  [maxlength]="service.maxLength || 100">
+              </mat-form-field>
+            </div>
+          </ng-container>
+        </div>
       </mat-expansion-panel>
 
       <!-- Error Display -->
@@ -157,6 +194,19 @@ export interface CreateLabelDialogResult {
         <div class="success-content">
           <strong>Label erstellt!</strong>
           <span>Sendungsnummer: {{ result?.shipment_number }}</span>
+        </div>
+      </div>
+
+      <!-- Print Instructions -->
+      <div *ngIf="result?.success" class="print-instructions">
+        <mat-icon>info</mat-icon>
+        <div class="instructions-content">
+          <strong>Druckeinstellungen:</strong>
+          <ul>
+            <li>Drucker: <strong>PL70e-BT</strong></li>
+            <li>Papierformat: <strong>100 x 150 mm</strong></li>
+            <li>Skalierung: <strong>An druckbaren Bereich anpassen</strong></li>
+          </ul>
         </div>
       </div>
 
@@ -206,10 +256,10 @@ export interface CreateLabelDialogResult {
         mat-raised-button
         color="primary"
         (click)="createLabel()"
-        [disabled]="loading">
-        <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
-        <mat-icon *ngIf="!loading">local_shipping</mat-icon>
-        {{ loading ? 'Wird erstellt...' : 'Label erstellen' }}
+        [disabled]="loading || validating">
+        <mat-spinner *ngIf="loading || validating" diameter="20"></mat-spinner>
+        <mat-icon *ngIf="!loading && !validating">local_shipping</mat-icon>
+        {{ validating ? 'Prüfe Adresse...' : (loading ? 'Wird erstellt...' : 'Label erstellen') }}
       </button>
     </mat-dialog-actions>
   `,
@@ -306,6 +356,57 @@ export interface CreateLabelDialogResult {
       }
     }
 
+    .validation-result {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+
+      mat-icon {
+        flex-shrink: 0;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      &.valid {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #2e7d32;
+      }
+
+      &.invalid {
+        background: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+      }
+
+      .validation-content {
+        flex: 1;
+        font-size: 13px;
+
+        strong {
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        ul {
+          margin: 4px 0 0 0;
+          padding-left: 18px;
+
+          li {
+            margin-bottom: 2px;
+          }
+
+          &.warnings {
+            color: #e65100;
+          }
+        }
+      }
+    }
+
     .error-message {
       display: flex;
       align-items: flex-start;
@@ -344,6 +445,41 @@ export interface CreateLabelDialogResult {
       }
     }
 
+    .print-instructions {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      color: #1565c0;
+      margin-top: 12px;
+      border-left: 4px solid #1976d2;
+
+      mat-icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .instructions-content {
+        font-size: 13px;
+
+        strong {
+          display: block;
+          margin-bottom: 8px;
+        }
+
+        ul {
+          margin: 0;
+          padding-left: 18px;
+
+          li {
+            margin-bottom: 4px;
+          }
+        }
+      }
+    }
+
     .warnings-message {
       display: flex;
       align-items: flex-start;
@@ -361,6 +497,38 @@ export interface CreateLabelDialogResult {
       ul {
         margin: 0;
         padding-left: 16px;
+      }
+    }
+
+    .loading-hint {
+      font-size: 12px;
+      color: #999;
+      margin-left: 8px;
+    }
+
+    .no-services {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      color: #666;
+      font-style: italic;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .service-with-input {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .service-input {
+        margin-left: 24px;
+        margin-top: 4px;
       }
     }
 
@@ -382,19 +550,24 @@ export class CreateLabelDialogComponent {
   // Configuration options
   products = DHL_PRODUCTS;
   printFormats = PRINT_FORMATS;
-  services = [...DHL_SERVICES];
+  services: DHLServiceOption[] = [];
+  allServices: DHLServiceOption[] = [];  // All services from backend
 
   // Form state
   selectedProduct: DHLProduct = 'V62KP';
   selectedPrintFormat = '910-300-356';  // Thermodrucker 100x150mm (empfohlen)
   weightKg = 0.5;
-  validateOnly = false;
+  validateFirst = true;  // Default: Adresse vor Erstellung prüfen
   preferredLocation = '';
+  serviceInputValues: Record<string, string> = {};  // For text/email inputs
 
   // UI state
   loading = false;
+  validating = false;
+  loadingServices = true;
   error: string | null = null;
   result: LabelResult | null = null;
+  validationResult: AddressValidationResult | null = null;
 
   constructor(
     public dialogRef: MatDialogRef<CreateLabelDialogComponent>,
@@ -402,6 +575,45 @@ export class CreateLabelDialogComponent {
   ) {
     // Auto-detect product based on shipping method
     this.detectProduct();
+    // Load services from backend
+    this.loadServices();
+  }
+
+  private loadServices(): void {
+    this.loadingServices = true;
+    this.dhlService.getServices().subscribe({
+      next: (response) => {
+        this.allServices = response.services.map(s => ({
+          ...s,
+          enabled: s.defaultEnabled || false
+        }));
+        this.updateServicesForProduct();
+        this.loadingServices = false;
+      },
+      error: () => {
+        // Fallback to static services
+        this.allServices = [...DHL_SERVICES];
+        this.updateServicesForProduct();
+        this.loadingServices = false;
+      }
+    });
+  }
+
+  updateServicesForProduct(): void {
+    // Filter services based on selected product
+    this.services = this.allServices
+      .filter(s => !s.products || s.products.includes(this.selectedProduct))
+      .map(s => ({
+        ...s,
+        enabled: s.enabled  // Preserve enabled state
+      }));
+  }
+
+  onProductChange(): void {
+    // Update available services when product changes
+    this.updateServicesForProduct();
+    // Reset validation when product changes
+    this.validationResult = null;
   }
 
   private detectProduct(): void {
@@ -421,17 +633,19 @@ export class CreateLabelDialogComponent {
     return this.services.find(s => s.key === key);
   }
 
-  createLabel(): void {
-    this.loading = true;
-    this.error = null;
-    this.result = null;
+  getServiceInputValue(key: string): string {
+    return this.serviceInputValues[key] || '';
+  }
 
+  setServiceInputValue(key: string, value: string): void {
+    this.serviceInputValues[key] = value;
+  }
+
+  private buildRequest(): CreateLabelRequest {
     const shipping = this.data.order.shipping;
-
-    // Parse address
     const { street, houseNumber } = this.parseAddress(shipping.address_1);
 
-    const request: CreateLabelRequest = {
+    return {
       consignee: {
         name1: `${shipping.first_name} ${shipping.last_name}`.trim(),
         name2: shipping.company || undefined,
@@ -453,6 +667,77 @@ export class CreateLabelDialogComponent {
       woocommerce_order_id: this.data.order.id,
       woocommerce_order_number: this.data.order.number,
     };
+  }
+
+  validateAddress(): void {
+    this.validating = true;
+    this.validationResult = null;
+    this.error = null;
+
+    const request = this.buildRequest();
+
+    this.dhlService.validateAddress(request).subscribe({
+      next: (result) => {
+        this.validating = false;
+        this.validationResult = result;
+
+        if (result.valid) {
+          this.snackBar.open('Adresse ist gültig', 'OK', { duration: 3000 });
+        } else {
+          this.snackBar.open('Adresse ist ungültig', 'OK', { duration: 3000 });
+        }
+      },
+      error: (err) => {
+        this.validating = false;
+        this.error = err.error?.detail || err.message || 'Validierung fehlgeschlagen';
+      },
+    });
+  }
+
+  createLabel(): void {
+    // If validation is enabled and not yet done, validate first
+    if (this.validateFirst && !this.validationResult) {
+      this.validating = true;
+      this.error = null;
+
+      const request = this.buildRequest();
+
+      this.dhlService.validateAddress(request).subscribe({
+        next: (result) => {
+          this.validating = false;
+          this.validationResult = result;
+
+          if (result.valid) {
+            // Address is valid, proceed with label creation
+            this.doCreateLabel();
+          } else {
+            this.snackBar.open(
+              'Adresse ist ungültig. Bitte korrigieren.',
+              'OK',
+              { duration: 5000 }
+            );
+          }
+        },
+        error: (err) => {
+          this.validating = false;
+          this.error = err.error?.detail || err.message || 'Validierung fehlgeschlagen';
+        },
+      });
+      return;
+    }
+
+    // If validation passed or disabled, create label
+    if (!this.validateFirst || this.validationResult?.valid) {
+      this.doCreateLabel();
+    }
+  }
+
+  private doCreateLabel(): void {
+    this.loading = true;
+    this.error = null;
+    this.result = null;
+
+    const request = this.buildRequest();
 
     this.dhlService.createLabel(request).subscribe({
       next: (result) => {
@@ -519,9 +804,15 @@ export class CreateLabelDialogComponent {
 
     for (const service of this.services) {
       if (service.enabled) {
-        if (service.key === 'preferredLocation' && this.preferredLocation) {
-          result[service.key] = this.preferredLocation;
+        // Check if service has a text/email input
+        if (service.inputType === 'text' || service.inputType === 'email') {
+          const inputValue = this.serviceInputValues[service.key];
+          if (inputValue && inputValue.trim()) {
+            result[service.key] = inputValue.trim();
+          }
+          // Skip if no input value provided
         } else {
+          // Boolean service
           result[service.key] = true;
         }
       }
@@ -545,7 +836,7 @@ export class CreateLabelDialogComponent {
 
   printLabel(): void {
     if (this.result?.label_pdf_base64) {
-      // Convert base64 to blob and open print dialog
+      // Convert base64 to blob
       const byteCharacters = atob(this.result.label_pdf_base64);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -555,21 +846,29 @@ export class CreateLabelDialogComponent {
       const blob = new Blob([byteArray], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
 
-      // Open in iframe and print
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = url;
-      document.body.appendChild(iframe);
+      // Create a hidden iframe for printing - keeps the dialog open
+      const printFrame = document.createElement('iframe');
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = 'none';
+      printFrame.src = url;
+      document.body.appendChild(printFrame);
 
-      iframe.onload = () => {
+      // Wait for PDF to load, then print
+      printFrame.onload = () => {
         setTimeout(() => {
-          iframe.contentWindow?.print();
-          // Clean up after printing
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            URL.revokeObjectURL(url);
-          }, 1000);
-        }, 500);
+          try {
+            printFrame.contentWindow?.focus();
+            printFrame.contentWindow?.print();
+          } catch (e) {
+            // Fallback: open in new tab
+            window.open(url, '_blank');
+            this.snackBar.open('Bitte drucken Sie das PDF manuell (Strg+P)', 'OK', { duration: 5000 });
+          }
+        }, 100);
       };
 
       this.snackBar.open('Druckdialog wird geöffnet...', '', { duration: 2000 });

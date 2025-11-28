@@ -35,16 +35,28 @@ export const PRINT_FORMATS: PrintFormat[] = [
   { code: '910-300-400', name: '100x70', description: 'Label 100 x 70 mm (Warenpost)' },
 ];
 
-// DHL Services (Additional Options)
+// DHL Services (Additional Options) - now loaded from backend
 export interface DHLServiceOption {
   key: string;
   name: string;
   description: string;
   enabled: boolean;
+  products?: string[];
+  inputType?: 'boolean' | 'text' | 'email';
+  placeholder?: string;
+  maxLength?: number;
+  defaultEnabled?: boolean;
 }
 
+// Backend response types
+export interface DHLServicesResponse {
+  services: DHLServiceOption[];
+  products: { code: string; name: string }[];
+}
+
+// Fallback services if backend is unavailable
 export const DHL_SERVICES: DHLServiceOption[] = [
-  { key: 'goGreen', name: 'GoGreen', description: 'Klimaneutraler Versand', enabled: false },
+  { key: 'goGreen', name: 'GoGreen', description: 'Klimaneutraler Versand', enabled: true },
   { key: 'goGreenPlus', name: 'GoGreen Plus', description: 'Erweiterter Klimaschutz', enabled: false },
   { key: 'parcelOutletRouting', name: 'Filialrouting', description: 'Zustellung an Filiale', enabled: false },
   { key: 'neighbourDelivery', name: 'Nachbar', description: 'Abgabe beim Nachbarn erlaubt', enabled: false },
@@ -116,6 +128,14 @@ export interface LabelPdfResponse {
   print_format: string;
 }
 
+export interface AddressValidationResult {
+  valid: boolean;
+  warnings: string[];
+  errors: string[];
+  status_code?: number;
+  status_detail?: string;
+}
+
 export interface DHLConfigStatus {
   environment: string;
   is_sandbox: boolean;
@@ -142,6 +162,14 @@ export class DHLService {
   }
 
   /**
+   * Get available DHL services (optionally filtered by product)
+   */
+  getServices(product?: string): Observable<DHLServicesResponse> {
+    const params = product ? `?product=${product}` : '';
+    return this.http.get<DHLServicesResponse>(`${this.baseUrl}/services/${params}`);
+  }
+
+  /**
    * Check DHL API health
    */
   healthCheck(): Observable<DHLHealthStatus> {
@@ -153,6 +181,16 @@ export class DHLService {
    */
   createLabel(request: CreateLabelRequest): Observable<LabelResult> {
     return this.http.post<LabelResult>(`${this.baseUrl}/labels/`, request);
+  }
+
+  /**
+   * Validate an address before creating a label
+   */
+  validateAddress(request: CreateLabelRequest): Observable<AddressValidationResult> {
+    return this.http.post<AddressValidationResult>(
+      `${this.baseUrl}/labels/validate/`,
+      request
+    );
   }
 
   /**

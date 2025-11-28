@@ -5,10 +5,12 @@ from .views import (
     dhl_config_view,
     dhl_health_check_view,
     dhl_create_label_view,
+    dhl_validate_address_view,
     dhl_delete_shipment_view,
     dhl_labels_by_order_view,
     dhl_label_pdf_view,
     dhl_label_mark_printed_view,
+    dhl_services_view,
 )
 
 urlpatterns = [
@@ -16,6 +18,11 @@ urlpatterns = [
         "config/",
         dhl_config_view,
         name="dhl-config"
+    ),
+    path(
+        "services/",
+        dhl_services_view,
+        name="dhl-services"
     ),
     path(
         "health/",
@@ -26,6 +33,11 @@ urlpatterns = [
         "labels/",
         dhl_create_label_view,
         name="dhl-create-label"
+    ),
+    path(
+        "labels/validate/",
+        dhl_validate_address_view,
+        name="dhl-validate-address"
     ),
     path(
         "labels/order/<int:order_id>/",

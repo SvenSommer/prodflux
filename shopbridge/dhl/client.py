@@ -36,12 +36,14 @@ class DHLClient:
             "Accept": "application/json",
         })
     
-    def post(self, endpoint: str, data: dict) -> dict:
+    def post(self, endpoint: str, data: dict, params: dict = None) -> dict:
         """Make POST request to DHL API."""
         url = f"{self.config.base_url}{endpoint}"
         
         try:
-            response = self._session.post(url, json=data, timeout=self.TIMEOUT)
+            response = self._session.post(
+                url, json=data, params=params, timeout=self.TIMEOUT
+            )
             return self._handle_response(response)
         except requests.RequestException as e:
             raise DHLClientError(f"Request failed: {str(e)}")
@@ -78,6 +80,7 @@ class DHLClient:
         # HTTP 400 with only warnings is acceptable (validation passes)
         if response.status_code == 400:
             items = data.get("items", [])
+            # Check for warnings only
             has_only_warnings = all(
                 all(
                     msg.get("validationState") == "Warning"
@@ -87,6 +90,10 @@ class DHLClient:
             )
             if has_only_warnings and items:
                 # Return data - it's just warnings, not errors
+                return data
+            # For DELETE operations, return the data with error info
+            # so the caller can handle specific status codes (like 204)
+            if items:
                 return data
         
         if response.status_code >= 400:

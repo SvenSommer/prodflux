@@ -16,6 +16,99 @@ from .serializers import (
 from shopbridge.models import DHLLabel
 
 
+# DHL Service definitions with product compatibility
+DHL_SERVICES = [
+    {
+        'key': 'goGreen',
+        'name': 'GoGreen',
+        'description': 'Klimaneutraler Versand',
+        'defaultEnabled': True,
+        'products': ['V62KP', 'V01PAK', 'V62WP', 'V66WPI', 'V53WPAK', 'V54EPAK'],
+        'inputType': 'boolean',
+    },
+    {
+        'key': 'goGreenPlus',
+        'name': 'GoGreen Plus',
+        'description': 'Erweiterter Klimaschutz (kostenpflichtig)',
+        'defaultEnabled': False,
+        'products': ['V62KP', 'V01PAK', 'V62WP', 'V66WPI', 'V53WPAK', 'V54EPAK'],
+        'inputType': 'boolean',
+    },
+    {
+        'key': 'preferredLocation',
+        'name': 'Ablageort',
+        'description': 'Wunschablageort (z.B. Garage, Terrasse)',
+        'defaultEnabled': False,
+        'products': ['V62KP', 'V01PAK', 'V62WP'],
+        'inputType': 'text',
+        'placeholder': 'z.B. Garage, Terrasse',
+        'maxLength': 100,
+    },
+    {
+        'key': 'preferredNeighbour',
+        'name': 'Wunschnachbar',
+        'description': 'Abgabe bei bestimmtem Nachbarn',
+        'defaultEnabled': False,
+        'products': ['V01PAK'],
+        'inputType': 'text',
+        'placeholder': 'z.B. Familie Müller nebenan',
+        'maxLength': 100,
+    },
+    {
+        'key': 'parcelOutletRouting',
+        'name': 'Filialrouting',
+        'description': 'Zustellung an nächste Filiale (Email erforderlich)',
+        'defaultEnabled': False,
+        'products': ['V01PAK'],
+        'inputType': 'email',
+        'placeholder': 'Email für Benachrichtigung',
+    },
+    {
+        'key': 'endorsement',
+        'name': 'Rücksendung',
+        'description': 'Sendung bei Unzustellbarkeit zurücksenden',
+        'defaultEnabled': False,
+        'products': ['V66WPI', 'V53WPAK'],
+        'inputType': 'boolean',
+    },
+    {
+        'key': 'noNeighbourDelivery',
+        'name': 'Keine Nachbarzustellung',
+        'description': 'Abgabe beim Nachbarn nicht erlaubt',
+        'defaultEnabled': False,
+        'products': ['V01PAK'],
+        'inputType': 'boolean',
+    },
+]
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dhl_services_view(request):
+    """Get available DHL services with product compatibility."""
+    product = request.query_params.get('product', None)
+    
+    if product:
+        # Filter services for specific product
+        services = [
+            s for s in DHL_SERVICES if product in s['products']
+        ]
+    else:
+        services = DHL_SERVICES
+    
+    return Response({
+        'services': services,
+        'products': [
+            {'code': 'V62KP', 'name': 'DHL Kleinpaket'},
+            {'code': 'V01PAK', 'name': 'DHL Paket'},
+            {'code': 'V62WP', 'name': 'Warenpost National'},
+            {'code': 'V66WPI', 'name': 'Warenpost International'},
+            {'code': 'V53WPAK', 'name': 'DHL Paket International'},
+            {'code': 'V54EPAK', 'name': 'DHL Europaket'},
+        ]
+    })
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def dhl_config_view(request):
@@ -52,6 +145,74 @@ def dhl_health_check_view(request):
             "status": "error",
             "message": str(e),
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def dhl_validate_address_view(request):
+    """Validate an address before creating a label."""
+    serializer = CreateLabelRequestSerializer(data=request.data)
+    
+    if not serializer.is_valid():
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    data = serializer.validated_data
+    service = ShipmentService()
+    
+    # Build consignee address
+    consignee_data = data['consignee']
+    consignee = Address(
+        name1=consignee_data['name1'],
+        name2=consignee_data.get('name2'),
+        name3=consignee_data.get('name3'),
+        street=consignee_data['street'],
+        house_number=consignee_data['house_number'],
+        postal_code=consignee_data['postal_code'],
+        city=consignee_data['city'],
+        country=consignee_data.get('country', 'DEU'),
+        email=consignee_data.get('email'),
+        phone=consignee_data.get('phone'),
+    )
+    
+    # Build shipper (use provided or default)
+    if 'shipper' in data and data['shipper']:
+        shipper_data = data['shipper']
+        shipper = Address(
+            name1=shipper_data['name1'],
+            street=shipper_data['street'],
+            house_number=shipper_data['house_number'],
+            postal_code=shipper_data['postal_code'],
+            city=shipper_data['city'],
+            country=shipper_data.get('country', 'DEU'),
+        )
+    else:
+        shipper = service.get_default_shipper()
+    
+    # Build shipment details
+    details_data = data['details']
+    details = ShipmentDetails(
+        weight_kg=details_data['weight_kg'],
+        length_cm=details_data.get('length_cm'),
+        width_cm=details_data.get('width_cm'),
+        height_cm=details_data.get('height_cm'),
+    )
+    
+    # Create shipment for validation
+    shipment = Shipment(
+        shipper=shipper,
+        consignee=consignee,
+        details=details,
+        product=data.get('product', 'V01PAK'),
+        reference=data.get('reference'),
+    )
+    
+    # Validate address
+    result = service.validate_address(shipment)
+    
+    return Response(result)
 
 
 @api_view(['POST'])
@@ -107,6 +268,9 @@ def dhl_create_label_view(request):
         height_cm=details_data.get('height_cm'),
     )
     
+    # Get services (Value Added Services)
+    services = data.get('services', {})
+    
     # Create shipment
     shipment = Shipment(
         shipper=shipper,
@@ -114,6 +278,7 @@ def dhl_create_label_view(request):
         details=details,
         product=data.get('product', 'V01PAK'),
         reference=data.get('reference'),
+        services=services,
     )
     
     # Get print format
@@ -136,7 +301,7 @@ def dhl_create_label_view(request):
             woocommerce_order_number=woocommerce_order_number,
             product=data.get('product', 'V01PAK'),
             reference=data.get('reference'),
-            label_pdf_base64=result.label_b64,
+            label_pdf_base64=result.label_pdf_base64,
             label_format='PDF',
             print_format=print_format,
             routing_code=result.routing_code,

@@ -81,6 +81,7 @@ class Shipment:
     billing_number: str = ""
     reference: Optional[str] = None
     shipper_ref: Optional[str] = None  # Profile reference for production
+    services: Optional[dict] = None  # DHL Value Added Services (VAS)
     
     def to_dict(self) -> dict:
         """Convert to DHL API format."""
@@ -106,6 +107,57 @@ class Shipment:
             elif len(ref) > 35:
                 ref = ref[:35]  # Truncate
             data["refNo"] = ref
+        
+        # Add Value Added Services (VAS) if provided
+        # Note: Not all services are available for all products!
+        # V62KP (Kleinpaket): goGreenPlus, preferredLocation, preferredNeighbour
+        # V01PAK (Paket): all services
+        # V66WPI (Warenpost Int.): endorsement, goGreenPlus
+        if self.services:
+            services_dict = {}
+            
+            # Product-specific service availability
+            national_products = ['V62KP', 'V01PAK', 'V62WP']
+            international_products = ['V66WPI', 'V53WPAK', 'V54EPAK']
+            
+            for key, value in self.services.items():
+                if value:  # Only include enabled services
+                    # Map frontend keys to DHL API keys
+                    if key == 'goGreen':
+                        # GoGreen is now standard, goGreenPlus is the upgrade
+                        services_dict['goGreenPlus'] = True
+                    elif key == 'goGreenPlus':
+                        services_dict['goGreenPlus'] = True
+                    elif key == 'preferredLocation':
+                        # Only for national products, expects a string value
+                        if self.product in national_products:
+                            if isinstance(value, str) and len(value) > 0:
+                                services_dict['preferredLocation'] = value
+                    elif key == 'preferredNeighbour':
+                        # Only for national products
+                        if self.product in national_products:
+                            if isinstance(value, str) and len(value) > 0:
+                                services_dict['preferredNeighbour'] = value
+                    elif key == 'neighbourDelivery':
+                        # noNeighbourDelivery = true means NOT allowed
+                        # We skip this as default is allowed
+                        pass
+                    elif key == 'parcelOutletRouting':
+                        # Only for V01PAK, requires email address
+                        if self.product == 'V01PAK':
+                            if isinstance(value, str) and '@' in value:
+                                services_dict['parcelOutletRouting'] = value
+                            # Skip if no valid email - don't send true
+                    elif key == 'endorsement':
+                        # Only for international products
+                        if self.product in international_products:
+                            services_dict['endorsement'] = 'RETURN'
+                    else:
+                        # Unknown service - skip to avoid errors
+                        pass
+            
+            if services_dict:
+                data["services"] = services_dict
             
         return data
 

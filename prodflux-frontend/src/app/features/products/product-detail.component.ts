@@ -18,7 +18,7 @@ import { ToggleProductDialogComponent, ToggleProductDialogData, ToggleProductDia
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { ProductOverviewCardComponent } from './product-overview-card/product-overview-card.component';
 import { ProductSalesCardComponent, ProductSale } from './product-sales-card/product-sales-card.component';
-import { ShopbridgeOrdersService, ShopbridgeOrdersSummary } from '../dashboard/shopbridgeorder.service';
+import { ShopbridgeOrdersService } from '../dashboard/shopbridgeorder.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -62,8 +62,9 @@ export class ProductDetailComponent {
   // New: Statistics and Sales
   productStatistics?: ProductStatisticsResponse;
   productSales: ProductSale[] = [];
+  activeSalesCount: number = 0;
+  completedSalesCount: number = 0;
   totalSold: number = 0;
-  woocommerceBaseUrl: string = environment.woocommerceUrl || '';
 
   editMode: boolean = false;
 
@@ -127,24 +128,23 @@ export class ProductDetailComponent {
   }
 
   loadProductSales() {
-    // Lade WooCommerce-Bestellungen und filtere nach diesem Produkt
-    this.shopbridgeService.getOrders('active').subscribe({
-      next: (summary: ShopbridgeOrdersSummary) => {
-        // Finde das Produkt in der Zusammenfassung
-        const productData = Object.values(summary.products).find(
-          p => p.prodflux_id === this.productId
-        );
+    // Lade sowohl aktive als auch abgeschlossene WooCommerce-Bestellungen
+    this.shopbridgeService.getAllOrdersForProduct(this.productId).subscribe({
+      next: (result) => {
+        // Kombiniere aktive und abgeschlossene Verkäufe, sortiert nach Datum
+        this.productSales = [...result.activeSales, ...result.completedSales]
+          .sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
         
-        if (productData) {
-          this.productSales = productData.orders;
-          this.totalSold = productData.total_quantity;
-        }
+        this.activeSalesCount = result.totalActive;
+        this.completedSalesCount = result.totalCompleted;
+        this.totalSold = result.totalSold;
       },
       error: () => {
         console.error('Fehler beim Laden der Verkäufe');
       }
     });
   }
+
   deleteProduct() {
     if (confirm('Produkt wirklich löschen?')) {
       this.productsService.deleteProduct(this.productId).subscribe(() => {

@@ -18,6 +18,21 @@ export interface ProductStockInfo {
   workshop_name: string;
 }
 
+export interface ProductOrderInfo {
+  order_id: number;
+  status: string;
+  quantity: number;
+  total: string;
+  currency: string;
+  customer_name: string;
+  customer_country: string;
+  customer_city: string;
+  date_created: string;
+  wc_product_name: string;
+  wc_sku: string;
+  match_type: string | null;
+}
+
 export interface ShopbridgeOrdersSummary {
   order_count: number;
   adapter_count: {
@@ -29,20 +44,7 @@ export interface ShopbridgeOrdersSummary {
     prodflux_id: number | null;
     prodflux_name: string | null;
     stocks: Record<number, ProductStockInfo>;
-    orders: {
-      order_id: number;
-      status: string;
-      quantity: number;
-      total: string;
-      currency: string;
-      customer_name: string;
-      customer_country: string;
-      customer_city: string;
-      date_created: string;
-      wc_product_name: string;
-      wc_sku: string;
-      match_type: string | null;
-    }[];
+    orders: ProductOrderInfo[];
   }>;
 }
 
@@ -165,6 +167,76 @@ export class ShopbridgeOrdersService {
     }
 
     return this.http.get<ShopbridgeOrdersSummary>(url);
+  }
+
+  /**
+   * Get all orders (active + completed) for complete sales data
+   * Combines active and completed orders into one summary
+   */
+  getAllOrdersForProduct(productId: number): Observable<{
+    activeSales: ProductOrderInfo[];
+    completedSales: ProductOrderInfo[];
+    totalActive: number;
+    totalCompleted: number;
+    totalSold: number;
+  }> {
+    return new Observable(observer => {
+      let activeSales: ProductOrderInfo[] = [];
+      let completedSales: ProductOrderInfo[] = [];
+      let totalActive = 0;
+      let totalCompleted = 0;
+      let completedCount = 0;
+
+      // Load active orders
+      this.getOrders('active').subscribe({
+        next: (summary) => {
+          const productData = Object.values(summary.products).find(
+            p => p.prodflux_id === productId
+          );
+          if (productData) {
+            activeSales = productData.orders;
+            totalActive = productData.total_quantity;
+          }
+          completedCount++;
+          if (completedCount === 2) {
+            observer.next({
+              activeSales,
+              completedSales,
+              totalActive,
+              totalCompleted,
+              totalSold: totalActive + totalCompleted
+            });
+            observer.complete();
+          }
+        },
+        error: (err) => observer.error(err)
+      });
+
+      // Load completed orders
+      this.getOrders('completed').subscribe({
+        next: (summary) => {
+          const productData = Object.values(summary.products).find(
+            p => p.prodflux_id === productId
+          );
+          if (productData) {
+            completedSales = productData.orders;
+            totalCompleted = productData.total_quantity;
+          }
+          completedCount++;
+          if (completedCount === 2) {
+            observer.next({
+              activeSales,
+              completedSales,
+              totalActive,
+              totalCompleted,
+              totalSold: totalActive + totalCompleted
+            });
+            observer.complete();
+          }
+        },
+        error: (err) => observer.error(err)
+      });
+    });
   }
 
   getOrderStats(): Observable<OrderStats> {

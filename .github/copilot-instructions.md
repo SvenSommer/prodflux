@@ -266,6 +266,9 @@ This system is designed for scalability and workshop-based multi-tenancy, so alw
 
 Copilot is authorized to handle the complete Git and deployment workflow:
 
+### ⚠️ WICHTIG: Immer vor Commit & Deploy nachfragen!
+**Bevor Commit und Deploy durchgeführt werden, IMMER beim Benutzer nachfragen und Bestätigung abwarten!**
+
 ### Commit Messages
 - Create meaningful commit messages following conventional commits format
 - Use prefixes: `feat:`, `fix:`, `refactor:`, `docs:`, `style:`, `chore:`

@@ -71,13 +71,13 @@ import { EditNotesDialogComponent, EditNotesDialogData } from './edit-notes-dial
           <div class="header-title">
             <div class="shop-badge">
               <mat-icon>store</mat-icon>
-              <span>WooCommerce</span>
+              <span>sdlink.de</span>
             </div>
             <h1>
               <mat-icon>receipt_long</mat-icon>
               Bestellung #{{ order.number }}
             </h1>
-            <span class="order-id-hint">WooCommerce ID: {{ order.id }}</span>
+            <span class="order-id-hint">Shop ID: {{ order.id }}</span>
           </div>
           <div class="header-actions">
             <!-- Links: Zurück zum Dashboard -->
@@ -104,7 +104,7 @@ import { EditNotesDialogComponent, EditNotesDialogData } from './edit-notes-dial
               </div>
               <a mat-stroked-button [href]="getWooCommerceEditUrl()" target="_blank" rel="noopener">
                 <mat-icon>open_in_new</mat-icon>
-                In WooCommerce öffnen
+                In sdlink.de öffnen
               </a>
               <button mat-raised-button color="primary" (click)="refresh()">
                 <mat-icon>refresh</mat-icon>

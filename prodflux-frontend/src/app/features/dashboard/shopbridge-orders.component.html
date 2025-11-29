@@ -6,7 +6,7 @@
     <div class="header-title">
       <div class="shop-badge">
         <mat-icon>store</mat-icon>
-        <span>WooCommerce</span>
+        <span>sdlink.de</span>
       </div>
       <h1>
         <mat-icon>shopping_bag</mat-icon>
@@ -197,7 +197,7 @@
                   <a *ngIf="order.prodfluxId"
                      [routerLink]="['/products', order.prodfluxId]"
                      class="product-link"
-                     [matTooltip]="'WooCommerce: ' + order.wcProductName">
+                     [matTooltip]="'Shop: ' + order.wcProductName">
                     <mat-icon class="link-icon">inventory_2</mat-icon>
                     {{ order.productShortName }}
                   </a>

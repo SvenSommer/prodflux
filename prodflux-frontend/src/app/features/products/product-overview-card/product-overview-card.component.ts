@@ -47,40 +47,36 @@ export interface ProductStatistics {
           </div>
 
           <!-- Verkauft -->
-          <div class="stat-item">
+          <div class="stat-item" [matTooltip]="getSalesBreakdown()">
             <div class="stat-icon sold">
               <mat-icon>shopping_cart</mat-icon>
             </div>
             <div class="stat-content">
               <span class="stat-value">{{ formatNumber(totalSold) }}</span>
               <span class="stat-label">Verkauft</span>
+              <span class="stat-breakdown" *ngIf="activeSalesCount > 0 || completedSalesCount > 0">
+                <span class="active-count" *ngIf="activeSalesCount > 0">{{ activeSalesCount }} offen</span>
+                <span *ngIf="activeSalesCount > 0 && completedSalesCount > 0"> · </span>
+                <span class="completed-count" *ngIf="completedSalesCount > 0">{{ completedSalesCount }} abgeschl.</span>
+              </span>
             </div>
           </div>
 
-          <!-- Gesamtbestand -->
-          <div class="stat-item">
+          <!-- Gesamtbestand mit Werkstatt-Breakdown -->
+          <div class="stat-item stock-item">
             <div class="stat-icon stock">
               <mat-icon>inventory_2</mat-icon>
             </div>
             <div class="stat-content">
               <span class="stat-value">{{ formatNumber(statistics?.statistics?.total_stock || 0) }}</span>
               <span class="stat-label">Gesamtbestand</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bestand pro Werkstatt -->
-        <div class="workshop-stocks" *ngIf="statistics?.statistics?.stock_by_workshop?.length">
-          <h4 class="section-title">
-            <mat-icon>factory</mat-icon>
-            Bestand pro Werkstatt
-          </h4>
-          <div class="workshop-list">
-            <div class="workshop-item" *ngFor="let ws of statistics?.statistics?.stock_by_workshop">
-              <span class="workshop-name">{{ ws.workshop_name }}</span>
-              <span class="workshop-stock" [class.zero]="ws.bestand === 0">
-                {{ formatNumber(ws.bestand) }}
-              </span>
+              <div class="workshop-breakdown" *ngIf="statistics?.statistics?.stock_by_workshop?.length">
+                <span class="workshop-stock-inline" 
+                      *ngFor="let ws of statistics?.statistics?.stock_by_workshop"
+                      [class.zero]="ws.bestand === 0">
+                  {{ ws.workshop_name }}: {{ formatNumber(ws.bestand) }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -181,57 +177,44 @@ export interface ProductStatistics {
       letter-spacing: 0.5px;
     }
 
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #666;
-      margin: 0 0 12px 0;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e0e0e0;
+    .stat-breakdown {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
 
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        color: #1976d2;
-      }
-    }
-
-    .workshop-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .workshop-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      background: #fafafa;
-      border-radius: 8px;
-      border: 1px solid #e0e0e0;
-
-      .workshop-name {
-        font-size: 14px;
-        color: #333;
+      .active-count {
+        color: #e65100;
       }
 
-      .workshop-stock {
-        font-size: 16px;
-        font-weight: 600;
+      .completed-count {
         color: #2e7d32;
-        padding: 4px 12px;
+      }
+    }
+
+    .workshop-breakdown {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+
+      .workshop-stock-inline {
+        font-size: 11px;
+        padding: 2px 8px;
         background: #e8f5e9;
-        border-radius: 16px;
+        color: #2e7d32;
+        border-radius: 10px;
+        white-space: nowrap;
 
         &.zero {
-          color: #9e9e9e;
           background: #f5f5f5;
+          color: #9e9e9e;
         }
+      }
+    }
+
+    .stock-item {
+      .stat-content {
+        min-width: 0;
       }
     }
   `]
@@ -239,11 +222,24 @@ export interface ProductStatistics {
 export class ProductOverviewCardComponent {
   @Input() statistics?: ProductStatistics;
   @Input() totalSold: number = 0;
+  @Input() activeSalesCount: number = 0;
+  @Input() completedSalesCount: number = 0;
 
   formatNumber(value: number): string {
     return value.toLocaleString('de-DE', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     });
+  }
+
+  getSalesBreakdown(): string {
+    const parts: string[] = [];
+    if (this.activeSalesCount > 0) {
+      parts.push(`${this.activeSalesCount} offene Bestellungen`);
+    }
+    if (this.completedSalesCount > 0) {
+      parts.push(`${this.completedSalesCount} abgeschlossene Bestellungen`);
+    }
+    return parts.length > 0 ? parts.join(', ') : 'Keine Verkäufe';
   }
 }

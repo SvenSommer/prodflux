@@ -47,7 +47,9 @@
     <!-- Overview Card (Full Width at Top) -->
     <app-product-overview-card
       [statistics]="productStatistics"
-      [totalSold]="totalSold">
+      [totalSold]="totalSold"
+      [activeSalesCount]="activeSalesCount"
+      [completedSalesCount]="completedSalesCount">
     </app-product-overview-card>
 
     <!-- Main Content Grid -->
@@ -92,10 +94,7 @@
 
       <!-- Right Column: Sales -->
       <div class="right-column">
-        <app-product-sales-card
-          [sales]="productSales"
-          [woocommerceBaseUrl]="woocommerceBaseUrl">
-        </app-product-sales-card>
+        <app-product-sales-card [sales]="productSales"></app-product-sales-card>
       </div>
     </div>
 

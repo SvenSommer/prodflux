@@ -1047,13 +1047,6 @@ export class CreateLabelDialogComponent {
     }
   }
 
-  downloadLabel(): void {
-    if (this.result?.label_pdf_base64) {
-      const filename = `DHL-Label-${this.data.order.number}-${this.result.shipment_number}.pdf`;
-      this.dhlService.downloadLabel(this.result.label_pdf_base64, filename);
-    }
-  }
-
   printLabel(): void {
     if (this.result?.label_pdf_base64) {
       // Convert base64 to blob

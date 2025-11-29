@@ -273,15 +273,6 @@ export interface CreateLabelDialogResult {
 
       <button
         *ngIf="result?.success && result?.label_pdf_base64"
-        mat-stroked-button
-        color="primary"
-        (click)="downloadLabel()">
-        <mat-icon>download</mat-icon>
-        Herunterladen
-      </button>
-
-      <button
-        *ngIf="result?.success && result?.label_pdf_base64"
         mat-raised-button
         color="accent"
         (click)="printLabel()">

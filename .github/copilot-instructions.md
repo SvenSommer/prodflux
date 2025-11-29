@@ -259,3 +259,35 @@ When working on this project:
 10. **Consider frontend integration** - API responses should be frontend-friendly
 
 This system is designed for scalability and workshop-based multi-tenancy, so always consider these aspects when implementing new features.
+
+---
+
+## Git & Deployment Workflow
+
+Copilot is authorized to handle the complete Git and deployment workflow:
+
+### Commit Messages
+- Create meaningful commit messages following conventional commits format
+- Use prefixes: `feat:`, `fix:`, `refactor:`, `docs:`, `style:`, `chore:`
+- Include concise description of changes in the commit body when needed
+
+### Git Operations
+- Stage changes with `git add`
+- Commit with descriptive messages
+- Push to `origin main` branch
+
+### Deployment
+- Run `./scripts/deploy.sh` to trigger deployments on Render.com
+- The script deploys both frontend and backend
+- Check deployment status at https://dashboard.render.com
+
+### Example Workflow
+```bash
+git add -A
+git commit -m "feat: Add new feature description
+
+- Detail 1
+- Detail 2"
+git push origin main
+./scripts/deploy.sh
+```

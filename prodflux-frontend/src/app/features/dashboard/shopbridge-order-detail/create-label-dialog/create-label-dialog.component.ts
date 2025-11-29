@@ -214,7 +214,15 @@ export interface CreateLabelDialogResult {
       <!-- Error Display -->
       <div *ngIf="error" class="error-message">
         <mat-icon>error</mat-icon>
-        {{ error }}
+        <div class="error-content">
+          <strong>{{ error }}</strong>
+          <ul *ngIf="errorDetails?.validation_errors?.length" class="error-list">
+            <li *ngFor="let err of errorDetails?.validation_errors">{{ err }}</li>
+          </ul>
+          <ul *ngIf="errorDetails?.warnings?.length" class="warning-list">
+            <li *ngFor="let warn of errorDetails?.warnings">⚠️ {{ warn }}</li>
+          </ul>
+        </div>
       </div>
 
       <!-- Success Display -->
@@ -522,6 +530,30 @@ export interface CreateLabelDialogResult {
 
       mat-icon {
         flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .error-content {
+        flex: 1;
+
+        strong {
+          display: block;
+          margin-bottom: 8px;
+        }
+
+        .error-list, .warning-list {
+          margin: 8px 0 0 0;
+          padding-left: 20px;
+          font-size: 13px;
+
+          li {
+            margin-bottom: 4px;
+          }
+        }
+
+        .warning-list {
+          color: #e65100;
+        }
       }
     }
 
@@ -672,6 +704,7 @@ export class CreateLabelDialogComponent {
   loadingServices = true;
   loadingConfig = true;
   error: string | null = null;
+  errorDetails: { validation_errors?: string[]; warnings?: string[] } | null = null;
   result: LabelResult | null = null;
   validationResult: AddressValidationResult | null = null;
 
@@ -902,6 +935,7 @@ export class CreateLabelDialogComponent {
   private doCreateLabel(): void {
     this.loading = true;
     this.error = null;
+    this.errorDetails = null;
     this.result = null;
 
     const request = this.buildRequest();
@@ -926,6 +960,10 @@ export class CreateLabelDialogComponent {
             debug_info: result.debug_info,
           });
           this.error = result.error || 'Label konnte nicht erstellt werden';
+          this.errorDetails = {
+            validation_errors: result.validation_errors,
+            warnings: result.warnings,
+          };
         }
       },
       error: (err) => {
@@ -940,12 +978,14 @@ export class CreateLabelDialogComponent {
           debug_info: err.error?.debug_info,
         });
 
-        // Build detailed error message
-        let errorMessage = err.error?.error || err.message || 'Unbekannter Fehler';
-        if (err.error?.validation_errors?.length > 0) {
-          errorMessage += ': ' + err.error.validation_errors.join('; ');
-        }
-        this.error = errorMessage;
+        // Store detailed error information for display
+        this.errorDetails = {
+          validation_errors: err.error?.validation_errors || [],
+          warnings: err.error?.error?.warnings || err.error?.warnings || [],
+        };
+
+        // Build main error message
+        this.error = err.error?.error?.error || err.error?.error || err.message || 'Unbekannter Fehler';
       },
     });
   }

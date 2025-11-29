@@ -142,19 +142,46 @@ class ShipmentService:
         request_data = {
             "profile": self.profile,
             "shipments": [s.to_dict() for s in shipments],
-            "labelFormat": print_format,
+        }
+        
+        # printFormat must be a query parameter, not in request body
+        params = {
+            "printFormat": print_format,
         }
         
         # Debug logging to see what's being sent to DHL
         logger.info(f"DHL Request: {request_data}")
+        logger.info(f"DHL Params: {params}")
         
         try:
-            response = self.client.post("/orders", request_data)
+            response = self.client.post("/orders", request_data, params=params)
             return self._parse_response(response)
         except DHLClientError as e:
+            logger.error(f"DHL API Error: {e}")
+            logger.error(f"DHL Error Response: {e.response}")
+            
+            # Extract detailed error information
+            error_details = e.response or {}
+            validation_errors = []
+            
+            # Parse validation messages from error response
+            for item in error_details.get("items", []):
+                for msg in item.get("validationMessages", []):
+                    if msg.get("validationState") == "Error":
+                        prop = msg.get("property", "")
+                        message = msg.get("validationMessage", "")
+                        full_msg = f"{prop}: {message}" if prop else message
+                        validation_errors.append(full_msg)
+            
+            error_msg = str(e)
+            if validation_errors:
+                error_msg = f"{error_msg} - {'; '.join(validation_errors)}"
+            
             return [LabelResult(
                 success=False,
-                error=str(e),
+                error=error_msg,
+                error_details=error_details,
+                validation_errors=validation_errors,
                 reference=s.reference
             ) for s in shipments]
     

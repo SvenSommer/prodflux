@@ -186,6 +186,8 @@ class LabelResult:
     reference: Optional[str] = None
     warnings: List[str] = field(default_factory=list)
     error: Optional[str] = None
+    error_details: Optional[dict] = None  # Full DHL error response
+    validation_errors: List[str] = field(default_factory=list)
     
     @classmethod
     def from_api_response(cls, item: dict) -> "LabelResult":
@@ -194,11 +196,25 @@ class LabelResult:
         is_success = status.get("statusCode", 500) == 200
         
         warnings = []
+        validation_errors = []
         for msg in item.get("validationMessages", []):
-            if msg.get("validationState") == "Warning":
-                warnings.append(msg.get("validationMessage", ""))
+            state = msg.get("validationState", "")
+            message = msg.get("validationMessage", "")
+            prop = msg.get("property", "")
+            full_msg = f"{prop}: {message}" if prop else message
+            
+            if state == "Warning":
+                warnings.append(full_msg)
+            elif state == "Error":
+                validation_errors.append(full_msg)
         
         label_data = item.get("label", {})
+        
+        error_msg = None
+        if not is_success:
+            error_msg = status.get("detail") or status.get("title", "Unknown error")
+            if validation_errors:
+                error_msg = f"{error_msg} - {'; '.join(validation_errors)}"
         
         return cls(
             success=is_success,
@@ -208,5 +224,7 @@ class LabelResult:
             routing_code=item.get("routingCode"),
             reference=item.get("shipmentRefNo"),
             warnings=warnings,
-            error=status.get("detail") if not is_success else None,
+            error=error_msg,
+            error_details=item if not is_success else None,
+            validation_errors=validation_errors,
         )

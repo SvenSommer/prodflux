@@ -886,12 +886,34 @@ export class CreateLabelDialogComponent {
             { duration: 5000 }
           );
         } else {
+          // Log detailed error information to console for debugging
+          console.error('DHL Label Creation Failed:', {
+            error: result.error,
+            validation_errors: result.validation_errors,
+            error_details: result.error_details,
+            debug_info: result.debug_info,
+          });
           this.error = result.error || 'Label konnte nicht erstellt werden';
         }
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.error || err.message || 'Unbekannter Fehler';
+        // Log full error response to console for debugging
+        console.error('DHL API Error Response:', {
+          status: err.status,
+          statusText: err.statusText,
+          error: err.error,
+          validation_errors: err.error?.validation_errors,
+          error_details: err.error?.error_details,
+          debug_info: err.error?.debug_info,
+        });
+
+        // Build detailed error message
+        let errorMessage = err.error?.error || err.message || 'Unbekannter Fehler';
+        if (err.error?.validation_errors?.length > 0) {
+          errorMessage += ': ' + err.error.validation_errors.join('; ');
+        }
+        this.error = errorMessage;
       },
     });
   }

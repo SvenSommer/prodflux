@@ -325,8 +325,19 @@ def dhl_create_label_view(request):
         )
         return Response(response_serializer.data)
     else:
+        # Return detailed error information for frontend debugging
+        error_response = {
+            **response_serializer.data,
+            'error_details': result.error_details,
+            'validation_errors': result.validation_errors,
+            'debug_info': {
+                'product': data.get('product'),
+                'print_format': print_format,
+                'reference': data.get('reference'),
+            }
+        }
         return Response(
-            response_serializer.data,
+            error_response,
             status=status.HTTP_400_BAD_REQUEST
         )
 

@@ -79,6 +79,12 @@ class LabelResultSerializer(serializers.Serializer):
         default=list
     )
     error = serializers.CharField(allow_null=True)
+    error_details = serializers.DictField(allow_null=True, required=False)
+    validation_errors = serializers.ListField(
+        child=serializers.CharField(),
+        default=list,
+        required=False
+    )
 
 
 class CreateLabelFromOrderSerializer(serializers.Serializer):

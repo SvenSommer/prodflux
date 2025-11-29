@@ -102,6 +102,13 @@ export interface LabelResult {
   reference: string | null;
   warnings: string[];
   error: string | null;
+  error_details?: Record<string, unknown> | null;
+  validation_errors?: string[];
+  debug_info?: {
+    product?: string;
+    print_format?: string;
+    reference?: string;
+  };
 }
 
 export interface StoredLabel {

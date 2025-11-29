@@ -1,5 +1,16 @@
 from django.urls import path
-from .views import ProductDetailView, ProductListCreateView, ProductMaterialCreateView, ProductMaterialDetailView, ProductMaterialListView, ProductMaterialGlobalListView, ProductVariantDetailView, ProductVariantListCreateView, ProductVersionDetailView, ProductVersionListCreateView, aggregated_material_requirements_view, manufacture_product, material_requirements_view, producible_overview_view, producible_units_view, product_lifecycle_overview, product_stock_view, workshop_products_overview, product_material_dependencies, deprecate_product_with_materials, toggle_product_deprecated
+from .views import (
+    ProductDetailView, ProductListCreateView, ProductMaterialCreateView,
+    ProductMaterialDetailView, ProductMaterialListView,
+    ProductMaterialGlobalListView, ProductVariantDetailView,
+    ProductVariantListCreateView, ProductVersionDetailView,
+    ProductVersionListCreateView, aggregated_material_requirements_view,
+    manufacture_product, material_requirements_view, producible_overview_view,
+    producible_units_view, product_lifecycle_overview, product_stock_view,
+    workshop_products_overview, product_material_dependencies,
+    deprecate_product_with_materials, toggle_product_deprecated,
+    product_statistics_view
+)
 
 urlpatterns = [
     path('product-versions/', ProductVersionListCreateView.as_view(), name='product-version-list'),
@@ -25,4 +36,7 @@ urlpatterns = [
     path('products/<int:product_id>/toggle-deprecated/',
          toggle_product_deprecated,
          name='toggle-product-deprecated'),
+    path('products/<int:product_id>/statistics/',
+         product_statistics_view,
+         name='product-statistics'),
 ]

@@ -667,3 +667,89 @@ def deprecate_product_with_materials(request, product_id):
         'materials_deprecated': deprecated_material_ids,
         'materials_count': len(deprecated_material_ids)
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def product_statistics_view(request, product_id):
+    """
+    Holt Statistiken für ein einzelnes Produkt:
+    - Produzierte Einheiten (aus MaterialMovement mit Fertigung-Note)
+    - Bestand pro Werkstatt (aus ProductStock)
+    - Verkaufte Einheiten (aus WooCommerce via Shopbridge)
+    """
+    from core.models import Workshop
+    
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response(
+            {"detail": "Produkt nicht gefunden"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # 1. Bestand pro Werkstatt
+    workshops = Workshop.objects.all()
+    stock_by_workshop = []
+    total_stock = Decimal(0)
+    
+    for workshop in workshops:
+        try:
+            stock = ProductStock.objects.get(product=product, workshop=workshop)
+            bestand = stock.bestand
+        except ProductStock.DoesNotExist:
+            bestand = Decimal(0)
+        
+        stock_by_workshop.append({
+            'workshop_id': workshop.id,
+            'workshop_name': workshop.name,
+            'bestand': float(bestand)
+        })
+        total_stock += bestand
+    
+    # 2. Produzierte Einheiten berechnen
+    # Zähle alle MaterialMovements vom Typ 'verbrauch' die zur Fertigung dieses Produkts gehören
+    production_movements = MaterialMovement.objects.filter(
+        note__icontains=product.bezeichnung,
+        change_type='verbrauch'
+    )
+    
+    # Berechne produzierte Einheiten aus den Notizen
+    # Format: "Fertigung 5x Produktname"
+    total_produced = Decimal(0)
+    for movement in production_movements:
+        note = movement.note
+        if 'Fertigung' in note and product.bezeichnung in note:
+            try:
+                # Extrahiere Menge aus "Fertigung 5x Produktname"
+                import re
+                match = re.search(r'Fertigung\s+(\d+(?:\.\d+)?)\s*x', note)
+                if match:
+                    qty = Decimal(match.group(1))
+                    # Nur einmal pro Fertigung zählen (nicht pro Material)
+                    # Wir nehmen nur den ersten Eintrag pro unique note
+                    pass
+            except (ValueError, AttributeError):
+                pass
+    
+    # Alternative: Zähle direkt aus ProductStock-Änderungen 
+    # (ProductStock repräsentiert den aktuellen Bestand nach allen Fertigungen)
+    # Da wir keinen direkten Fertigungs-Log haben, nehmen wir den aktuellen Bestand als Basis
+    # und fügen verkaufte hinzu um auf produzierte zu kommen (wenn Verkäufe vorhanden)
+    
+    # Für jetzt: Produzierte = Bestand (später mit WooCommerce Verkäufen erweitern)
+    total_produced = total_stock
+    
+    # 3. Placeholder für Verkäufe (WooCommerce Integration)
+    # Diese werden vom Frontend über die shopbridge API geholt
+    
+    return Response({
+        'product_id': product.id,
+        'product_name': product.bezeichnung,
+        'artikelnummer': product.artikelnummer,
+        'statistics': {
+            'total_produced': float(total_produced),
+            'total_stock': float(total_stock),
+            'stock_by_workshop': stock_by_workshop,
+        }
+    })

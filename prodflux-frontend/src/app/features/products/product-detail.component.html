@@ -1,325 +1,321 @@
-<mat-card class="product-card">
-  <!-- Löschen-Icon oben rechts -->
-  <div class="delete-button">
-    <button
-      mat-icon-button
-      color="warn"
-      (click)="deleteProduct()"
-      matTooltip="Produkt löschen"
-    >
-      <mat-icon>delete</mat-icon>
-    </button>
-  </div>
+<div class="page-container">
+  <!-- Breadcrumb Navigation -->
+  <app-breadcrumb
+    [links]="[
+      { label: 'Produkte', url: '/products' },
+      { label: product?.bezeichnung || 'Produkt', url: '/products/' + productId }
+    ]"
+  ></app-breadcrumb>
 
-  <mat-card-title>Produktdetails</mat-card-title>
-
-  <mat-card-content>
-    <div class="product-info-header">
-      <div class="product-details">
-        <p><strong>Bezeichnung:</strong> {{ product?.bezeichnung }}</p>
-        <p><strong>Artikelnummer:</strong> {{ product?.artikelnummer }}</p>
-        <p><strong>Version:</strong> {{ product?.version }}</p>
-
-        <!-- Deprecated Status -->
-        <div class="status-section">
-          <mat-chip-set *ngIf="product?.deprecated" class="deprecated-status">
-            <mat-chip color="warn" selected>
-              <mat-icon matChipAvatar>archive</mat-icon>
-              Veraltet
-            </mat-chip>
-          </mat-chip-set>
-        </div>
-      </div>
-
-      <div class="product-actions">
-        <button
-          mat-stroked-button
-          [color]="product?.deprecated ? 'primary' : 'warn'"
-          (click)="toggleDeprecatedStatus()"
-          [matTooltip]="product?.deprecated ? 'Produkt wieder aktivieren' : 'Produkt als veraltet markieren'"
-          class="toggle-deprecated-button"
-        >
-          <mat-icon>{{ product?.deprecated ? 'unarchive' : 'archive' }}</mat-icon>
-          {{ product?.deprecated ? 'Wieder aktivieren' : 'Als veraltet markieren' }}
-        </button>
-
-        <!-- Legacy Button (optional, kann entfernt werden) -->
-        <button
-          *ngIf="!product?.deprecated"
-          mat-stroked-button
-          color="warn"
-          (click)="deprecateProduct()"
-          matTooltip="Produkt als veraltet markieren (Legacy)"
-          class="deprecate-button"
-          style="display: none;"
-        >
+  <div *ngIf="product" class="product-detail-content">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-title">
+        <h1>
+          <mat-icon>inventory_2</mat-icon>
+          {{ product.bezeichnung }}
+        </h1>
+        <span class="artikelnummer">#{{ product.artikelnummer }}</span>
+        <mat-chip *ngIf="product.deprecated" class="deprecated-chip">
           <mat-icon>archive</mat-icon>
-          Als veraltet markieren (Legacy)
+          Veraltet
+        </mat-chip>
+      </div>
+      <div class="header-actions">
+        <button 
+          mat-stroked-button 
+          color="primary" 
+          [routerLink]="['/products', productId, 'edit']">
+          <mat-icon>edit</mat-icon>
+          Bearbeiten
+        </button>
+        <button
+          mat-stroked-button
+          [color]="product.deprecated ? 'primary' : 'warn'"
+          (click)="toggleDeprecatedStatus()"
+          [matTooltip]="product.deprecated ? 'Produkt wieder aktivieren' : 'Produkt als veraltet markieren'">
+          <mat-icon>{{ product.deprecated ? 'unarchive' : 'archive' }}</mat-icon>
+          {{ product.deprecated ? 'Aktivieren' : 'Archivieren' }}
+        </button>
+        <button mat-stroked-button color="warn" (click)="deleteProduct()">
+          <mat-icon>delete</mat-icon>
+          Löschen
         </button>
       </div>
     </div>
 
-    <div *ngIf="product?.bild" class="image-container">
-      <img [src]="product?.bild" alt="Produktbild" class="product-image" />
+    <!-- Overview Card (Full Width at Top) -->
+    <app-product-overview-card
+      [statistics]="productStatistics"
+      [totalSold]="totalSold">
+    </app-product-overview-card>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      <!-- Left Column: Product Info & Image -->
+      <div class="left-column">
+        <!-- Product Info Card -->
+        <mat-card class="info-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>info</mat-icon>
+              Produktinformationen
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Artikelnummer:</span>
+                <span class="value">{{ product.artikelnummer }}</span>
+              </div>
+              <div class="info-item" *ngIf="product.version">
+                <span class="label">Version:</span>
+                <span class="value">{{ product.version.name }}</span>
+              </div>
+              <div class="info-item" *ngIf="product.varianten && product.varianten.length > 0">
+                <span class="label">Varianten:</span>
+                <div class="variants-list">
+                  <mat-chip *ngFor="let variant of product.varianten" class="variant-chip">
+                    {{ variant.name }}
+                  </mat-chip>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Product Image -->
+            <div *ngIf="product.bild" class="product-image-container">
+              <img [src]="product.bild" alt="Produktbild" class="product-image" />
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Right Column: Sales -->
+      <div class="right-column">
+        <app-product-sales-card
+          [sales]="productSales"
+          [woocommerceBaseUrl]="woocommerceBaseUrl">
+        </app-product-sales-card>
+      </div>
     </div>
 
-    <!-- VIEW-MODE -->
-    <div *ngIf="!editMode" class="mt-4">
-      <div class="header-row">
-        <h3>Zugeordnete Materialien</h3>
+    <!-- Materials Section (Full Width) -->
+    <mat-card class="materials-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>category</mat-icon>
+          Bill of Materials (BOM)
+        </mat-card-title>
         <button
           mat-icon-button
           color="primary"
           (click)="toggleEditMode()"
-          matTooltip="Bearbeiten"
-        >
-          <mat-icon>edit</mat-icon>
+          [matTooltip]="editMode ? 'Ansicht wechseln' : 'Bearbeiten'">
+          <mat-icon>{{ editMode ? 'visibility' : 'edit' }}</mat-icon>
         </button>
-      </div>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- VIEW-MODE -->
+        <div *ngIf="!editMode">
+          <ng-container *ngFor="let group of materialGroups">
+            <div
+              *ngIf="getMaterialsByCategory(group.category_id).length > 0"
+              class="material-category-block">
+              <h4 class="category-title">{{ group.category_name }}</h4>
 
-      <ng-container *ngFor="let group of materialGroups">
-        <div
-          *ngIf="getMaterialsByCategory(group.category_id).length > 0"
-          class="material-category-block"
-        >
-          <h4 class="category-title">{{ group.category_name }}</h4>
+              <table
+                mat-table
+                [dataSource]="getMaterialsByCategory(group.category_id)"
+                class="mat-elevation-z1 full-width-table">
+                <!-- Spalte # -->
+                <ng-container matColumnDef="nr">
+                  <th mat-header-cell *matHeaderCellDef>#</th>
+                  <td mat-cell *matCellDef="let m; let i = index">{{ i + 1 }}</td>
+                </ng-container>
 
-          <table
-            mat-table
-            [dataSource]="getMaterialsByCategory(group.category_id)"
-            class="mat-elevation-z1 full-width-table mb-6"
-          >
-            <!-- Spalte # -->
-            <ng-container matColumnDef="nr">
-              <th mat-header-cell *matHeaderCellDef>#</th>
-              <td mat-cell *matCellDef="let m; let i = index">{{ i + 1 }}</td>
-            </ng-container>
-
-            <!-- Spalte Material -->
-            <ng-container matColumnDef="material">
-              <th mat-header-cell *matHeaderCellDef>Material</th>
-              <td mat-cell *matCellDef="let m">
-                <div class="material-info">
-                  <img
-                    *ngIf="
-                      getMaterialOrAlternativeBildUrl(m.material) as bildUrl
-                    "
-                    [src]="bildUrl"
-                    alt="Bild"
-                    class="material-inline-image"
-                  />
-                  <a [routerLink]="['/materials', m.material]"
-                     [class.deprecated-material]="isMaterialDeprecated(m.material)">
-                    {{ getMaterialBezeichnung(m.material) }}
-                    <span *ngIf="isMaterialDeprecated(m.material)" class="deprecated-badge">
-                      <mat-icon>archive</mat-icon>
-                      Veraltet
-                    </span>
-                  </a>
-                </div>
-
-                <!-- Alternativen -->
-                <div
-                  *ngIf="getMaterialAlternatives(m.material).length > 0"
-                  class="alternatives-wrapper"
-                >
-                  <p class="alternative-label">
-                    {{
-                      getMaterialAlternatives(m.material).length > 1
-                        ? "Alternativen:"
-                        : "Alternative:"
-                    }}
-                  </p>
-
-                  <div
-                    *ngFor="let altId of getMaterialAlternatives(m.material)"
-                    class="alternative-item"
-                  >
-                    <span class="oder-text">oder</span>
+                <!-- Spalte Material -->
+                <ng-container matColumnDef="material">
+                  <th mat-header-cell *matHeaderCellDef>Material</th>
+                  <td mat-cell *matCellDef="let m">
                     <div class="material-info">
                       <img
-                        *ngIf="getMaterialBildUrl(altId)"
-                        [src]="getMaterialBildUrl(altId)"
-                        alt="Bild Alternative"
-                        class="material-inline-image"
-                      />
-                      <a [routerLink]="['/materials', altId]"
-                         [class.deprecated-material]="isMaterialDeprecated(altId)">
-                        {{ getMaterialBezeichnung(altId) }}
-                        <span *ngIf="isMaterialDeprecated(altId)" class="deprecated-badge">
+                        *ngIf="getMaterialOrAlternativeBildUrl(m.material) as bildUrl"
+                        [src]="bildUrl"
+                        alt="Bild"
+                        class="material-inline-image" />
+                      <a [routerLink]="['/materials', m.material]"
+                         [class.deprecated-material]="isMaterialDeprecated(m.material)">
+                        {{ getMaterialBezeichnung(m.material) }}
+                        <span *ngIf="isMaterialDeprecated(m.material)" class="deprecated-badge">
                           <mat-icon>archive</mat-icon>
                           Veraltet
                         </span>
                       </a>
                     </div>
-                    <span *ngIf="getMaterialHersteller(altId)"
-                      >– {{ getMaterialHersteller(altId) }}</span
-                    >
-                  </div>
-                </div>
-              </td>
-            </ng-container>
 
-            <!-- Spalte Hersteller-Bezeichnung -->
-            <ng-container matColumnDef="hersteller">
-              <th mat-header-cell *matHeaderCellDef>Hersteller-Bezeichnung</th>
-              <td mat-cell *matCellDef="let m">
-                {{ getMaterialHersteller(m.material) }}
-              </td>
-            </ng-container>
-
-            <!-- Spalte Menge -->
-            <ng-container matColumnDef="menge">
-              <th mat-header-cell *matHeaderCellDef>Menge</th>
-              <td mat-cell *matCellDef="let m">{{ m.quantity_per_unit }}</td>
-            </ng-container>
-
-            <!-- Tabellenaufbau -->
-            <tr
-              mat-header-row
-              *matHeaderRowDef="['nr', 'material', 'hersteller', 'menge']"
-            ></tr>
-            <tr
-              mat-row
-              *matRowDef="
-                let row;
-                columns: ['nr', 'material', 'hersteller', 'menge']
-              "
-            ></tr>
-          </table>
-        </div>
-      </ng-container>
-    </div>
-
-    <!-- EDIT-MODE -->
-    <form *ngIf="editMode" (ngSubmit)="toggleEditMode()" class="mt-4">
-      <div class="header-row">
-        <h3>Material-Zuordnung bearbeiten</h3>
-        <button mat-raised-button color="accent" type="submit">
-          <mat-icon class="mr-1">save</mat-icon> Speichern & schließen
-        </button>
-      </div>
-
-      <ng-container *ngFor="let group of materialGroups">
-        <div *ngIf="group.materials.length > 0" class="material-category-block">
-          <h4 class="category-title">{{ group.category_name }}</h4>
-
-          <table
-            mat-table
-            [dataSource]="group.materials"
-            class="mat-elevation-z1 full-width-table mb-6"
-          >
-            <!-- Material -->
-            <ng-container matColumnDef="material">
-              <th mat-header-cell *matHeaderCellDef>Material</th>
-              <td mat-cell *matCellDef="let mat">
-                <div class="material-info">
-                  <img
-                    *ngIf="mat.bild_url"
-                    [src]="mat.bild_url"
-                    alt="Bild"
-                    class="material-inline-image"
-                  />
-                  <a [routerLink]="['/materials', mat.id]"
-                     [class.deprecated-material]="mat.deprecated">
-                    {{ mat.bezeichnung }}
-                    <span *ngIf="mat.deprecated" class="deprecated-badge">
-                      <mat-icon>archive</mat-icon>
-                      Veraltet
-                    </span>
-                  </a>
-                </div>
-
-                <!-- Alternativen darstellen -->
-                <div
-                  *ngIf="mat.alternatives.length > 0"
-                  class="alternatives-wrapper"
-                >
-                  <p class="alternative-label">
-                    {{
-                      mat.alternatives.length > 1
-                        ? "Alternativen:"
-                        : "Alternative:"
-                    }}
-                  </p>
-
-                  <div
-                    *ngFor="let altId of mat.alternatives"
-                    class="alternative-item"
-                  >
-                    <span class="oder-text">oder</span>
-                    <div class="material-info">
-                      <img
-                        *ngIf="getMaterialBildUrl(altId)"
-                        [src]="getMaterialBildUrl(altId)"
-                        alt="Bild Alternative"
-                        class="material-inline-image"
-                      />
-                      <a [routerLink]="['/materials', altId]"
-                         [class.deprecated-material]="isMaterialDeprecated(altId)">
-                        {{ getMaterialBezeichnung(altId) }}
-                        <span *ngIf="isMaterialDeprecated(altId)" class="deprecated-badge">
-                          <mat-icon>archive</mat-icon>
-                          Veraltet
-                        </span>
-                      </a>
+                    <!-- Alternativen -->
+                    <div
+                      *ngIf="getMaterialAlternatives(m.material).length > 0"
+                      class="alternatives-wrapper">
+                      <p class="alternative-label">
+                        {{ getMaterialAlternatives(m.material).length > 1 ? "Alternativen:" : "Alternative:" }}
+                      </p>
+                      <div
+                        *ngFor="let altId of getMaterialAlternatives(m.material)"
+                        class="alternative-item">
+                        <span class="oder-text">oder</span>
+                        <div class="material-info">
+                          <img
+                            *ngIf="getMaterialBildUrl(altId)"
+                            [src]="getMaterialBildUrl(altId)"
+                            alt="Bild Alternative"
+                            class="material-inline-image" />
+                          <a [routerLink]="['/materials', altId]"
+                             [class.deprecated-material]="isMaterialDeprecated(altId)">
+                            {{ getMaterialBezeichnung(altId) }}
+                            <span *ngIf="isMaterialDeprecated(altId)" class="deprecated-badge">
+                              <mat-icon>archive</mat-icon>
+                              Veraltet
+                            </span>
+                          </a>
+                        </div>
+                        <span *ngIf="getMaterialHersteller(altId)">– {{ getMaterialHersteller(altId) }}</span>
+                      </div>
                     </div>
-                    <span *ngIf="getMaterialHersteller(altId)"
-                      >– {{ getMaterialHersteller(altId) }}</span
-                    >
-                  </div>
-                </div>
-              </td>
-            </ng-container>
+                  </td>
+                </ng-container>
 
-            <!-- Hersteller-Bezeichnung -->
-            <ng-container matColumnDef="hersteller">
-              <th mat-header-cell *matHeaderCellDef>Hersteller-Bezeichnung</th>
-              <td mat-cell *matCellDef="let mat">
-                {{ mat.hersteller_bezeichnung }}
-              </td>
-            </ng-container>
-            <!-- Menge -->
-            <ng-container matColumnDef="quantity">
-              <th mat-header-cell *matHeaderCellDef class="text-center">
-                Menge
-              </th>
-              <td mat-cell *matCellDef="let mat" class="text-center">
-                <mat-form-field appearance="outline" class="quantity-field">
-                  <input
-                    matInput
-                    type="number"
-                    step="1"
-                    min="0"
-                    [(ngModel)]="materialAssignments[mat.id]"
-                    [name]="'qty_' + mat.id"
-                  />
-                </mat-form-field>
-              </td>
-            </ng-container>
+                <!-- Spalte Hersteller-Bezeichnung -->
+                <ng-container matColumnDef="hersteller">
+                  <th mat-header-cell *matHeaderCellDef>Hersteller-Bezeichnung</th>
+                  <td mat-cell *matCellDef="let m">{{ getMaterialHersteller(m.material) }}</td>
+                </ng-container>
 
-            <!-- Tabellenaufbau -->
-            <tr
-              mat-header-row
-              *matHeaderRowDef="['material', 'hersteller', 'quantity']"
-            ></tr>
-            <tr
-              mat-row
-              *matRowDef="
-                let row;
-                columns: ['material', 'hersteller', 'quantity']
-              "
-            ></tr>
-          </table>
+                <!-- Spalte Menge -->
+                <ng-container matColumnDef="menge">
+                  <th mat-header-cell *matHeaderCellDef>Menge</th>
+                  <td mat-cell *matCellDef="let m">{{ m.quantity_per_unit }}</td>
+                </ng-container>
 
-          <!-- ➡️ Speicher-Button am Ende jeder Tabelle -->
-          <div class="text-right mb-6">
-            <button mat-raised-button color="primary" type="submit">
-              <mat-icon class="mr-1">save</mat-icon> Speichern & schließen
-            </button>
+                <tr mat-header-row *matHeaderRowDef="['nr', 'material', 'hersteller', 'menge']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['nr', 'material', 'hersteller', 'menge']"></tr>
+              </table>
+            </div>
+          </ng-container>
+
+          <!-- Empty State -->
+          <div *ngIf="materials.length === 0" class="no-materials">
+            <mat-icon>category</mat-icon>
+            <h4>Keine Materialien zugeordnet</h4>
+            <p>Klicken Sie auf "Bearbeiten" um Materialien hinzuzufügen.</p>
           </div>
         </div>
-      </ng-container>
-    </form>
-  </mat-card-content>
-</mat-card>
+
+        <!-- EDIT-MODE -->
+        <form *ngIf="editMode" (ngSubmit)="toggleEditMode()">
+          <div class="edit-actions-top">
+            <button mat-raised-button color="accent" type="submit">
+              <mat-icon>save</mat-icon> Speichern & schließen
+            </button>
+          </div>
+
+          <ng-container *ngFor="let group of materialGroups">
+            <div *ngIf="group.materials.length > 0" class="material-category-block">
+              <h4 class="category-title">{{ group.category_name }}</h4>
+
+              <table
+                mat-table
+                [dataSource]="group.materials"
+                class="mat-elevation-z1 full-width-table">
+                <!-- Material -->
+                <ng-container matColumnDef="material">
+                  <th mat-header-cell *matHeaderCellDef>Material</th>
+                  <td mat-cell *matCellDef="let mat">
+                    <div class="material-info">
+                      <img
+                        *ngIf="mat.bild_url"
+                        [src]="mat.bild_url"
+                        alt="Bild"
+                        class="material-inline-image" />
+                      <a [routerLink]="['/materials', mat.id]"
+                         [class.deprecated-material]="mat.deprecated">
+                        {{ mat.bezeichnung }}
+                        <span *ngIf="mat.deprecated" class="deprecated-badge">
+                          <mat-icon>archive</mat-icon>
+                          Veraltet
+                        </span>
+                      </a>
+                    </div>
+
+                    <!-- Alternativen darstellen -->
+                    <div *ngIf="mat.alternatives.length > 0" class="alternatives-wrapper">
+                      <p class="alternative-label">
+                        {{ mat.alternatives.length > 1 ? "Alternativen:" : "Alternative:" }}
+                      </p>
+                      <div *ngFor="let altId of mat.alternatives" class="alternative-item">
+                        <span class="oder-text">oder</span>
+                        <div class="material-info">
+                          <img
+                            *ngIf="getMaterialBildUrl(altId)"
+                            [src]="getMaterialBildUrl(altId)"
+                            alt="Bild Alternative"
+                            class="material-inline-image" />
+                          <a [routerLink]="['/materials', altId]"
+                             [class.deprecated-material]="isMaterialDeprecated(altId)">
+                            {{ getMaterialBezeichnung(altId) }}
+                            <span *ngIf="isMaterialDeprecated(altId)" class="deprecated-badge">
+                              <mat-icon>archive</mat-icon>
+                              Veraltet
+                            </span>
+                          </a>
+                        </div>
+                        <span *ngIf="getMaterialHersteller(altId)">– {{ getMaterialHersteller(altId) }}</span>
+                      </div>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <!-- Hersteller-Bezeichnung -->
+                <ng-container matColumnDef="hersteller">
+                  <th mat-header-cell *matHeaderCellDef>Hersteller-Bezeichnung</th>
+                  <td mat-cell *matCellDef="let mat">{{ mat.hersteller_bezeichnung }}</td>
+                </ng-container>
+
+                <!-- Menge -->
+                <ng-container matColumnDef="quantity">
+                  <th mat-header-cell *matHeaderCellDef class="text-center">Menge</th>
+                  <td mat-cell *matCellDef="let mat" class="text-center">
+                    <mat-form-field appearance="outline" class="quantity-field">
+                      <input
+                        matInput
+                        type="number"
+                        step="1"
+                        min="0"
+                        [(ngModel)]="materialAssignments[mat.id]"
+                        [name]="'qty_' + mat.id" />
+                    </mat-form-field>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="['material', 'hersteller', 'quantity']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['material', 'hersteller', 'quantity']"></tr>
+              </table>
+            </div>
+          </ng-container>
+
+          <div class="edit-actions-bottom">
+            <button mat-raised-button color="primary" type="submit">
+              <mat-icon>save</mat-icon> Speichern & schließen
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="!product" class="loading-state">
+    <mat-icon>hourglass_empty</mat-icon>
+    <p>Laden...</p>
+  </div>
+</div>

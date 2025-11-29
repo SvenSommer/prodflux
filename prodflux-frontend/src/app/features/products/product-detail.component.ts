@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ProductsService, Product, ProductMaterial, MaterialDependencyResponse } from './products.service';
+import { ProductsService, Product, ProductMaterial, MaterialDependencyResponse, ProductStatisticsResponse } from './products.service';
 import { FormsModule } from '@angular/forms';
 import { MaterialsService, Material, MaterialCategoryGroup } from '../materials/materials.service';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +15,11 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { ToggleProductDialogComponent, ToggleProductDialogData, ToggleProductDialogResult } from './toggle-product-dialog.component';
+import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { ProductOverviewCardComponent } from './product-overview-card/product-overview-card.component';
+import { ProductSalesCardComponent, ProductSale } from './product-sales-card/product-sales-card.component';
+import { ShopbridgeOrdersService, ShopbridgeOrdersSummary } from '../dashboard/shopbridgeorder.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-product-detail',
@@ -30,7 +35,10 @@ import { ToggleProductDialogComponent, ToggleProductDialogData, ToggleProductDia
     MatTableModule,
     MatFormFieldModule,
     MatInputModule,
-    MatChipsModule
+    MatChipsModule,
+    BreadcrumbComponent,
+    ProductOverviewCardComponent,
+    ProductSalesCardComponent
   ],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss'],
@@ -39,6 +47,7 @@ export class ProductDetailComponent {
   private route = inject(ActivatedRoute);
   private productsService = inject(ProductsService);
   private materialsService = inject(MaterialsService);
+  private shopbridgeService = inject(ShopbridgeOrdersService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -50,12 +59,20 @@ export class ProductDetailComponent {
   materialAssignments: { [materialId: number]: number } = {};
   materialGroups: MaterialCategoryGroup[] = [];
 
+  // New: Statistics and Sales
+  productStatistics?: ProductStatisticsResponse;
+  productSales: ProductSale[] = [];
+  totalSold: number = 0;
+  woocommerceBaseUrl: string = environment.woocommerceUrl || '';
+
   editMode: boolean = false;
 
   ngOnInit() {
     console.log('[ProductDetail] Init gestartet');
 
     this.loadProduct();
+    this.loadProductStatistics();
+    this.loadProductSales();
 
     this.materialsService.getMaterialsGrouped(true).subscribe(materialGroups => {
       this.materialGroups = materialGroups;
@@ -98,6 +115,36 @@ export class ProductDetailComponent {
     this.productsService.getProduct(this.productId).subscribe(p => this.product = p);
   }
 
+  loadProductStatistics() {
+    this.productsService.getProductStatistics(this.productId).subscribe({
+      next: (stats) => {
+        this.productStatistics = stats;
+      },
+      error: () => {
+        console.error('Fehler beim Laden der Statistiken');
+      }
+    });
+  }
+
+  loadProductSales() {
+    // Lade WooCommerce-Bestellungen und filtere nach diesem Produkt
+    this.shopbridgeService.getOrders('active').subscribe({
+      next: (summary: ShopbridgeOrdersSummary) => {
+        // Finde das Produkt in der Zusammenfassung
+        const productData = Object.values(summary.products).find(
+          p => p.prodflux_id === this.productId
+        );
+        
+        if (productData) {
+          this.productSales = productData.orders;
+          this.totalSold = productData.total_quantity;
+        }
+      },
+      error: () => {
+        console.error('Fehler beim Laden der Verkäufe');
+      }
+    });
+  }
   deleteProduct() {
     if (confirm('Produkt wirklich löschen?')) {
       this.productsService.deleteProduct(this.productId).subscribe(() => {

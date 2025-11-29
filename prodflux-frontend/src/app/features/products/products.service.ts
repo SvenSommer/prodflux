@@ -66,6 +66,23 @@ export interface ToggleDeprecatedResponse {
   action: 'deprecated' | 'reactivated';
 }
 
+export interface WorkshopStock {
+  workshop_id: number;
+  workshop_name: string;
+  bestand: number;
+}
+
+export interface ProductStatisticsResponse {
+  product_id: number;
+  product_name: string;
+  artikelnummer: string;
+  statistics: {
+    total_produced: number;
+    total_stock: number;
+    stock_by_workshop: WorkshopStock[];
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
   private http = inject(HttpClient);
@@ -176,6 +193,13 @@ export class ProductsService {
     return this.http.post<ToggleDeprecatedResponse>(
       `${this.baseUrl}/products/${productId}/toggle-deprecated/`,
       { handle_materials: handleMaterials }
+    );
+  }
+
+  // Product statistics
+  getProductStatistics(productId: number): Observable<ProductStatisticsResponse> {
+    return this.http.get<ProductStatisticsResponse>(
+      `${this.baseUrl}/products/${productId}/statistics/`
     );
   }
 }

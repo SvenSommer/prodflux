@@ -5,6 +5,7 @@ from .views import (
     woocommerce_order_update_view,
     woocommerce_order_update_status_view,
     woocommerce_cache_invalidate_view,
+    woocommerce_cache_status_view,
     woocommerce_orders_stats_view,
     EmailTemplateListCreateView,
     EmailTemplateDetailView,
@@ -57,6 +58,11 @@ urlpatterns = [
         "cache/invalidate/",
         woocommerce_cache_invalidate_view,
         name="woocommerce-cache-invalidate"
+    ),
+    path(
+        "cache/status/",
+        woocommerce_cache_status_view,
+        name="woocommerce-cache-status"
     ),
 
     # Email Templates

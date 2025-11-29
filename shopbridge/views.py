@@ -588,9 +588,43 @@ def woocommerce_order_update_status_view(request, order_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def woocommerce_cache_invalidate_view(request):
-    """Invalidate all WooCommerce cache entries."""
+    """
+    Invalidate cache and trigger background refresh.
+    Returns immediately - refresh happens in background.
+    """
+    from .cache_scheduler import trigger_cache_refresh
+
     invalidate_orders_cache()
-    return Response({"message": "Cache invalidiert", "success": True})
+    refresh_triggered = trigger_cache_refresh()
+
+    return Response({
+        "message": "Cache invalidiert, Aktualisierung gestartet",
+        "success": True,
+        "background_refresh": refresh_triggered
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def woocommerce_cache_status_view(request):
+    """
+    Get the current cache status and scheduler info.
+    Useful for frontend to show cache freshness.
+    """
+    from .cache_scheduler import get_scheduler
+
+    scheduler = get_scheduler()
+    cache_version = get_cache_version()
+
+    # Check if we have cached data
+    cache_key = f"{CACHE_KEY_PREFIX}order_stats_v{cache_version}"
+    has_cached_stats = cache.get(cache_key) is not None
+
+    return Response({
+        "scheduler_running": scheduler._running,
+        "cache_version": cache_version,
+        "has_cached_data": has_cached_stats,
+    })
 
 
 @api_view(['GET'])

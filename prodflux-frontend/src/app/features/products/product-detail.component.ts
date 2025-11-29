@@ -134,7 +134,7 @@ export class ProductDetailComponent {
         // Kombiniere aktive und abgeschlossene Verkäufe, sortiert nach Datum
         this.productSales = [...result.activeSales, ...result.completedSales]
           .sort((a, b) => new Date(b.date_created).getTime() - new Date(a.date_created).getTime());
-        
+
         this.activeSalesCount = result.totalActive;
         this.completedSalesCount = result.totalCompleted;
         this.totalSold = result.totalSold;

@@ -71,7 +71,7 @@ export interface ProductStatistics {
               <span class="stat-value">{{ formatNumber(statistics?.statistics?.total_stock || 0) }}</span>
               <span class="stat-label">Gesamtbestand</span>
               <div class="workshop-breakdown" *ngIf="statistics?.statistics?.stock_by_workshop?.length">
-                <span class="workshop-stock-inline" 
+                <span class="workshop-stock-inline"
                       *ngFor="let ws of statistics?.statistics?.stock_by_workshop"
                       [class.zero]="ws.bestand === 0">
                   {{ ws.workshop_name }}: {{ formatNumber(ws.bestand) }}

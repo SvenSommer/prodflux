@@ -87,7 +87,7 @@ export class ProductSalesCardComponent implements OnChanges {
   @Input() sales: ProductSale[] = [];
 
   displayedColumns: string[] = ['order_id', 'date', 'customer', 'quantity', 'status'];
-  
+
   // Pagination
   pageSize = 10;
   currentPage = 0;

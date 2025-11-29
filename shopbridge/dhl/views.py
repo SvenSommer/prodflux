@@ -23,7 +23,7 @@ DHL_SERVICES = [
         'name': 'GoGreen',
         'description': 'Klimaneutraler Versand',
         'defaultEnabled': True,
-        'products': ['V62KP', 'V01PAK', 'V62WP', 'V66WPI', 'V53WPAK', 'V54EPAK'],
+        'products': ['V62KP', 'V01PAK', 'V66WPI', 'V53WPAK', 'V54EPAK'],
         'inputType': 'boolean',
     },
     {
@@ -47,7 +47,7 @@ DHL_SERVICES = [
         'name': 'GoGreen Plus',
         'description': 'Erweiterter Klimaschutz (kostenpflichtig)',
         'defaultEnabled': False,
-        'products': ['V62KP', 'V01PAK', 'V62WP', 'V66WPI', 'V53WPAK', 'V54EPAK'],
+        'products': ['V62KP', 'V01PAK', 'V66WPI', 'V53WPAK', 'V54EPAK'],
         'inputType': 'boolean',
     },
     {
@@ -55,7 +55,7 @@ DHL_SERVICES = [
         'name': 'Ablageort',
         'description': 'Wunschablageort (z.B. Garage, Terrasse)',
         'defaultEnabled': False,
-        'products': ['V62KP', 'V01PAK', 'V62WP'],
+        'products': ['V62KP', 'V01PAK'],
         'inputType': 'text',
         'placeholder': 'z.B. Garage, Terrasse',
         'maxLength': 100,
@@ -117,7 +117,7 @@ def dhl_services_view(request):
         'products': [
             {'code': 'V62KP', 'name': 'DHL Kleinpaket'},
             {'code': 'V01PAK', 'name': 'DHL Paket'},
-            {'code': 'V62WP', 'name': 'Warenpost National'},
+            {'code': 'V62KP', 'name': 'DHL Kleinpaket'},
             {'code': 'V66WPI', 'name': 'Warenpost International'},
             {'code': 'V53WPAK', 'name': 'DHL Paket International'},
             {'code': 'V54EPAK', 'name': 'DHL Europaket'},

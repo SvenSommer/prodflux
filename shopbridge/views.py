@@ -989,15 +989,19 @@ def shipping_config_for_country(request, country_code):
     config = ShippingCountryConfig.get_config_for_country(country_code)
     
     if not config:
-        # Fallback: Standard-Konfiguration
+        # Fallback: Standard-Konfiguration basierend auf Zielland
         is_domestic = country_code.upper() == 'DE'
         return Response({
             'country_code': country_code.upper(),
             'country_name': country_code.upper(),
             'shipping_type': 'dhl_product',
-            'dhl_product': 'V62WP' if is_domestic else 'V66WPI',
-            'dhl_product_name': 'Warenpost' if is_domestic else 'Warenpost International',
-            'is_configured': False
+            'dhl_product': 'V62KP' if is_domestic else 'V66WPI',
+            'dhl_product_name': 'DHL Kleinpaket' if is_domestic else 'Warenpost International',
+            'is_configured': False,
+            'available_products': (
+                ['V62KP', 'V01PAK'] if is_domestic 
+                else ['V66WPI', 'V53WPAK', 'V54EPAK']
+            )
         })
     
     response_data = {
@@ -1029,10 +1033,13 @@ def shipping_config_defaults(request):
             {'code': 'external_link', 'name': 'Externer Link (manuell)'},
         ],
         'dhl_products': [
-            {'code': 'V62WP', 'name': 'Warenpost National'},
-            {'code': 'V66WPI', 'name': 'Warenpost International'},
-            {'code': 'V62KP', 'name': 'DHL Kleinpaket'},
-            {'code': 'V01PAK', 'name': 'DHL Paket'},
+            # National (nur Deutschland)
+            {'code': 'V62KP', 'name': 'DHL Kleinpaket', 'type': 'national'},
+            {'code': 'V01PAK', 'name': 'DHL Paket', 'type': 'national'},
+            # International
+            {'code': 'V66WPI', 'name': 'Warenpost International', 'type': 'international'},
+            {'code': 'V53WPAK', 'name': 'DHL Paket International', 'type': 'international'},
+            {'code': 'V54EPAK', 'name': 'DHL Europaket', 'type': 'eu'},
         ],
         'default_countries': [
             {'code': 'DE', 'name': 'Deutschland'},

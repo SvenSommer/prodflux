@@ -303,8 +303,8 @@ export class ShopbridgeOrderLabelsCardComponent implements OnInit {
   private productNames: Record<string, string> = {
     'V62KP': 'DHL Kleinpaket',
     'V01PAK': 'DHL Paket',
-    'V62WP': 'Warenpost',
     'V66WPI': 'Warenpost Int.',
+    'V53WPAK': 'DHL Paket Int.',
   };
 
   ngOnInit(): void {

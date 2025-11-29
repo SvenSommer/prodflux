@@ -22,10 +22,12 @@ import {
   PRINT_FORMATS,
   DHL_SERVICES,
   DHLProduct,
+  DHLProductInfo,
   DHLServiceOption,
   CreateLabelRequest,
   LabelResult,
   AddressValidationResult,
+  getProductsForCountry,
 } from '../../dhl.service';
 import { WooCommerceOrderDetail } from '../../shopbridgeorder.service';
 import { ShippingConfigService, CountryShippingInfo } from '../../../settings/shipping-config.service';
@@ -649,8 +651,9 @@ export class CreateLabelDialogComponent {
   private shippingConfigService = inject(ShippingConfigService);
   private snackBar = inject(MatSnackBar);
 
-  // Configuration options
-  products = DHL_PRODUCTS;
+  // Configuration options - filtered by country
+  products: DHLProductInfo[] = [];
+  allProducts = DHL_PRODUCTS;
   printFormats = PRINT_FORMATS;
   services: DHLServiceOption[] = [];
   allServices: DHLServiceOption[] = [];  // All services from backend
@@ -689,14 +692,23 @@ export class CreateLabelDialogComponent {
     const countryCode = this.data.order.shipping.country || 'DE';
     this.loadingConfig = true;
 
+    // Filter products based on country
+    this.products = getProductsForCountry(countryCode);
+
     this.shippingConfigService.getConfigForCountry(countryCode).subscribe({
       next: (config) => {
         this.shippingConfig = config;
         this.loadingConfig = false;
 
-        // Set product from config if it's a DHL product type
+        // Set product from config if it's a DHL product type and valid for this country
         if (config.shipping_type === 'dhl_product' && config.dhl_product) {
-          this.selectedProduct = config.dhl_product as DHLProduct;
+          const isValidProduct = this.products.some(p => p.code === config.dhl_product);
+          if (isValidProduct) {
+            this.selectedProduct = config.dhl_product as DHLProduct;
+          } else {
+            // Config product not valid for this country, use detection
+            this.detectProduct();
+          }
         } else {
           // Fallback detection
           this.detectProduct();
@@ -754,12 +766,32 @@ export class CreateLabelDialogComponent {
   private detectProduct(): void {
     const shippingLines = this.data.order.shipping_lines || [];
     const methodTitle = shippingLines[0]?.method_title?.toLowerCase() || '';
+    const countryCode = this.data.order.shipping.country || 'DE';
 
-    if (methodTitle.includes('international')) {
-      this.selectedProduct = 'V66WPI';
+    // Check if we have products for this country
+    if (this.products.length === 0) {
+      this.products = getProductsForCountry(countryCode);
+    }
+
+    // For Germany: prefer Kleinpaket, for international: prefer Warenpost Int.
+    if (countryCode === 'DE') {
+      // National shipment
+      if (methodTitle.includes('paket') || methodTitle.includes('standard')) {
+        this.selectedProduct = 'V01PAK';
+      } else {
+        // Default: DHL Kleinpaket für Deutschland
+        this.selectedProduct = 'V62KP';
+      }
     } else {
-      // Default: DHL Kleinpaket für Deutschland
-      this.selectedProduct = 'V62KP';
+      // International shipment - select first available international product
+      if (methodTitle.includes('paket')) {
+        // Check if V53WPAK is available for this country
+        const hasIntPaket = this.products.some(p => p.code === 'V53WPAK');
+        this.selectedProduct = hasIntPaket ? 'V53WPAK' : 'V66WPI';
+      } else {
+        // Default: Warenpost International
+        this.selectedProduct = 'V66WPI';
+      }
     }
     // Keep default print format: 910-300-356 (100x150 Thermo)
   }

@@ -91,7 +91,7 @@ export class ShippingConfigSettingsComponent implements OnInit {
       country_code: '',
       country_name: '',
       shipping_type: 'dhl_product',
-      dhl_product: 'V62WP',
+      dhl_product: 'V62KP',
       external_link: 'https://www.dhl.de/de/privatkunden.html',
       external_link_label: 'Manuell versenden',
       notes: '',
@@ -153,7 +153,7 @@ export class ShippingConfigSettingsComponent implements OnInit {
 
       // Auto-select appropriate product based on country
       if (countryCode === 'DE') {
-        this.formData.dhl_product = 'V62WP'; // Warenpost National
+        this.formData.dhl_product = 'V62KP'; // DHL Kleinpaket
       } else if (['CH', 'GB'].includes(countryCode)) {
         // Suggest external link for CH and GB
         this.formData.shipping_type = 'external_link';
@@ -237,7 +237,7 @@ export class ShippingConfigSettingsComponent implements OnInit {
       country_code: config.country_code,
       country_name: config.country_name,
       shipping_type: config.shipping_type,
-      dhl_product: config.dhl_product || 'V62WP',
+      dhl_product: config.dhl_product || 'V62KP',
       external_link:
         config.external_link || 'https://www.dhl.de/de/privatkunden.html',
       external_link_label: config.external_link_label || 'Manuell versenden',
@@ -278,14 +278,14 @@ export class ShippingConfigSettingsComponent implements OnInit {
 
   getProductIcon(productCode: string): string {
     switch (productCode) {
-      case 'V62WP':
-        return 'mail';
-      case 'V66WPI':
-        return 'public';
       case 'V62KP':
         return 'inventory_2';
+      case 'V66WPI':
+        return 'public';
       case 'V01PAK':
         return 'local_shipping';
+      case 'V53WPAK':
+        return 'flight';
       default:
         return 'package';
     }

@@ -15,7 +15,7 @@ class DHLConfig:
     
     # Product Codes
     PRODUCT_PAKET = "V01PAK"        # DHL Paket
-    PRODUCT_WARENPOST = "V62WP"     # Warenpost National
+    PRODUCT_KLEINPAKET = "V62KP"    # DHL Kleinpaket (ersetzt V62WP seit 1.1.2025)
     PRODUCT_WARENPOST_INT = "V66WPI" # Warenpost International
     
     api_key: str

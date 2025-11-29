@@ -287,8 +287,8 @@ class ShipmentService:
         product_codes = {
             "V01PAK": "01",   # DHL Paket
             "V62KP": "62",    # DHL Kleinpaket
-            "V62WP": "62",    # Warenpost National
             "V66WPI": "66",   # Warenpost International
+            "V53WPAK": "53",  # DHL Paket International
         }
         
         product_code = product_codes.get(product, "62")  # Default: Kleinpaket
@@ -301,8 +301,8 @@ class ShipmentService:
         participation_map = {
             "V01PAK": os.getenv("DHL_PARTICIPATION_PAKET", "01"),
             "V62KP": os.getenv("DHL_PARTICIPATION_KLEINPAKET", "01"),
-            "V62WP": os.getenv("DHL_PARTICIPATION_WARENPOST", "01"),
             "V66WPI": os.getenv("DHL_PARTICIPATION_WARENPOST_INT", "01"),
+            "V53WPAK": os.getenv("DHL_PARTICIPATION_PAKET_INT", "01"),
         }
         return participation_map.get(product, "01")
     

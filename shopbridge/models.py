@@ -243,8 +243,9 @@ class DHLLabel(models.Model):
     PRODUCT_CHOICES = [
         ('V01PAK', 'DHL Paket'),
         ('V62KP', 'DHL Kleinpaket'),
-        ('V62WP', 'Warenpost National'),
+        # V62WP (Warenpost) wurde zum 1.1.2025 durch V62KP ersetzt
         ('V66WPI', 'Warenpost International'),
+        ('V53WPAK', 'DHL Paket International'),
     ]
     
     STATUS_CHOICES = [
@@ -370,10 +371,11 @@ class ShippingCountryConfig(models.Model):
     ]
     
     DHL_PRODUCT_CHOICES = [
-        ('V62WP', 'Warenpost National'),
-        ('V66WPI', 'Warenpost International'),
+        # V62WP (Warenpost National) wurde zum 1.1.2025 durch V62KP ersetzt
         ('V62KP', 'DHL Kleinpaket'),
         ('V01PAK', 'DHL Paket'),
+        ('V66WPI', 'Warenpost International'),
+        ('V53WPAK', 'DHL Paket International'),
     ]
     
     country_code = models.CharField(
@@ -460,7 +462,7 @@ class ShippingCountryConfig(models.Model):
         if config and config.shipping_type == 'dhl_product' and config.dhl_product:
             return config.dhl_product
         # Fallback: Warenpost für DE, International für andere
-        return 'V62WP' if country_code.upper() == 'DE' else 'V66WPI'
+        return 'V62KP' if country_code.upper() == 'DE' else 'V66WPI'
 
 
 class ProductManual(models.Model):

@@ -117,7 +117,7 @@ class Shipment:
             services_dict = {}
             
             # Product-specific service availability
-            national_products = ['V62KP', 'V01PAK', 'V62WP']
+            national_products = ['V62KP', 'V01PAK']
             international_products = ['V66WPI', 'V53WPAK', 'V54EPAK']
             
             for key, value in self.services.items():

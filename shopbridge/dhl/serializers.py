@@ -35,8 +35,9 @@ class CreateLabelRequestSerializer(serializers.Serializer):
         choices=[
             ("V62KP", "DHL Kleinpaket"),
             ("V01PAK", "DHL Paket"),
-            ("V62WP", "Warenpost National"),
+            # V62WP (Warenpost) wurde zum 1.1.2025 durch V62KP ersetzt
             ("V66WPI", "Warenpost International"),
+            ("V53WPAK", "DHL Paket International"),
         ],
         default="V62KP"
     )
@@ -95,8 +96,9 @@ class CreateLabelFromOrderSerializer(serializers.Serializer):
         choices=[
             ("V62KP", "DHL Kleinpaket"),
             ("V01PAK", "DHL Paket"),
-            ("V62WP", "Warenpost National"),
+            # V62WP (Warenpost) wurde zum 1.1.2025 durch V62KP ersetzt
             ("V66WPI", "Warenpost International"),
+            ("V53WPAK", "DHL Paket International"),
         ],
         default="V62KP"
     )

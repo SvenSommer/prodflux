@@ -4,20 +4,38 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 // DHL Products
-export type DHLProduct = 'V01PAK' | 'V62KP' | 'V62WP' | 'V66WPI';
+export type DHLProduct = 'V01PAK' | 'V62KP' | 'V66WPI' | 'V53WPAK' | 'V54EPAK';
 
 export interface DHLProductInfo {
   code: DHLProduct;
   name: string;
   description: string;
+  type: 'national' | 'international' | 'eu';
 }
 
+// Produkte nach Zielland:
+// - National (DE): V62KP, V01PAK
+// - International: V66WPI, V53WPAK
+// - EU: V54EPAK (zusätzlich zu International)
 export const DHL_PRODUCTS: DHLProductInfo[] = [
-  { code: 'V62KP', name: 'DHL Kleinpaket', description: 'DHL Kleinpaket bis 25 kg (Standard)' },
-  { code: 'V01PAK', name: 'DHL Paket', description: 'Standard DHL Paket bis 31,5 kg' },
-  { code: 'V62WP', name: 'Warenpost', description: 'Warenpost National bis 1 kg' },
-  { code: 'V66WPI', name: 'Warenpost International', description: 'Warenpost International' },
+  // National (nur für Deutschland)
+  { code: 'V62KP', name: 'DHL Kleinpaket', description: 'DHL Kleinpaket bis 25 kg', type: 'national' },
+  { code: 'V01PAK', name: 'DHL Paket', description: 'Standard DHL Paket bis 31,5 kg', type: 'national' },
+  // International
+  { code: 'V66WPI', name: 'Warenpost International', description: 'Günstig für kleine Sendungen', type: 'international' },
+  { code: 'V53WPAK', name: 'DHL Paket International', description: 'Standard International', type: 'international' },
+  { code: 'V54EPAK', name: 'DHL Europaket', description: 'Für EU-Länder', type: 'eu' },
 ];
+
+// Helper function to get products for a country
+export function getProductsForCountry(countryCode: string): DHLProductInfo[] {
+  const isGermany = countryCode.toUpperCase() === 'DE';
+  if (isGermany) {
+    return DHL_PRODUCTS.filter(p => p.type === 'national');
+  }
+  // International: all non-national products
+  return DHL_PRODUCTS.filter(p => p.type !== 'national');
+}
 
 // Print Formats
 export interface PrintFormat {

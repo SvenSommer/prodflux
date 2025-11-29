@@ -45,7 +45,7 @@ export interface PrintFormat {
 }
 
 export const PRINT_FORMATS: PrintFormat[] = [
-  { code: '910-300-356', name: '100x150 Thermo', description: 'Thermodrucker 100 x 150 mm (empfohlen)' },
+  { code: '910-300-400', name: '103x150 Thermo', description: 'Thermodrucker 103 x 150 mm (DHL Standard)' },
   { code: '910-300-300', name: '100x200 Thermo', description: 'Thermodrucker 100 x 150 mm (Standard)' },
   { code: '910-300-700', name: 'A4', description: 'DIN A4 (210 x 297 mm)' },
   { code: '910-300-710', name: '100x200', description: 'Label 100 x 200 mm' },

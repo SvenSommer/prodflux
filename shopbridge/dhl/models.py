@@ -110,14 +110,19 @@ class Shipment:
         
         # Add Value Added Services (VAS) if provided
         # Note: Not all services are available for all products!
-        # V62KP (Kleinpaket): goGreenPlus, preferredLocation, preferredNeighbour
+        # V62KP (Kleinpaket): According to DHL API examples, NO services are used
+        #                     The API docs list goGreenPlus as optional, but in practice
+        #                     it may not be activated for all contracts.
         # V01PAK (Paket): all services
         # V66WPI (Warenpost Int.): endorsement, goGreenPlus
         if self.services:
             services_dict = {}
             
             # Product-specific service availability
-            national_products = ['V62KP', 'V01PAK']
+            # V62KP does NOT get any services - the DHL API example shows no services
+            # and "The service entered is unknown" error indicates it's not supported
+            products_with_gogreen = ['V01PAK', 'V66WPI', 'V53WPAK', 'V54EPAK']
+            national_products = ['V01PAK']  # V62KP removed - no services supported
             international_products = ['V66WPI', 'V53WPAK', 'V54EPAK']
             
             for key, value in self.services.items():
@@ -125,9 +130,12 @@ class Shipment:
                     # Map frontend keys to DHL API keys
                     if key == 'goGreen':
                         # GoGreen is now standard, goGreenPlus is the upgrade
-                        services_dict['goGreenPlus'] = True
+                        # Only for products that support it (NOT V62KP)
+                        if self.product in products_with_gogreen:
+                            services_dict['goGreenPlus'] = True
                     elif key == 'goGreenPlus':
-                        services_dict['goGreenPlus'] = True
+                        if self.product in products_with_gogreen:
+                            services_dict['goGreenPlus'] = True
                     elif key == 'preferredLocation':
                         # Only for national products, expects a string value
                         if self.product in national_products:

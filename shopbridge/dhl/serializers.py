@@ -45,14 +45,14 @@ class CreateLabelRequestSerializer(serializers.Serializer):
     shipper = AddressSerializer(required=False)
     print_format = serializers.ChoiceField(
         choices=[
-            ("910-300-356", "100x150 Thermo"),
+            ("910-300-400", "103x150 Thermo"),
             ("910-300-300", "100x200 Thermo"),
             ("910-300-700", "A4"),
             ("910-300-710", "100x200"),
             ("910-300-600", "103x199"),
             ("910-300-400", "100x70 (Warenpost)"),
         ],
-        default="910-300-356",
+        default="910-300-400",
         required=False
     )
     services = serializers.DictField(

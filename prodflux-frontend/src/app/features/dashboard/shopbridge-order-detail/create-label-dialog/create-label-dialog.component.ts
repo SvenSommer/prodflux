@@ -660,7 +660,7 @@ export class CreateLabelDialogComponent {
 
   // Form state
   selectedProduct: DHLProduct = 'V62KP';
-  selectedPrintFormat = '910-300-356';  // Thermodrucker 100x150mm (empfohlen)
+  selectedPrintFormat = '910-300-400';  // Thermodrucker 103x150mm (DHL Standard)
   weightKg = 0.5;
   validateFirst = true;  // Default: Adresse vor Erstellung prüfen
   preferredLocation = '';
@@ -793,7 +793,7 @@ export class CreateLabelDialogComponent {
         this.selectedProduct = 'V66WPI';
       }
     }
-    // Keep default print format: 910-300-356 (100x150 Thermo)
+    // Keep default print format: 910-300-400 (103x150 Thermo)
   }
 
   getService(key: string) {

@@ -106,7 +106,7 @@ class ShipmentService:
     def create_label(
         self,
         shipment: Shipment,
-        print_format: str = "910-300-356"  # 100x150mm for thermal printers
+        print_format: str = "910-300-400"  # 103x150mm thermal (DHL standard)
     ) -> LabelResult:
         """Create a single shipment label."""
         results = self.create_labels([shipment], print_format)
@@ -118,7 +118,7 @@ class ShipmentService:
     def create_labels(
         self,
         shipments: List[Shipment],
-        print_format: str = "910-300-356",  # 100x150mm for thermal printers
+        print_format: str = "910-300-400",  # 103x150mm thermal (DHL standard)
     ) -> List[LabelResult]:
         """Create multiple shipment labels in one request.
         

@@ -301,7 +301,7 @@ class DHLLabel(models.Model):
     )
     print_format = models.CharField(
         max_length=20,
-        default='910-300-356',
+        default='910-300-400',
         verbose_name='Druckformat'
     )
     

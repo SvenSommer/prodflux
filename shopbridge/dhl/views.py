@@ -23,7 +23,9 @@ DHL_SERVICES = [
         'name': 'GoGreen',
         'description': 'Klimaneutraler Versand',
         'defaultEnabled': True,
-        'products': ['V62KP', 'V01PAK', 'V66WPI', 'V53WPAK', 'V54EPAK'],
+        # V62KP does NOT support goGreen/goGreenPlus - DHL API returns
+        # "The service entered is unknown" for Kleinpaket
+        'products': ['V01PAK', 'V66WPI', 'V53WPAK', 'V54EPAK'],
         'inputType': 'boolean',
     },
     {
@@ -47,7 +49,8 @@ DHL_SERVICES = [
         'name': 'GoGreen Plus',
         'description': 'Erweiterter Klimaschutz (kostenpflichtig)',
         'defaultEnabled': False,
-        'products': ['V62KP', 'V01PAK', 'V66WPI', 'V53WPAK', 'V54EPAK'],
+        # V62KP does NOT support goGreen/goGreenPlus
+        'products': ['V01PAK', 'V66WPI', 'V53WPAK', 'V54EPAK'],
         'inputType': 'boolean',
     },
     {
@@ -55,7 +58,8 @@ DHL_SERVICES = [
         'name': 'Ablageort',
         'description': 'Wunschablageort (z.B. Garage, Terrasse)',
         'defaultEnabled': False,
-        'products': ['V62KP', 'V01PAK'],
+        # Only V01PAK supports preferredLocation, V62KP does not
+        'products': ['V01PAK'],
         'inputType': 'text',
         'placeholder': 'z.B. Garage, Terrasse',
         'maxLength': 100,
@@ -65,6 +69,7 @@ DHL_SERVICES = [
         'name': 'Wunschnachbar',
         'description': 'Abgabe bei bestimmtem Nachbarn',
         'defaultEnabled': False,
+        # Only V01PAK supports preferredNeighbour
         'products': ['V01PAK'],
         'inputType': 'text',
         'placeholder': 'z.B. Familie Müller nebenan',
